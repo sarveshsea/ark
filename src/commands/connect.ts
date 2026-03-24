@@ -5,6 +5,7 @@ import { DashboardServer } from "../dashboard/server.js";
 import { readFile, writeFile } from "fs/promises";
 import { join } from "path";
 import { createInterface } from "readline";
+import { exec } from "child_process";
 
 /** Prompt for a single line of input */
 function ask(question: string, defaultVal?: string): Promise<string> {
@@ -227,10 +228,20 @@ export function registerConnectCommand(program: Command, engine: NocheEngine) {
         const dashboard = new DashboardServer(engine, dashPort);
         try {
           const actualDashPort = await dashboard.start();
+          const dashUrl = `http://localhost:${actualDashPort}`;
           console.log(`  ┌──────────────────────────────────────────────┐`);
-          console.log(`  │  AGENT PORTAL — http://localhost:${String(actualDashPort).padEnd(13)}│`);
-          console.log(`  │  Live dashboard with real-time Figma events  │`);
+          console.log(`  │  AGENT PORTAL — ${dashUrl.padEnd(29)}│`);
+          console.log(`  │  Setup wizard · Live feed · Compose          │`);
           console.log(`  └──────────────────────────────────────────────┘\n`);
+
+          // Auto-open dashboard in default browser
+          const opener =
+            process.platform === "darwin" ? `open "${dashUrl}"` :
+            process.platform === "win32"  ? `start "" "${dashUrl}"` :
+            `xdg-open "${dashUrl}"`;
+          exec(opener, (err) => {
+            if (err) console.log(`  (Could not auto-open browser: ${err.message})`);
+          });
         } catch (dashErr) {
           const msg = dashErr instanceof Error ? dashErr.message : String(dashErr);
           console.log(`  Dashboard failed: ${msg} (continuing without it)\n`);

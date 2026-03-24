@@ -1,15 +1,19 @@
 /**
  * Live Dashboard Server — HTTP + SSE for the Noche Agent Portal.
  *
- * Serves the portal HTML and pushes real-time events from the
- * Figma bridge (actions, syncs, selections, page changes) to
- * all connected browser clients via Server-Sent Events.
- *
- * Also exposes POST /api/action to trigger Figma plugin actions
- * from the dashboard UI.
+ * Routes:
+ *   GET  /            → Portal HTML
+ *   GET  /events      → SSE stream
+ *   GET  /api/status  → Bridge status JSON
+ *   GET  /api/events  → Last 100 events
+ *   POST /api/action  → Trigger Figma plugin actions
+ *   POST /api/setup   → Save FIGMA_TOKEN or FIGMA_FILE_KEY to .env.local
+ *   POST /api/compose → Run compose intent through the orchestrator
  */
 
 import { createServer, type IncomingMessage, type ServerResponse } from "http";
+import { readFile, writeFile } from "fs/promises";
+import { join } from "path";
 import type { FigmaBridge } from "../figma/bridge.js";
 import type { NocheEngine } from "../engine/core.js";
 import { createLogger } from "../engine/logger.js";
@@ -46,7 +50,6 @@ export class DashboardServer {
 
       this.server.on("error", (err: Error & { code?: string }) => {
         if (err.code === "EADDRINUSE") {
-          // Try next port
           this.port++;
           if (this.port > 3399) {
             reject(new Error("No available ports for dashboard (3333-3399)"));
@@ -106,7 +109,7 @@ export class DashboardServer {
       try {
         client.res.write(payload);
       } catch {
-        // Client gone, will be cleaned up
+        // Client gone, cleaned up on close
       }
     }
   }
@@ -114,7 +117,6 @@ export class DashboardServer {
   private handleRequest(req: IncomingMessage, res: ServerResponse): void {
     const url = req.url || "/";
 
-    // CORS for local dev
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -135,18 +137,36 @@ export class DashboardServer {
       this.handleAction(req, res);
     } else if (url === "/api/events") {
       this.handleEventLog(res);
+    } else if (url === "/api/setup" && req.method === "POST") {
+      this.handleSetup(req, res);
+    } else if (url === "/api/compose" && req.method === "POST") {
+      this.handleCompose(req, res);
     } else {
       res.writeHead(404, { "Content-Type": "text/plain" });
       res.end("Not found");
     }
   }
 
-  private servePortal(res: ServerResponse): void {
+  private async servePortal(res: ServerResponse): Promise<void> {
     const bridgeStatus = this.bridge.getStatus();
+    const root = this.engine.config.projectRoot;
+
+    // Read env for portal config
+    const token = await this.findEnvVar(root, "FIGMA_TOKEN");
+    const fileKey = await this.findEnvVar(root, "FIGMA_FILE_KEY") || this.engine.config.figmaFileKey;
+    const nodeId = await this.findEnvVar(root, "FIGMA_NODE_ID");
+    const projectName = await this.findEnvVar(root, "NOCHE_PROJECT_NAME") || "Noche";
+    const pluginManifestPath = join(root, "plugin", "manifest.json");
+
     const html = generatePortalHTML({
       bridgePort: bridgeStatus.port,
       bridgeClients: bridgeStatus.clients,
       dashboardPort: this.port,
+      hasToken: !!token,
+      figmaFileKey: fileKey || "",
+      figmaNodeId: nodeId || "",
+      projectName,
+      pluginManifestPath,
     });
     res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
     res.end(html);
@@ -161,9 +181,15 @@ export class DashboardServer {
       "Connection": "keep-alive",
     });
 
-    // Send initial state
-    const status = this.bridge.getStatus();
-    res.write(`data: ${JSON.stringify({ type: "init", data: { status, recentEvents: this.eventLog.slice(-50) }, ts: Date.now() })}\n\n`);
+    const bridgeStatus = this.bridge.getStatus();
+    const root = this.engine.config.projectRoot;
+    const pluginManifestPath = join(root, "plugin", "manifest.json");
+
+    const initData = {
+      status: { ...bridgeStatus, pluginManifestPath },
+      recentEvents: this.eventLog.slice(-50),
+    };
+    res.write(`data: ${JSON.stringify({ type: "init", data: initData, ts: Date.now() })}\n\n`);
 
     const client: SSEClient = { id: clientId, res };
     this.sseClients.push(client);
@@ -175,8 +201,101 @@ export class DashboardServer {
 
   private handleStatus(res: ServerResponse): void {
     const status = this.bridge.getStatus();
+    const pluginManifestPath = join(this.engine.config.projectRoot, "plugin", "manifest.json");
     res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify(status));
+    res.end(JSON.stringify({ ...status, pluginManifestPath }));
+  }
+
+  private async handleSetup(req: IncomingMessage, res: ServerResponse): Promise<void> {
+    let body = "";
+    for await (const chunk of req) {
+      body += chunk;
+      if (body.length > 10_000) {
+        res.writeHead(413, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Payload too large" }));
+        return;
+      }
+    }
+
+    let parsed: { key: string; value: string };
+    try {
+      parsed = JSON.parse(body);
+    } catch {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Invalid JSON" }));
+      return;
+    }
+
+    const allowedKeys = ["FIGMA_TOKEN", "FIGMA_FILE_KEY", "FIGMA_NODE_ID", "NOCHE_PROJECT_NAME"];
+    if (!parsed.key || !allowedKeys.includes(parsed.key)) {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: `Key must be one of: ${allowedKeys.join(", ")}` }));
+      return;
+    }
+
+    if (!parsed.value || typeof parsed.value !== "string") {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Missing value" }));
+      return;
+    }
+
+    try {
+      await this.setEnvVar(this.engine.config.projectRoot, parsed.key, parsed.value);
+      // Also update process env so it takes effect immediately
+      process.env[parsed.key] = parsed.value;
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ ok: true }));
+      log.info(`Setup: saved ${parsed.key}`);
+    } catch (err) {
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: err instanceof Error ? err.message : String(err) }));
+    }
+  }
+
+  private async handleCompose(req: IncomingMessage, res: ServerResponse): Promise<void> {
+    let body = "";
+    for await (const chunk of req) {
+      body += chunk;
+      if (body.length > 50_000) {
+        res.writeHead(413, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Payload too large" }));
+        return;
+      }
+    }
+
+    let parsed: { intent: string; dryRun?: boolean };
+    try {
+      parsed = JSON.parse(body);
+    } catch {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Invalid JSON" }));
+      return;
+    }
+
+    if (!parsed.intent || typeof parsed.intent !== "string") {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Missing intent" }));
+      return;
+    }
+
+    try {
+      // Dynamically import orchestrator to avoid circular deps at startup
+      const { AgentOrchestrator } = await import("../agents/orchestrator.js");
+      const orchestrator = new AgentOrchestrator(this.engine);
+      const result = await orchestrator.execute(parsed.intent, { dryRun: parsed.dryRun });
+
+      const summary = `${result.status.toUpperCase()} — ${result.completedTasks}/${result.totalTasks} tasks, ${result.mutations.length} mutations`;
+
+      // Broadcast so live feed also shows it
+      this.broadcast("compose-result", { intent: parsed.intent, summary });
+
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ ok: true, summary, result }));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: msg }));
+    }
   }
 
   private async handleAction(req: IncomingMessage, res: ServerResponse): Promise<void> {
@@ -206,15 +325,14 @@ export class DashboardServer {
     }
 
     const actionMap: Record<string, { method: string; params: Record<string, unknown> }> = {
-      "pull-tokens": { method: "getVariables", params: {} },
-      "pull-components": { method: "getComponents", params: {} },
-      "pull-styles": { method: "getStyles", params: {} },
-      "stickies": { method: "getStickies", params: {} },
-      "inspect": { method: "getSelection", params: {} },
-      "page-tree": { method: "getPageTree", params: { depth: 2 } },
+      "pull-tokens":      { method: "getVariables",   params: {} },
+      "pull-components":  { method: "getComponents",  params: {} },
+      "pull-styles":      { method: "getStyles",      params: {} },
+      "stickies":         { method: "getStickies",    params: {} },
+      "inspect":          { method: "getSelection",   params: {} },
+      "page-tree":        { method: "getPageTree",    params: { depth: 2 } },
     };
 
-    // Full sync triggers all three
     if (parsed.action === "full-sync") {
       try {
         const [tokens, components, styles] = await Promise.all([
@@ -251,5 +369,41 @@ export class DashboardServer {
   private handleEventLog(res: ServerResponse): void {
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify(this.eventLog.slice(-100)));
+  }
+
+  // ── Env helpers ──────────────────────────────────────
+
+  private async findEnvVar(root: string, key: string): Promise<string | null> {
+    for (const file of [".env.local", ".env"]) {
+      try {
+        const content = await readFile(join(root, file), "utf-8");
+        const match = content.match(new RegExp(`^${key}\\s*=\\s*"?([^"\\n]+)"?`, "m"));
+        if (match) return match[1].trim();
+      } catch {
+        // file absent
+      }
+    }
+    return process.env[key] || null;
+  }
+
+  private async setEnvVar(root: string, key: string, value: string): Promise<void> {
+    const envPath = join(root, ".env.local");
+    let content = "";
+    try {
+      content = await readFile(envPath, "utf-8");
+    } catch {
+      // new file
+    }
+
+    const regex = new RegExp(`^${key}\\s*=.*$`, "m");
+    const line = `${key}="${value}"`;
+
+    if (regex.test(content)) {
+      content = content.replace(regex, line);
+    } else {
+      content = content.trim() + (content.trim() ? "\n" : "") + line + "\n";
+    }
+
+    await writeFile(envPath, content);
   }
 }
