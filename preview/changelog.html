@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M25.5 15.5A9.5 9.5 0 0 1 12 25 9.5 9.5 0 0 1 9.5 6.5 12 12 0 1 0 25.5 15.5z' fill='%23e2e8f0'/%3E%3C/svg%3E">
+<title>Noche Changelog</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0a0a0a;
+  --bg-card: #111111;
+  --bg-hover: #1a1a1a;
+  --fg: #e0e0e0;
+  --fg-muted: #666666;
+  --border: #1e1e1e;
+  --accent: #9D833E;
+  --accent-bright: #C4A35A;
+  --accent-dim: #3D3520;
+  --success: #22C55E;
+  --warn: #EAB308;
+  --error: #EF4444;
+  --info: #3B82F6;
+  --mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Cascadia Code', monospace;
+  --radius: 2px;
+}
+
+body {
+  font-family: var(--mono);
+  font-size: 12px;
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.6;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection { background: var(--accent-dim); color: var(--accent-bright); }
+
+.hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 24px; border-bottom: 1px solid var(--border);
+  background: var(--bg-card); position: sticky; top: 0; z-index: 10;
+}
+.hdr-title { font-size: 14px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+.hdr-title span { color: var(--accent-bright); }
+.hdr-nav { display: flex; gap: 16px; font-size: 10px; align-items: center; }
+.nav-link {
+  color: #d4d4d4; text-decoration: none; border: 1px solid #444;
+  padding: 2px 10px; border-radius: 2px; font-size: 10px; letter-spacing: 1px; transition: all 0.15s;
+}
+.nav-link:hover { border-color: #d4d4d4; }
+.nav-link.active { color: var(--accent-bright); border-color: var(--accent-bright); font-weight: 700; }
+
+.hero {
+  padding: 32px 24px; border-bottom: 1px solid var(--border);
+  background: var(--accent-dim);
+}
+.hero h1 { font-size: 18px; font-weight: 700; color: var(--accent-bright); letter-spacing: 2px; margin-bottom: 6px; }
+.hero p { font-size: 11px; color: var(--fg-muted); }
+
+.container { max-width: 900px; margin: 0 auto; padding: 32px 24px; }
+
+/* ── Timeline ─────────────────────────── */
+.timeline { position: relative; padding-left: 32px; }
+.timeline::before {
+  content: ''; position: absolute; left: 8px; top: 0; bottom: 0;
+  width: 1px; background: var(--border);
+}
+
+.version {
+  position: relative; margin-bottom: 48px;
+}
+.version::before {
+  content: ''; position: absolute; left: -28px; top: 6px;
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--accent); border: 2px solid var(--bg);
+}
+.version.latest::before { background: var(--success); box-shadow: 0 0 8px rgba(34,197,94,0.4); }
+
+.version-header {
+  display: flex; align-items: baseline; gap: 12px; margin-bottom: 16px;
+}
+.version-tag {
+  font-size: 16px; font-weight: 700; color: var(--accent-bright);
+  letter-spacing: 1px;
+}
+.version-date { font-size: 10px; color: var(--fg-muted); letter-spacing: 1px; }
+.version-label {
+  font-size: 8px; padding: 2px 8px; border-radius: 2px;
+  font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
+}
+.label-latest { background: rgba(34,197,94,0.15); color: var(--success); border: 1px solid var(--success); }
+.label-initial { background: rgba(59,130,246,0.15); color: var(--info); border: 1px solid var(--info); }
+
+.commits { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+.commit {
+  display: flex; align-items: flex-start; gap: 12px; padding: 10px 14px;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--bg-card); transition: border-color 0.15s;
+}
+.commit:hover { border-color: var(--accent-dim); }
+.commit-hash {
+  font-size: 10px; color: var(--accent); font-weight: 700;
+  min-width: 56px; flex-shrink: 0; padding-top: 1px;
+}
+.commit-body { flex: 1; }
+.commit-msg { font-size: 11px; color: var(--fg); font-weight: 500; margin-bottom: 2px; }
+.commit-meta { font-size: 9px; color: var(--fg-muted); }
+
+.decisions {
+  margin-top: 16px; padding: 16px;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--bg-card);
+}
+.decisions-title {
+  font-size: 9px; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 12px;
+}
+.decision {
+  display: flex; gap: 10px; margin-bottom: 10px; font-size: 11px;
+  line-height: 1.5;
+}
+.decision:last-child { margin-bottom: 0; }
+.decision-icon { color: var(--accent-bright); flex-shrink: 0; font-size: 10px; padding-top: 2px; }
+.decision-text { color: var(--fg-muted); }
+.decision-text strong { color: var(--fg); font-weight: 600; }
+
+.files-changed {
+  margin-top: 12px;
+}
+.files-toggle {
+  font-size: 9px; color: var(--fg-muted); cursor: pointer;
+  letter-spacing: 1px; text-transform: uppercase; padding: 4px 0;
+  border: none; background: none; font-family: var(--mono);
+  transition: color 0.15s;
+}
+.files-toggle:hover { color: var(--accent); }
+.files-list {
+  display: none; margin-top: 8px; padding: 10px 14px;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--bg); font-size: 10px; color: var(--fg-muted);
+  line-height: 1.8;
+}
+.files-list.open { display: block; }
+.file-added { color: var(--success); }
+.file-modified { color: var(--warn); }
+.file-renamed { color: var(--info); }
+
+footer {
+  padding: 20px 24px; border-top: 1px solid var(--border); text-align: center;
+  font-size: 9px; color: var(--fg-muted); letter-spacing: 1px;
+}
+footer a { color: var(--accent); text-decoration: none; }
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-title"><span>NOCHE</span> CHANGELOG</div>
+  <div class="hdr-nav">
+    <a href="index.html" class="nav-link">PREVIEW</a>
+    <a href="design-system.html" class="nav-link">DESIGN SYSTEM</a>
+    <a href="changelog.html" class="nav-link active">CHANGELOG</a>
+    <a href="research.html" class="nav-link">RESEARCH</a>
+    <a href="bidcraft.html" class="nav-link">BIDCRAFT</a>
+  </div>
+</div>
+
+<div class="hero">
+  <h1>Version Changelog</h1>
+  <p>Commits, changes, and key design decisions for every release of Noche.</p>
+</div>
+
+<div class="container">
+<div class="timeline">
+
+  <!-- v0.1.0 -->
+  <div class="version latest">
+    <div class="version-header">
+      <div class="version-tag">v0.1.0</div>
+      <div class="version-date">2026-03-24</div>
+      <span class="version-label label-latest">LATEST</span>
+    </div>
+
+    <div class="commits">
+      <div class="commit">
+        <div class="commit-hash">a20c747</div>
+        <div class="commit-body">
+          <div class="commit-msg">Finalize ark &rarr; noche rename across entire codebase</div>
+          <div class="commit-meta">Sarvesh M Chidambaram &middot; 2026-03-24 11:57</div>
+        </div>
+      </div>
+      <div class="commit">
+        <div class="commit-hash">9c15762</div>
+        <div class="commit-body">
+          <div class="commit-msg">Add animated 3D spinning moon to README header</div>
+          <div class="commit-meta">Sarvesh M Chidambaram &middot; 2026-03-24 11:44</div>
+        </div>
+      </div>
+      <div class="commit">
+        <div class="commit-hash">7881845</div>
+        <div class="commit-body">
+          <div class="commit-msg">Audit and upgrade all Noche skills against Figma MCP best practices</div>
+          <div class="commit-meta">Sarvesh M Chidambaram &middot; 2026-03-24 11:43</div>
+        </div>
+      </div>
+      <div class="commit">
+        <div class="commit-hash">70d8f6a</div>
+        <div class="commit-body">
+          <div class="commit-msg">Replace remaining ark CLI references with noche</div>
+          <div class="commit-meta">Sarvesh M Chidambaram &middot; 2026-03-24 11:26</div>
+        </div>
+      </div>
+      <div class="commit">
+        <div class="commit-hash">9f57f82</div>
+        <div class="commit-body">
+          <div class="commit-msg">Rename Figma Ark &rarr; Noche across entire codebase</div>
+          <div class="commit-meta">Sarvesh M Chidambaram &middot; 2026-03-24 11:11</div>
+        </div>
+      </div>
+      <div class="commit">
+        <div class="commit-hash">2b0017f</div>
+        <div class="commit-body">
+          <div class="commit-msg">Add Figma MCP canvas integration, skills, atomic design enforcement, and README</div>
+          <div class="commit-meta">Sarvesh M Chidambaram &middot; 2026-03-24 10:56</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="decisions">
+      <div class="decisions-title">Key Design Decisions</div>
+      <div class="decision">
+        <div class="decision-icon">&raquo;</div>
+        <div class="decision-text"><strong>Atomic Design Only.</strong> Every generated component must declare an atomic level (atom, molecule, organism, template). Enforced in specs and codegen. No exceptions.</div>
+      </div>
+      <div class="decision">
+        <div class="decision-icon">&raquo;</div>
+        <div class="decision-text"><strong>MCP Tool Decision Tree.</strong> <code style="color:var(--accent);background:var(--accent-dim);padding:1px 4px;border-radius:2px">use_figma</code> (Official MCP) for design-system-aware operations. <code style="color:var(--accent);background:var(--accent-dim);padding:1px 4px;border-radius:2px">figma_execute</code> (Console MCP) for raw Plugin API. Check Code Connect BEFORE creating anything.</div>
+      </div>
+      <div class="decision">
+        <div class="decision-icon">&raquo;</div>
+        <div class="decision-text"><strong>Self-Healing Loop.</strong> Mandatory CREATE &rarr; SCREENSHOT &rarr; ANALYZE &rarr; FIX &rarr; VERIFY cycle (max 3 rounds) for all canvas operations.</div>
+      </div>
+      <div class="decision">
+        <div class="decision-icon">&raquo;</div>
+        <div class="decision-text"><strong>Code Connect First-Class.</strong> Every component spec has a codeConnect field mapping Figma node IDs to codebase paths. Checked before generation, established after creation.</div>
+      </div>
+      <div class="decision">
+        <div class="decision-icon">&raquo;</div>
+        <div class="decision-text"><strong>Multi-Agent Native.</strong> Multiple Claude instances connect on ports 9223-9232. Each shows a color-coded box widget in Figma (yellow=working, green=done, red=error).</div>
+      </div>
+      <div class="decision">
+        <div class="decision-icon">&raquo;</div>
+        <div class="decision-text"><strong>AgenticUI Aesthetic.</strong> Monospace terminal-paper aesthetic. Dark theme for system UI, warm paper theme for generated output. Gold accent (#9D833E).</div>
+      </div>
+      <div class="decision">
+        <div class="decision-icon">&raquo;</div>
+        <div class="decision-text"><strong>Skills Architecture.</strong> 9 skill files in skills/ with freedom levels (maximum, high, read-only, reference). Agents load relevant skills before acting.</div>
+      </div>
+    </div>
+
+    <div class="files-changed">
+      <button class="files-toggle" onclick="this.nextElementSibling.classList.toggle('open')">+ 40 files changed</button>
+      <div class="files-list">
+        <span class="file-added">A</span> assets/noche-moon.svg<br>
+        <span class="file-added">A</span> skills/DASHBOARD_FROM_RESEARCH.md<br>
+        <span class="file-added">A</span> skills/FIGMA_AUDIT.md<br>
+        <span class="file-added">A</span> skills/FIGMA_PROTOTYPE.md<br>
+        <span class="file-renamed">R</span> .ark/ &rarr; .noche/<br>
+        <span class="file-renamed">R</span> ArkEngine &rarr; NocheEngine<br>
+        <span class="file-renamed">R</span> ArkConfig &rarr; NocheConfig<br>
+        <span class="file-renamed">R</span> ArkWsServer &rarr; NocheWsServer<br>
+        <span class="file-modified">M</span> skills/SUPERPOWER.md — MCP decision tree, Code Connect check-first<br>
+        <span class="file-modified">M</span> skills/FIGMA_USE.md — Complete MCP tool routing, API gotchas<br>
+        <span class="file-modified">M</span> skills/FIGMA_GENERATE_DESIGN.md — Code Connect before creating<br>
+        <span class="file-modified">M</span> skills/FIGMA_GENERATE_LIBRARY.md — Batch ops, Code Connect primary output<br>
+        <span class="file-modified">M</span> skills/MULTI_AGENT.md — Error recovery protocol<br>
+        <span class="file-modified">M</span> skills/registry.json — v2.0.0, freedomLevel field<br>
+        <span class="file-modified">M</span> src/engine/core.ts — Class renames<br>
+        <span class="file-modified">M</span> src/figma/ws-server.ts — Class renames<br>
+        <span class="file-modified">M</span> src/engine/logger.ts — NOCHE_LOG_LEVEL<br>
+        <span class="file-modified">M</span> src/engine/workspace.ts — .noche-workspaces<br>
+        <span class="file-modified">M</span> package.json — name: noche, bin: noche<br>
+        <span class="file-modified">M</span> README.md — Full rewrite, moon header<br>
+        <span class="file-modified">M</span> CLAUDE.md — Updated skills reference<br>
+        <span class="file-modified">M</span> plugin/ — Noche branding<br>
+      </div>
+    </div>
+  </div>
+
+  <!-- v0.0.1 — Initial -->
+  <div class="version">
+    <div class="version-header">
+      <div class="version-tag">v0.0.1</div>
+      <div class="version-date">2026-03-23</div>
+      <span class="version-label label-initial">INITIAL</span>
+    </div>
+
+    <div class="commits">
+      <div class="commit">
+        <div class="commit-hash">199df7a</div>
+        <div class="commit-body">
+          <div class="commit-msg">Initial commit: Ark &mdash; AI-native Figma design intelligence engine</div>
+          <div class="commit-meta">Sarvesh M Chidambaram &middot; 2026-03-23 14:45</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="decisions">
+      <div class="decisions-title">Key Design Decisions</div>
+      <div class="decision">
+        <div class="decision-icon">&raquo;</div>
+        <div class="decision-text"><strong>Spec-First Architecture.</strong> Every component starts as a JSON spec before any code is generated. Specs define variants, props, shadcn base, and atomic level.</div>
+      </div>
+      <div class="decision">
+        <div class="decision-icon">&raquo;</div>
+        <div class="decision-text"><strong>WebSocket Figma Bridge.</strong> Auto-discovery on ports 9223-9232. Plugin scans and connects automatically. Zero configuration required.</div>
+      </div>
+      <div class="decision">
+        <div class="decision-icon">&raquo;</div>
+        <div class="decision-text"><strong>shadcn/ui + Tailwind.</strong> All generated code uses shadcn/ui components and Tailwind CSS. No custom component libraries. Zod for validation.</div>
+      </div>
+      <div class="decision">
+        <div class="decision-icon">&raquo;</div>
+        <div class="decision-text"><strong>Research Pipeline.</strong> Excel/CSV import, Figma sticky note extraction, AI synthesis, and report generation. Research informs design specs.</div>
+      </div>
+      <div class="decision">
+        <div class="decision-icon">&raquo;</div>
+        <div class="decision-text"><strong>Built for Claude.</strong> CLAUDE.md + skills/ directory teach Claude how to operate autonomously. Superagent mode by default.</div>
+      </div>
+    </div>
+
+    <div class="files-changed">
+      <button class="files-toggle" onclick="this.nextElementSibling.classList.toggle('open')">+ Initial codebase</button>
+      <div class="files-list">
+        <span class="file-added">A</span> src/engine/ — Core orchestrator, logger, workspace<br>
+        <span class="file-added">A</span> src/figma/ — WebSocket bridge, token extraction<br>
+        <span class="file-added">A</span> src/research/ — Research engine<br>
+        <span class="file-added">A</span> src/specs/ — Spec types and Zod validation<br>
+        <span class="file-added">A</span> src/codegen/ — Code generators<br>
+        <span class="file-added">A</span> src/preview/ — Localhost preview server<br>
+        <span class="file-added">A</span> src/commands/ — CLI (Commander.js)<br>
+        <span class="file-added">A</span> src/tui/ — Terminal UI (Ink/React)<br>
+        <span class="file-added">A</span> plugin/ — Figma plugin<br>
+        <span class="file-added">A</span> skills/ — Agent skill definitions<br>
+        <span class="file-added">A</span> CLAUDE.md — Agent instructions<br>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<footer>
+  <p>Noche v0.1.0 &middot; <a href="https://github.com/sarveshsea/noche">github.com/sarveshsea/noche</a></p>
+</footer>
+
+</body>
+</html>
