@@ -1,6 +1,14 @@
-# Noche
+<p align="center">
+  <img src="assets/noche-moon.svg" alt="Noche" width="200" height="200" />
+</p>
 
-AI-native design intelligence engine. Connects to Figma, pulls your design system, generates production React code. Runs autonomously with Claude.
+<h1 align="center">Noche</h1>
+
+<p align="center">
+  AI-native design intelligence engine.<br/>
+  Connects to Figma. Pulls your design system. Generates production React code.<br/>
+  Runs autonomously with Claude.
+</p>
 
 ---
 
@@ -181,13 +189,15 @@ Claude reads these files from `skills/` to know how to operate:
 
 | File | What it does |
 |------|-------------|
-| `SUPERPOWER.md` | Default mode. Makes Claude operate as an autonomous design agent |
-| `FIGMA_USE.md` | How to read and write to the Figma canvas |
-| `FIGMA_GENERATE_DESIGN.md` | How to create new designs using existing components |
-| `FIGMA_GENERATE_LIBRARY.md` | How to build a Figma component library from code |
-| `MULTI_AGENT.md` | How to run multiple Claude instances in parallel |
-| `ATOMIC_DESIGN.md` | Reference for Atomic Design methodology |
-| `DASHBOARD_FROM_RESEARCH.md` | How to turn research data into dashboards |
+| `SUPERPOWER.md` | Default mode. Autonomous design agent with MCP tool routing |
+| `FIGMA_USE.md` | Foundational canvas skill — MCP decision tree, self-healing, Code Connect |
+| `FIGMA_GENERATE_DESIGN.md` | Create new designs using existing components and tokens |
+| `FIGMA_GENERATE_LIBRARY.md` | Build a Figma component library from code with Code Connect parity |
+| `FIGMA_AUDIT.md` | Audit design system for consistency, accessibility, token adoption |
+| `FIGMA_PROTOTYPE.md` | Create interactive prototypes with flows and transitions |
+| `MULTI_AGENT.md` | Run multiple Claude instances in parallel with box widgets |
+| `ATOMIC_DESIGN.md` | Complete Atomic Design methodology reference |
+| `DASHBOARD_FROM_RESEARCH.md` | Transform research data into interactive dashboards |
 
 ### Multi-agent mode
 

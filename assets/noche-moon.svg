@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <style>
+    @keyframes spin {
+      0%   { transform: scaleX(1); }
+      25%  { transform: scaleX(0.3); }
+      50%  { transform: scaleX(-1); }
+      75%  { transform: scaleX(-0.3); }
+      100% { transform: scaleX(1); }
+    }
+    @keyframes shadow-shift {
+      0%   { cx: 115; }
+      25%  { cx: 100; }
+      50%  { cx: 85; }
+      75%  { cx: 100; }
+      100% { cx: 115; }
+    }
+    @keyframes glow-pulse {
+      0%, 100% { opacity: 0.15; r: 90; }
+      50%      { opacity: 0.25; r: 95; }
+    }
+    .moon-body {
+      transform-origin: 100px 100px;
+      animation: spin 4s ease-in-out infinite;
+    }
+    .shadow-ellipse {
+      animation: shadow-shift 4s ease-in-out infinite;
+    }
+    .glow {
+      animation: glow-pulse 4s ease-in-out infinite;
+    }
+  </style>
+
+  <!-- Background glow -->
+  <circle class="glow" cx="100" cy="100" r="90" fill="#a78bfa" opacity="0.15"/>
+  <circle class="glow" cx="100" cy="100" r="75" fill="#c4b5fd" opacity="0.1" style="animation-delay: -1s"/>
+
+  <!-- Moon base -->
+  <circle cx="100" cy="100" r="60" fill="#e8e0d0"/>
+
+  <!-- Moon surface details (craters) -->
+  <g class="moon-body">
+    <circle cx="80" cy="85" r="8" fill="#d4cbb8" opacity="0.7"/>
+    <circle cx="82" cy="87" r="6" fill="#c9bfa8" opacity="0.5"/>
+    <circle cx="115" cy="75" r="5" fill="#d4cbb8" opacity="0.6"/>
+    <circle cx="117" cy="76" r="3.5" fill="#c9bfa8" opacity="0.4"/>
+    <circle cx="95" cy="110" r="10" fill="#d4cbb8" opacity="0.6"/>
+    <circle cx="97" cy="112" r="7" fill="#c9bfa8" opacity="0.4"/>
+    <circle cx="110" cy="100" r="4" fill="#d4cbb8" opacity="0.5"/>
+    <circle cx="75" cy="105" r="3" fill="#d4cbb8" opacity="0.4"/>
+    <circle cx="105" cy="85" r="6" fill="#d4cbb8" opacity="0.5"/>
+    <circle cx="107" cy="86" r="4" fill="#c9bfa8" opacity="0.3"/>
+    <circle cx="88" cy="70" r="3" fill="#d4cbb8" opacity="0.4"/>
+    <circle cx="120" cy="110" r="5" fill="#d4cbb8" opacity="0.5"/>
+  </g>
+
+  <!-- 3D shadow overlay (creates the phase/rotation illusion) -->
+  <clipPath id="moon-clip">
+    <circle cx="100" cy="100" r="60"/>
+  </clipPath>
+  <ellipse class="shadow-ellipse" cx="115" cy="100" rx="45" ry="61" fill="#1a1a2e" opacity="0.35" clip-path="url(#moon-clip)"/>
+
+  <!-- Rim highlight -->
+  <circle cx="100" cy="100" r="60" fill="none" stroke="#f5f0e8" stroke-width="1" opacity="0.4"/>
+
+  <!-- Specular highlight -->
+  <ellipse cx="88" cy="82" rx="20" ry="25" fill="white" opacity="0.08" clip-path="url(#moon-clip)"/>
+
+  <!-- Pixel grid overlay for pixel-art effect -->
+  <defs>
+    <pattern id="pixel-grid" width="4" height="4" patternUnits="userSpaceOnUse">
+      <rect width="4" height="4" fill="none" stroke="#1a1a2e" stroke-width="0.15" opacity="0.12"/>
+    </pattern>
+  </defs>
+  <circle cx="100" cy="100" r="60" fill="url(#pixel-grid)"/>
+</svg>
