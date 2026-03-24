@@ -1,33 +1,17 @@
 # Noche Changelog
 
-This file documents key design decisions, architectural choices, and notable changes for projects built with Noche. Claude updates this file as work progresses.
+Noche is an AI-native design intelligence engine. Designers use it to build their own products — connecting Figma, pulling design systems, generating production code.
 
-The Noche engine section tracks changes to the tool itself. Project sections track design decisions for whatever Noche is currently building.
-
----
-
-## Active Project: BidCraft
-
-> Commercial production estimator — AICP bid form reimagined as a guided desktop app. Publicis-inspired beige paper aesthetic.
-
-### Design Decisions
-<!-- Claude: add decisions here as they're made during BidCraft development -->
-
-### Specs Created
-<!-- Claude: log specs as they're created -->
-
-### Components Generated
-<!-- Claude: log components as they're generated -->
+This changelog tracks Noche itself: every version, commit, and architectural decision that shapes the tool.
 
 ---
 
-## Noche Engine
+## v0.1.0 — 2026-03-24
 
-### v0.1.0 — 2026-03-24
-
-#### Commits
+### Commits
 | Hash | Message |
 |------|---------|
+| `59bc247` | Add CHANGELOG.md as project decision log, update CLAUDE.md convention |
 | `bdad1cc` | Replace Labor Budgeting design system with Noche DS, add changelog page |
 | `a20c747` | Finalize ark → noche rename across entire codebase |
 | `9c15762` | Add animated 3D spinning moon to README header |
@@ -36,7 +20,7 @@ The Noche engine section tracks changes to the tool itself. Project sections tra
 | `9f57f82` | Rename Figma Ark → Noche across entire codebase |
 | `2b0017f` | Add Figma MCP canvas integration, skills, atomic design enforcement, and README |
 
-#### Key Design Decisions
+### Key Design Decisions
 - **Atomic Design Only** — Every generated component must declare an atomic level (atom, molecule, organism, template). Enforced in specs and codegen.
 - **MCP Tool Decision Tree** — `use_figma` for design-system-aware ops, `figma_execute` for raw Plugin API. Check Code Connect BEFORE creating anything.
 - **Self-Healing Loop** — Mandatory CREATE → SCREENSHOT → ANALYZE → FIX → VERIFY (max 3 rounds) for all canvas operations.
@@ -44,8 +28,9 @@ The Noche engine section tracks changes to the tool itself. Project sections tra
 - **Multi-Agent Native** — Multiple Claude instances on ports 9223-9232. Color-coded box widgets in Figma (yellow=working, green=done, red=error).
 - **AgenticUI Aesthetic** — Monospace terminal-paper aesthetic. Dark for system UI, warm paper for generated output. Gold accent (#9D833E).
 - **Skills Architecture** — 9 skill files with freedom levels (maximum, high, read-only, reference).
+- **Changelog Convention** — Claude updates this file after every Noche commit. User projects are tracked locally in `.noche/`, not here.
 
-#### Changes
+### Changes
 - Rewrote `preview/design-system.html` — Noche's actual tokens, typography, components, atomic hierarchy
 - Created `preview/changelog.html` — timeline view with design decisions per version
 - Upgraded all 9 skills against Figma MCP best practices
@@ -56,19 +41,19 @@ The Noche engine section tracks changes to the tool itself. Project sections tra
 
 ---
 
-### v0.0.1 — 2026-03-23
+## v0.0.1 — 2026-03-23
 
-#### Commits
+### Commits
 | Hash | Message |
 |------|---------|
 | `199df7a` | Initial commit: Ark — AI-native Figma design intelligence engine |
 
-#### Key Design Decisions
+### Key Design Decisions
 - **Spec-First Architecture** — Every component starts as a JSON spec before code generation.
 - **WebSocket Figma Bridge** — Auto-discovery on ports 9223-9232. Zero config.
 - **shadcn/ui + Tailwind** — All generated code uses shadcn/ui and Tailwind CSS. Zod for validation.
 - **Research Pipeline** — Excel/CSV import, Figma sticky extraction, AI synthesis, report generation.
 - **Built for Claude** — CLAUDE.md + skills/ teach Claude to operate autonomously.
 
-#### Changes
+### Changes
 - Initial codebase: engine, Figma bridge, research engine, spec system, codegen, preview server, CLI, TUI, Figma plugin, skills
