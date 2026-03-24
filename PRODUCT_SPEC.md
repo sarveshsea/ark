@@ -94,11 +94,11 @@ Raw Input → Parse → Classify → Cluster → Synthesize → Output
 - `research/*.md` — Human-readable research reports
 
 **Commands:**
-- `ark research from-stickies <figma-url>` — Convert FigJam stickies to research
-- `ark research from-file <path>` — Parse Excel/CSV research data
-- `ark research web <topic>` — Deep online research with source attribution
-- `ark research synthesize` — Combine all research into unified insights
-- `ark research report` — Generate formatted research report
+- `noche research from-stickies <figma-url>` — Convert FigJam stickies to research
+- `noche research from-file <path>` — Parse Excel/CSV research data
+- `noche research web <topic>` — Deep online research with source attribution
+- `noche research synthesize` — Combine all research into unified insights
+- `noche research report` — Generate formatted research report
 
 ### 3. Spec Engine
 
@@ -221,7 +221,7 @@ A persistent, live-reloading HTML environment that renders everything Ark genera
 
 **File Structure:**
 ```
-ark/
+noche/
 ├── preview/
 │   ├── index.html          # Gallery entry point
 │   ├── pages/              # Page-level previews
@@ -251,7 +251,7 @@ Ark understands the project it's in and adapts.
 - Detects framework (Next.js, Remix, Vite, etc.)
 - Identifies existing shadcn components
 - Maps existing design tokens
-- Creates `.ark/project.json` context file
+- Creates `.noche/project.json` context file
 
 **Ongoing:**
 - Tracks which specs have been generated vs. modified by hand
@@ -259,7 +259,7 @@ Ark understands the project it's in and adapts.
 - Suggests new components based on patterns it sees
 - Updates token mappings when Figma design system changes
 
-**Context File (.ark/project.json):**
+**Context File (.noche/project.json):**
 ```json
 {
   "framework": "nextjs",
@@ -287,18 +287,18 @@ Ark exposes commands that work as Claude Code slash commands.
 **Commands:**
 | Command | Description |
 |---------|-------------|
-| `ark connect` | Connect to Figma via Desktop Bridge |
-| `ark pull` | Pull latest design system from Figma |
-| `ark research <subcommand>` | Run research pipeline |
-| `ark spec <type> <name>` | Create or edit a spec |
-| `ark generate <spec>` | Generate code from spec |
-| `ark preview` | Start HTML preview server |
-| `ark status` | Show project status in TUI |
-| `ark sync` | Full sync: Figma → specs → code → preview |
-| `ark stickies <figma-url>` | Convert FigJam stickies to research |
-| `ark dataviz <name>` | Create a new dataviz spec |
-| `ark page <name>` | Create a new page spec |
-| `ark tokens` | Export design tokens as CSS/Tailwind |
+| `noche connect` | Connect to Figma via Desktop Bridge |
+| `noche pull` | Pull latest design system from Figma |
+| `noche research <subcommand>` | Run research pipeline |
+| `noche spec <type> <name>` | Create or edit a spec |
+| `noche generate <spec>` | Generate code from spec |
+| `noche preview` | Start HTML preview server |
+| `noche status` | Show project status in TUI |
+| `noche sync` | Full sync: Figma → specs → code → preview |
+| `noche stickies <figma-url>` | Convert FigJam stickies to research |
+| `noche dataviz <name>` | Create a new dataviz spec |
+| `noche page <name>` | Create a new page spec |
+| `noche tokens` | Export design tokens as CSS/Tailwind |
 
 ---
 
@@ -307,14 +307,14 @@ Ark exposes commands that work as Claude Code slash commands.
 ### Flow 1: FigJam Stickies → Research → Component Spec → Code
 
 ```
-1. User runs: ark stickies https://figma.com/board/xyz
+1. User runs: noche stickies https://figma.com/board/xyz
 2. Ark reads FigJam board via MCP
 3. Stickies are parsed, clustered by affinity
 4. Research engine synthesizes themes and insights
 5. Insights stored in research/insights.json
-6. User runs: ark spec component InsightCard
+6. User runs: noche spec component InsightCard
 7. Spec references research findings
-8. User runs: ark generate InsightCard
+8. User runs: noche generate InsightCard
 9. shadcn Card + Badge component generated
 10. HTML preview auto-updates with new component
 ```
@@ -322,12 +322,12 @@ Ark exposes commands that work as Claude Code slash commands.
 ### Flow 2: Excel User Research → Personas → Page Layout
 
 ```
-1. User runs: ark research from-file survey-results.xlsx
+1. User runs: noche research from-file survey-results.xlsx
 2. Excel parsed into structured data table
 3. Research engine extracts patterns, generates personas
-4. User runs: ark spec page UserDashboard
+4. User runs: noche spec page UserDashboard
 5. Spec includes persona-driven section priorities
-6. User runs: ark generate UserDashboard
+6. User runs: noche generate UserDashboard
 7. Full page layout generated with shadcn Sidebar + content area
 8. Preview shows responsive layout at all breakpoints
 ```
@@ -335,12 +335,12 @@ Ark exposes commands that work as Claude Code slash commands.
 ### Flow 3: Figma Design System → Token Sync → DataViz
 
 ```
-1. User runs: ark connect (establishes Figma bridge)
-2. User runs: ark pull (extracts design system)
+1. User runs: noche connect (establishes Figma bridge)
+2. User runs: noche pull (extracts design system)
 3. Tokens mapped to Tailwind CSS variables
-4. User runs: ark dataviz RevenueChart
+4. User runs: noche dataviz RevenueChart
 5. Spec defines chart type, data shape, interactions
-6. User runs: ark generate RevenueChart
+6. User runs: noche generate RevenueChart
 7. Recharts component generated, wrapped in shadcn Card
 8. Uses design tokens for colors, typography
 9. Preview shows chart with sample data
@@ -351,11 +351,11 @@ Ark exposes commands that work as Claude Code slash commands.
 ## File Structure
 
 ```
-ark/
+noche/
 ├── PRODUCT_SPEC.md              # This file
 ├── package.json
 ├── tsconfig.json
-├── .ark/                         # Project context (auto-generated)
+├── .noche/                         # Project context (auto-generated)
 │   ├── project.json              # Project detection results
 │   └── figma-session.json        # Active Figma connection state
 │
@@ -409,15 +409,15 @@ ark/
 │   │   └── theme.ts              # TUI color theme
 │   │
 │   └── commands/
-│       ├── connect.ts            # ark connect
-│       ├── pull.ts               # ark pull
-│       ├── research.ts           # ark research <sub>
-│       ├── spec.ts               # ark spec <type> <name>
-│       ├── generate.ts           # ark generate <spec>
-│       ├── preview.ts            # ark preview
-│       ├── status.ts             # ark status
-│       ├── sync.ts               # ark sync
-│       └── tokens.ts             # ark tokens
+│       ├── connect.ts            # noche connect
+│       ├── pull.ts               # noche pull
+│       ├── research.ts           # noche research <sub>
+│       ├── spec.ts               # noche spec <type> <name>
+│       ├── generate.ts           # noche generate <spec>
+│       ├── preview.ts            # noche preview
+│       ├── status.ts             # noche status
+│       ├── sync.ts               # noche sync
+│       └── tokens.ts             # noche tokens
 │
 ├── specs/                        # User-created specs
 │   ├── components/

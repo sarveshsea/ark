@@ -1,10 +1,10 @@
 import type { Command } from "commander";
-import type { ArkEngine } from "../engine/core.js";
+import type { NocheEngine } from "../engine/core.js";
 import { writeTokenFiles, generateShadcnTokenMapping } from "../codegen/tailwind-tokens.js";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 
-export function registerTokensCommand(program: Command, engine: ArkEngine) {
+export function registerTokensCommand(program: Command, engine: NocheEngine) {
   program
     .command("tokens")
     .description("Export design tokens as CSS / Tailwind / JSON")

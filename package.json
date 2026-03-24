@@ -1,10 +1,10 @@
 {
-  "name": "ark",
+  "name": "noche",
   "version": "0.1.0",
   "description": "AI-Native Design Intelligence Engine — Figma + Research + Spec-Driven Code Generation",
   "type": "module",
   "bin": {
-    "ark": "./dist/index.js"
+    "noche": "./dist/index.js"
   },
   "scripts": {
     "build": "tsc",
@@ -16,13 +16,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sarveshsea/ark.git"
+    "url": "git+https://github.com/sarveshsea/noche.git"
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/sarveshsea/ark/issues"
+    "url": "https://github.com/sarveshsea/noche/issues"
   },
-  "homepage": "https://github.com/sarveshsea/ark#readme",
+  "homepage": "https://github.com/sarveshsea/noche#readme",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.26.0",
     "commander": "^12.1.0",

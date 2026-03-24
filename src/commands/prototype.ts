@@ -1,9 +1,9 @@
 import type { Command } from "commander";
-import type { ArkEngine } from "../engine/core.js";
+import type { NocheEngine } from "../engine/core.js";
 import { buildScenesFromSpecs, exportPrototype } from "../codegen/prototype-exporter.js";
 import { join } from "path";
 
-export function registerPrototypeCommand(program: Command, engine: ArkEngine) {
+export function registerPrototypeCommand(program: Command, engine: NocheEngine) {
   program
     .command("prototype")
     .description("Generate a cinematic prototype with Playwright video + interactive HTML")

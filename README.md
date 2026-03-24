@@ -43,8 +43,8 @@ Before you start, you need these installed on your computer:
 ### Step 1: Clone and install
 
 ```bash
-git clone https://github.com/sarveshsea/ark.git
-cd ark
+git clone https://github.com/sarveshsea/noche.git
+cd noche
 npm install
 ```
 
@@ -75,7 +75,7 @@ It will ask for your Figma token. Paste it. Done.
 
 1. Open **Figma Desktop** (not the browser version)
 2. Go to **Plugins** > **Development** > **Import plugin from manifest**
-3. Navigate to the `ark/plugin/manifest.json` file you cloned
+3. Navigate to the `noche/plugin/manifest.json` file you cloned
 4. Click **Open**
 
 That's it. The plugin auto-connects to Noche. You'll see "AGENT CONNECTED" in the plugin panel.
@@ -173,7 +173,7 @@ Noche is built for Claude to drive. Open Claude Code in the project directory an
 ### Basic usage
 
 ```bash
-cd ark
+cd noche
 claude
 ```
 
@@ -284,7 +284,7 @@ This gives `figma_execute`, `figma_take_screenshot`, `figma_search_components`, 
 ## Project structure
 
 ```
-ark/
+noche/
   CLAUDE.md            <- Instructions for Claude (read this if you're curious)
   skills/              <- Skill files that teach Claude how to operate
   specs/               <- JSON specs for components, pages, dataviz

@@ -24,7 +24,7 @@ export async function writeTokenFiles(
 
   // 2. Tailwind config extension
   const tailwindCode = generateTailwindExtend(tokens);
-  const tailwindPath = join(outputDir, "ark-tokens.ts");
+  const tailwindPath = join(outputDir, "noche-tokens.ts");
   await writeFile(tailwindPath, tailwindCode);
 
   // 3. Raw JSON

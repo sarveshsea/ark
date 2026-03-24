@@ -1,7 +1,7 @@
 import type { Command } from "commander";
-import type { ArkEngine } from "../engine/core.js";
+import type { NocheEngine } from "../engine/core.js";
 
-export function registerResearchCommand(program: Command, engine: ArkEngine) {
+export function registerResearchCommand(program: Command, engine: NocheEngine) {
   const research = program
     .command("research")
     .description("Research pipeline — process data from multiple sources");

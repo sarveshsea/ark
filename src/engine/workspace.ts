@@ -1,6 +1,6 @@
 /**
  * Workspace Manager — Stores per-project data outside the Noche repo.
- * Each project gets a workspace at ~/.ark-workspaces/{workspace-id}/
+ * Each project gets a workspace at ~/.noche-workspaces/{workspace-id}/
  * keyed by SHA256 hash of the project's absolute path.
  */
 
@@ -78,7 +78,7 @@ export class WorkspaceManager {
   private workspaceRoot: string;
 
   constructor(workspaceRoot?: string) {
-    this.workspaceRoot = workspaceRoot || join(homedir(), ".ark-workspaces");
+    this.workspaceRoot = workspaceRoot || join(homedir(), ".noche-workspaces");
   }
 
   /**

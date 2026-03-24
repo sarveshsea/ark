@@ -1,6 +1,6 @@
 /**
  * Registry — Manages specs, design system data, and generation state.
- * Persists to .ark/ directory for cross-session continuity.
+ * Persists to .noche/ directory for cross-session continuity.
  */
 
 import { readFile, writeFile, readdir, mkdir, rename } from "fs/promises";

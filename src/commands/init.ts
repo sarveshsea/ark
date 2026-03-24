@@ -1,10 +1,10 @@
 import type { Command } from "commander";
-import type { ArkEngine } from "../engine/core.js";
+import type { NocheEngine } from "../engine/core.js";
 import type { ComponentSpec, DataVizSpec, PageSpec } from "../specs/types.js";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 
-export function registerInitCommand(program: Command, engine: ArkEngine) {
+export function registerInitCommand(program: Command, engine: NocheEngine) {
   program
     .command("init")
     .description("Interactive onboarding — set up Noche for your project")
@@ -60,7 +60,7 @@ export function registerInitCommand(program: Command, engine: ArkEngine) {
         "generated/pages",
         "generated/dataviz",
         "prototype",
-        ".ark",
+        ".noche",
       ];
 
       for (const dir of dirs) {
@@ -162,7 +162,7 @@ export function registerInitCommand(program: Command, engine: ArkEngine) {
 
       // Write onboarding complete marker
       await writeFile(
-        join(root, ".ark", "onboarded.json"),
+        join(root, ".noche", "onboarded.json"),
         JSON.stringify({ completedAt: new Date().toISOString(), version: "0.1.0" })
       );
 

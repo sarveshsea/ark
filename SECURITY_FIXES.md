@@ -6,7 +6,7 @@ This document provides ready-to-implement fixes for all findings in SECURITY_REV
 
 ## CRITICAL #1: Plugin Code Execution Blocklist
 
-**Original Code:** `/Users/sarveshchidambaram/Desktop/ark/plugin/code.js` (lines 184-214)
+**Original Code:** `/Users/sarveshchidambaram/Desktop/noche/plugin/code.js` (lines 184-214)
 
 ### Recommended Approach: Allowlist + AST Validation
 
@@ -194,7 +194,7 @@ for (const test of TEST_CASES) {
 
 ## CRITICAL #2: Prototype Exporter Code Injection
 
-**Original Code:** `/Users/sarveshchidambaram/Desktop/ark/src/codegen/prototype-exporter.ts`
+**Original Code:** `/Users/sarveshchidambaram/Desktop/noche/src/codegen/prototype-exporter.ts`
 
 ### Fix: Add Escaping Utilities
 
@@ -477,11 +477,11 @@ ${scenes.map((scene, i) => {
 
 ## HIGH #1: WebSocket Rate Limiting
 
-**File:** `/Users/sarveshchidambaram/Desktop/ark/src/figma/ws-server.ts`
+**File:** `/Users/sarveshchidambaram/Desktop/noche/src/figma/ws-server.ts`
 
 ### Add Rate Limiting Class
 
-Insert before `ArkWsServer` class definition:
+Insert before `NocheWsServer` class definition:
 
 ```typescript
 /**
@@ -537,18 +537,18 @@ class RateLimiter {
 }
 ```
 
-### Update `ArkWsServer` class:
+### Update `NocheWsServer` class:
 
 ```typescript
-export class ArkWsServer extends EventEmitter {
+export class NocheWsServer extends EventEmitter {
   // ... existing fields ...
   private rateLimiter: RateLimiter;
 
-  constructor(config: ArkWsServerConfig = {}) {
+  constructor(config: NocheWsServerConfig = {}) {
     super();
     this.config = config;
     this.rateLimiter = new RateLimiter(1000, 100 * 1024 * 1024); // 1000 msgs/min, 100MB/min
-    this.server = new ArkWsServer({
+    this.server = new NocheWsServer({
       // ... existing config ...
     });
   }
@@ -610,7 +610,7 @@ export class ArkWsServer extends EventEmitter {
 
 ## HIGH #2: Spec Name Validation
 
-**File:** `/Users/sarveshchidambaram/Desktop/ark/src/engine/registry.ts`
+**File:** `/Users/sarveshchidambaram/Desktop/noche/src/engine/registry.ts`
 
 ### Add validation function:
 
@@ -659,7 +659,7 @@ async saveSpec(spec: AnySpec): Promise<void> {
   this.specs.set(spec.name, spec);
 
   const typeDir = specTypeDir(spec.type);
-  const dir = join(this.arkDir, "..", "specs", typeDir);
+  const dir = join(this.nocheDir, "..", "specs", typeDir);
   await mkdir(dir, { recursive: true });
 
   const filePath = join(dir, `${spec.name}.json`);
@@ -674,7 +674,7 @@ async saveSpec(spec: AnySpec): Promise<void> {
 
 ## HIGH #3: WebSocket Origin Validation
 
-**File:** `/Users/sarveshchidambaram/Desktop/ark/src/figma/ws-server.ts`
+**File:** `/Users/sarveshchidambaram/Desktop/noche/src/figma/ws-server.ts`
 
 ### Update `startOnPort` method:
 
@@ -739,14 +739,14 @@ private startOnPort(port: number): Promise<void> {
  * Removes sensitive values
  */
 
-export interface ArkConfig {
+export interface NocheConfig {
   projectRoot: string;
   figmaToken?: string;
   figmaFileKey?: string;
 }
 
 export function sanitizeConfigForLogging(
-  config: ArkConfig
+  config: NocheConfig
 ): Record<string, unknown> {
   return {
     projectRoot: config.projectRoot,
@@ -810,7 +810,7 @@ export function createLogger(name: string) {
         };
       },
       config: (config: unknown) => {
-        return sanitizeConfigForLogging(config as ArkConfig);
+        return sanitizeConfigForLogging(config as NocheConfig);
       }
     }
   });

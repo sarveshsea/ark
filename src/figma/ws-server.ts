@@ -9,7 +9,7 @@
 import { WebSocketServer, WebSocket } from "ws";
 import { createLogger } from "../engine/logger.js";
 import { EventEmitter } from "events";
-import type { ArkEvent } from "../engine/core.js";
+import type { NocheEvent } from "../engine/core.js";
 
 const log = createLogger("ws-server");
 
@@ -23,12 +23,12 @@ export interface BridgeClient {
   lastPing: Date;
 }
 
-export interface ArkWsServerConfig {
+export interface NocheWsServerConfig {
   port?: number;
   instanceName?: string;
   onCommand?: (method: string, params: Record<string, unknown>) => Promise<unknown>;
   onChat?: (text: string, fromPlugin: string) => void;
-  onEvent?: (event: ArkEvent) => void;
+  onEvent?: (event: NocheEvent) => void;
 }
 
 /** Shape of messages received from the Figma plugin */
@@ -59,8 +59,8 @@ const RATE_LIMIT = {
   windowMs: 60_000,
 };
 
-export class ArkWsServer extends EventEmitter {
-  private config: ArkWsServerConfig;
+export class NocheWsServer extends EventEmitter {
+  private config: NocheWsServerConfig;
   private wss: WebSocketServer | null = null;
   private clients = new Map<string, BridgeClient>();
   private rateLimits = new Map<string, RateLimit>();
@@ -75,7 +75,7 @@ export class ArkWsServer extends EventEmitter {
   }>();
   private commandId = 0;
 
-  constructor(config: ArkWsServerConfig = {}) {
+  constructor(config: NocheWsServerConfig = {}) {
     super();
     this.config = config;
   }
@@ -104,7 +104,7 @@ export class ArkWsServer extends EventEmitter {
         await this.startOnPort(p);
         this.port = p;
         this._running = true;
-        log.info(`Ark WS server listening on port ${p}`);
+        log.info(`Noche WS server listening on port ${p}`);
         this.emitEvent("success", `Bridge server started on port ${p}`);
         return p;
       } catch {
@@ -183,14 +183,14 @@ export class ArkWsServer extends EventEmitter {
     this.broadcast({
       type: "chat",
       text,
-      from: this.config.instanceName ?? "ark-terminal",
+      from: this.config.instanceName ?? "noche-terminal",
     });
   }
 
   /**
    * Send an event notification to all plugins.
    */
-  sendEvent(event: ArkEvent): void {
+  sendEvent(event: NocheEvent): void {
     this.broadcast({
       type: "event",
       level: event.type,
@@ -277,7 +277,7 @@ export class ArkWsServer extends EventEmitter {
       // Send identification
       ws.send(JSON.stringify({
         type: "identify",
-        name: this.config.instanceName ?? `Ark Terminal`,
+        name: this.config.instanceName ?? `Noche Terminal`,
         port: this.port,
       }));
 
@@ -431,8 +431,8 @@ export class ArkWsServer extends EventEmitter {
     return null;
   }
 
-  private emitEvent(type: ArkEvent["type"], message: string): void {
-    const event: ArkEvent = {
+  private emitEvent(type: NocheEvent["type"], message: string): void {
+    const event: NocheEvent = {
       type,
       source: "ws-server",
       message,

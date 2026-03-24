@@ -1,5 +1,5 @@
 import type { Command } from "commander";
-import type { ArkEngine } from "../engine/core.js";
+import type { NocheEngine } from "../engine/core.js";
 import type { ComponentSpec, PageSpec, DataVizSpec, DesignSpec } from "../specs/types.js";
 import { validateSpec } from "../specs/validator.js";
 
@@ -15,7 +15,7 @@ function validateName(name: string): void {
   }
 }
 
-export function registerSpecCommand(program: Command, engine: ArkEngine) {
+export function registerSpecCommand(program: Command, engine: NocheEngine) {
   const spec = program
     .command("spec")
     .description("Create or edit specs");

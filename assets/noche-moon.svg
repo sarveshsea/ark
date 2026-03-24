@@ -1,75 +1,139 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240">
   <style>
-    @keyframes spin {
-      0%   { transform: scaleX(1); }
-      25%  { transform: scaleX(0.3); }
-      50%  { transform: scaleX(-1); }
-      75%  { transform: scaleX(-0.3); }
-      100% { transform: scaleX(1); }
+    @keyframes orbit {
+      0%   { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
-    @keyframes shadow-shift {
-      0%   { cx: 115; }
-      25%  { cx: 100; }
-      50%  { cx: 85; }
-      75%  { cx: 100; }
-      100% { cx: 115; }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(-6px); }
     }
-    @keyframes glow-pulse {
-      0%, 100% { opacity: 0.15; r: 90; }
-      50%      { opacity: 0.25; r: 95; }
+    @keyframes twinkle1 {
+      0%, 100% { opacity: 0.8; }
+      50%      { opacity: 0.2; }
     }
-    .moon-body {
-      transform-origin: 100px 100px;
-      animation: spin 4s ease-in-out infinite;
+    @keyframes twinkle2 {
+      0%, 100% { opacity: 0.3; }
+      50%      { opacity: 0.9; }
     }
-    .shadow-ellipse {
-      animation: shadow-shift 4s ease-in-out infinite;
+    @keyframes twinkle3 {
+      0%, 100% { opacity: 0.5; }
+      50%      { opacity: 0.1; }
     }
-    .glow {
-      animation: glow-pulse 4s ease-in-out infinite;
+    .moon-group {
+      animation: float 6s ease-in-out infinite;
     }
+    .orbit-ring {
+      transform-origin: 120px 120px;
+      animation: orbit 20s linear infinite;
+    }
+    .star1 { animation: twinkle1 3s ease-in-out infinite; }
+    .star2 { animation: twinkle2 4s ease-in-out infinite; }
+    .star3 { animation: twinkle3 2.5s ease-in-out infinite; }
   </style>
 
-  <!-- Background glow -->
-  <circle class="glow" cx="100" cy="100" r="90" fill="#a78bfa" opacity="0.15"/>
-  <circle class="glow" cx="100" cy="100" r="75" fill="#c4b5fd" opacity="0.1" style="animation-delay: -1s"/>
+  <defs>
+    <!-- Moon surface gradient -->
+    <radialGradient id="moonGrad" cx="0.4" cy="0.35" r="0.65">
+      <stop offset="0%" stop-color="#f5f0e6"/>
+      <stop offset="40%" stop-color="#e8dfc8"/>
+      <stop offset="80%" stop-color="#d4c9a8"/>
+      <stop offset="100%" stop-color="#c2b48c"/>
+    </radialGradient>
 
-  <!-- Moon base -->
-  <circle cx="100" cy="100" r="60" fill="#e8e0d0"/>
+    <!-- Shadow gradient for 3D depth -->
+    <radialGradient id="shadowGrad" cx="0.7" cy="0.5" r="0.55">
+      <stop offset="0%" stop-color="#1a1a2e" stop-opacity="0"/>
+      <stop offset="60%" stop-color="#1a1a2e" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#0d0d1a" stop-opacity="0.7"/>
+    </radialGradient>
 
-  <!-- Moon surface details (craters) -->
-  <g class="moon-body">
-    <circle cx="80" cy="85" r="8" fill="#d4cbb8" opacity="0.7"/>
-    <circle cx="82" cy="87" r="6" fill="#c9bfa8" opacity="0.5"/>
-    <circle cx="115" cy="75" r="5" fill="#d4cbb8" opacity="0.6"/>
-    <circle cx="117" cy="76" r="3.5" fill="#c9bfa8" opacity="0.4"/>
-    <circle cx="95" cy="110" r="10" fill="#d4cbb8" opacity="0.6"/>
-    <circle cx="97" cy="112" r="7" fill="#c9bfa8" opacity="0.4"/>
-    <circle cx="110" cy="100" r="4" fill="#d4cbb8" opacity="0.5"/>
-    <circle cx="75" cy="105" r="3" fill="#d4cbb8" opacity="0.4"/>
-    <circle cx="105" cy="85" r="6" fill="#d4cbb8" opacity="0.5"/>
-    <circle cx="107" cy="86" r="4" fill="#c9bfa8" opacity="0.3"/>
-    <circle cx="88" cy="70" r="3" fill="#d4cbb8" opacity="0.4"/>
-    <circle cx="120" cy="110" r="5" fill="#d4cbb8" opacity="0.5"/>
+    <!-- Glow -->
+    <radialGradient id="glowGrad" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#e8dfc8" stop-opacity="0.12"/>
+      <stop offset="60%" stop-color="#c4b5fd" stop-opacity="0.04"/>
+      <stop offset="100%" stop-color="#1a1a2e" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Crater texture -->
+    <filter id="crater-blur">
+      <feGaussianBlur stdDeviation="0.8"/>
+    </filter>
+
+    <!-- Soft inner shadow for sphere illusion -->
+    <filter id="inner-shadow">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur"/>
+      <feOffset dx="3" dy="3"/>
+      <feComposite in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1"/>
+      <feFlood flood-color="#8b7355" flood-opacity="0.3"/>
+      <feComposite in2="SourceGraphic" operator="in"/>
+      <feMerge>
+        <feMergeNode in="SourceGraphic"/>
+        <feMergeNode/>
+      </feMerge>
+    </filter>
+
+    <clipPath id="moonClip">
+      <circle cx="120" cy="120" r="52"/>
+    </clipPath>
+  </defs>
+
+  <!-- Ambient glow -->
+  <circle cx="120" cy="120" r="100" fill="url(#glowGrad)"/>
+
+  <!-- Tiny orbiting dot -->
+  <g class="orbit-ring" opacity="0.3">
+    <circle cx="120" cy="42" r="1.5" fill="#c4b5fd"/>
   </g>
 
-  <!-- 3D shadow overlay (creates the phase/rotation illusion) -->
-  <clipPath id="moon-clip">
-    <circle cx="100" cy="100" r="60"/>
-  </clipPath>
-  <ellipse class="shadow-ellipse" cx="115" cy="100" rx="45" ry="61" fill="#1a1a2e" opacity="0.35" clip-path="url(#moon-clip)"/>
+  <!-- Stars -->
+  <circle class="star1" cx="45"  cy="55"  r="1" fill="#e8e0d0"/>
+  <circle class="star2" cx="195" cy="70"  r="0.8" fill="#c4b5fd"/>
+  <circle class="star3" cx="60"  cy="180" r="0.7" fill="#e8e0d0"/>
+  <circle class="star1" cx="185" cy="170" r="0.9" fill="#d4cbb8"/>
+  <circle class="star2" cx="35"  cy="120" r="0.6" fill="#c4b5fd"/>
+  <circle class="star3" cx="205" cy="130" r="0.7" fill="#e8e0d0"/>
+  <circle class="star1" cx="80"  cy="38"  r="0.5" fill="#d4cbb8"/>
+  <circle class="star2" cx="160" cy="195" r="0.6" fill="#c4b5fd"/>
 
-  <!-- Rim highlight -->
-  <circle cx="100" cy="100" r="60" fill="none" stroke="#f5f0e8" stroke-width="1" opacity="0.4"/>
+  <!-- Moon group with float animation -->
+  <g class="moon-group">
+    <!-- Moon base sphere -->
+    <circle cx="120" cy="120" r="52" fill="url(#moonGrad)" filter="url(#inner-shadow)"/>
 
-  <!-- Specular highlight -->
-  <ellipse cx="88" cy="82" rx="20" ry="25" fill="white" opacity="0.08" clip-path="url(#moon-clip)"/>
+    <!-- Craters (subtle, proper shading) -->
+    <g clip-path="url(#moonClip)" filter="url(#crater-blur)">
+      <!-- Large mare (dark flat area) -->
+      <ellipse cx="108" cy="108" rx="18" ry="16" fill="#c2b48c" opacity="0.4"/>
+      <ellipse cx="135" cy="125" rx="12" ry="10" fill="#c2b48c" opacity="0.3"/>
 
-  <!-- Pixel grid overlay for pixel-art effect -->
-  <defs>
-    <pattern id="pixel-grid" width="4" height="4" patternUnits="userSpaceOnUse">
-      <rect width="4" height="4" fill="none" stroke="#1a1a2e" stroke-width="0.15" opacity="0.12"/>
-    </pattern>
-  </defs>
-  <circle cx="100" cy="100" r="60" fill="url(#pixel-grid)"/>
+      <!-- Individual craters with rim highlights -->
+      <circle cx="95"  cy="100" r="6"   fill="#b8a87a" opacity="0.35"/>
+      <circle cx="94"  cy="99"  r="5.5" fill="#cfc0a0" opacity="0.2"/>
+
+      <circle cx="130" cy="105" r="4"   fill="#b8a87a" opacity="0.3"/>
+      <circle cx="129" cy="104" r="3.5" fill="#cfc0a0" opacity="0.15"/>
+
+      <circle cx="110" cy="135" r="7"   fill="#b8a87a" opacity="0.3"/>
+      <circle cx="109" cy="134" r="6"   fill="#cfc0a0" opacity="0.15"/>
+
+      <circle cx="140" cy="115" r="3"   fill="#b8a87a" opacity="0.25"/>
+      <circle cx="100" cy="80"  r="3.5" fill="#b8a87a" opacity="0.2"/>
+      <circle cx="125" cy="90"  r="2.5" fill="#b8a87a" opacity="0.2"/>
+      <circle cx="115" cy="145" r="4"   fill="#b8a87a" opacity="0.25"/>
+      <circle cx="85"  cy="120" r="2"   fill="#b8a87a" opacity="0.2"/>
+      <circle cx="145" cy="135" r="3"   fill="#b8a87a" opacity="0.15"/>
+    </g>
+
+    <!-- 3D shadow overlay (terminator line — gives sphere depth) -->
+    <circle cx="120" cy="120" r="52" fill="url(#shadowGrad)" clip-path="url(#moonClip)"/>
+
+    <!-- Specular highlight (top-left light source) -->
+    <ellipse cx="106" cy="104" rx="22" ry="26" fill="white" opacity="0.07" clip-path="url(#moonClip)"/>
+    <ellipse cx="102" cy="98"  rx="12" ry="14" fill="white" opacity="0.05" clip-path="url(#moonClip)"/>
+
+    <!-- Rim light (thin bright edge from light source) -->
+    <circle cx="120" cy="120" r="51" fill="none" stroke="#f5f0e6" stroke-width="0.8" opacity="0.25"/>
+    <path d="M 82 85 A 52 52 0 0 0 82 155" fill="none" stroke="#f5f0e6" stroke-width="1.2" opacity="0.15" stroke-linecap="round"/>
+  </g>
 </svg>

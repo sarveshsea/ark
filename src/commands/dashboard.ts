@@ -1,5 +1,5 @@
 import type { Command } from "commander";
-import type { ArkEngine } from "../engine/core.js";
+import type { NocheEngine } from "../engine/core.js";
 import type { AnySpec, IASpec, IANode } from "../specs/types.js";
 import type { DesignToken } from "../engine/registry.js";
 import type { ResearchInsight, ResearchTheme, ResearchStore } from "../research/engine.js";
@@ -35,7 +35,7 @@ interface DashboardData {
   figma: { running: boolean; port: number; clients: { id: string; file: string; editor: string; connectedAt: string }[] };
 }
 
-export function registerDashboardCommand(program: Command, engine: ArkEngine) {
+export function registerDashboardCommand(program: Command, engine: NocheEngine) {
   program
     .command("dashboard")
     .description("Launch the Noche dashboard — view design systems, specs, prototypes, and research on localhost")
@@ -51,7 +51,7 @@ export function registerDashboardCommand(program: Command, engine: ArkEngine) {
       await engine.init();
       await engine.research.load();
 
-      const dashDir = join(engine.config.projectRoot, ".ark", "dashboard");
+      const dashDir = join(engine.config.projectRoot, ".noche", "dashboard");
       await mkdir(dashDir, { recursive: true });
 
       console.log("\n  Building Noche Dashboard...\n");
@@ -802,7 +802,7 @@ tr:hover td { background: hsl(var(--muted) / 0.4); }
         <div><strong>1.</strong> Get Figma token: <code>Figma &rarr; Settings &rarr; Personal Access Tokens</code></div>
         <div><strong>2.</strong> Set env: <code>export FIGMA_TOKEN="figd_..."</code></div>
         <div><strong>3.</strong> Start server: <code>noche connect</code></div>
-        <div><strong>4.</strong> In Figma: <code>Plugins &rarr; Dev &rarr; Import manifest &rarr; ark/plugin/manifest.json</code></div>
+        <div><strong>4.</strong> In Figma: <code>Plugins &rarr; Dev &rarr; Import manifest &rarr; noche/plugin/manifest.json</code></div>
         <div><strong>5.</strong> Pull system: <code>noche pull</code></div>
         <div><strong>6.</strong> Refresh: <code>noche dashboard</code></div>
       </div>

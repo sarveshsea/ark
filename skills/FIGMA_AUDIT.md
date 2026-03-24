@@ -145,6 +145,6 @@ Recommendations:
 ```
 
 ## Integration
-- Save audit results to `.ark/audit.json` for tracking over time
+- Save audit results to `.noche/audit.json` for tracking over time
 - Compare against previous audits to show improvement
 - Block `noche sync` if critical issues exceed threshold

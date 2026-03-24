@@ -13,14 +13,14 @@ import { EventEmitter } from "events";
 import { readFile, writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 
-export interface ArkConfig {
+export interface NocheConfig {
   projectRoot: string;
   figmaToken?: string;
   figmaFileKey?: string;
   previewPort?: number;
 }
 
-export interface ArkEvent {
+export interface NocheEvent {
   type: "info" | "warn" | "error" | "success";
   source: string;
   message: string;
@@ -28,8 +28,8 @@ export interface ArkEvent {
   data?: unknown;
 }
 
-export class ArkEngine extends EventEmitter {
-  readonly config: ArkConfig;
+export class NocheEngine extends EventEmitter {
+  readonly config: NocheConfig;
   readonly log = createLogger("noche");
   readonly registry: Registry;
   readonly figma: FigmaBridge;
@@ -39,10 +39,10 @@ export class ArkEngine extends EventEmitter {
   private _project: ProjectContext | null = null;
   private _initialized = false;
 
-  constructor(config: ArkConfig) {
+  constructor(config: NocheConfig) {
     super();
     this.config = config;
-    this.registry = new Registry(join(config.projectRoot, ".ark"));
+    this.registry = new Registry(join(config.projectRoot, ".noche"));
     this.figma = new FigmaBridge({
       token: config.figmaToken,
       fileKey: config.figmaFileKey,
@@ -68,8 +68,8 @@ export class ArkEngine extends EventEmitter {
 
     this.log.info("Initializing Noche engine...");
 
-    // Ensure .ark directory exists
-    const arkDir = join(this.config.projectRoot, ".ark");
+    // Ensure .noche directory exists
+    const arkDir = join(this.config.projectRoot, ".noche");
     await mkdir(arkDir, { recursive: true });
 
     // Detect project context
@@ -86,7 +86,7 @@ export class ArkEngine extends EventEmitter {
       message: `Ark initialized — ${this._project.framework} project detected`,
       timestamp: new Date(),
       data: this._project,
-    } satisfies ArkEvent);
+    } satisfies NocheEvent);
   }
 
   async connectFigma(): Promise<number> {
@@ -96,7 +96,7 @@ export class ArkEngine extends EventEmitter {
       source: "figma",
       message: `Bridge server started on port ${port}`,
       timestamp: new Date(),
-    } satisfies ArkEvent);
+    } satisfies NocheEvent);
     return port;
   }
 
@@ -114,7 +114,7 @@ export class ArkEngine extends EventEmitter {
       message: `Pulled ${designSystem.tokens.length} tokens, ${designSystem.components.length} components`,
       timestamp: new Date(),
       data: designSystem,
-    } satisfies ArkEvent);
+    } satisfies NocheEvent);
   }
 
   async generateFromSpec(specName: string): Promise<string> {
@@ -134,7 +134,7 @@ export class ArkEngine extends EventEmitter {
       message: `Generated ${result.files.length} files from spec "${specName}"`,
       timestamp: new Date(),
       data: result,
-    } satisfies ArkEvent);
+    } satisfies NocheEvent);
 
     return result.entryFile;
   }
@@ -153,12 +153,12 @@ export class ArkEngine extends EventEmitter {
       source: "engine",
       message: `Full sync complete — ${specs.length} specs regenerated`,
       timestamp: new Date(),
-    } satisfies ArkEvent);
+    } satisfies NocheEvent);
   }
 
   private async saveProjectContext(): Promise<void> {
     if (!this._project) return;
-    const path = join(this.config.projectRoot, ".ark", "project.json");
+    const path = join(this.config.projectRoot, ".noche", "project.json");
     await writeFile(path, JSON.stringify(this._project, null, 2));
   }
 }

@@ -9,7 +9,7 @@
  */
 
 import type { Command } from "commander";
-import type { ArkEngine } from "../engine/core.js";
+import type { NocheEngine } from "../engine/core.js";
 import type { IASpec, IANode } from "../specs/types.js";
 import { validateSpec, validateCrossRefs } from "../specs/validator.js";
 
@@ -45,12 +45,12 @@ function countNodes(node: IANode): number {
   return 1 + node.children.reduce((sum, c) => sum + countNodes(c), 0);
 }
 
-export function registerIACommand(program: Command, engine: ArkEngine) {
+export function registerIACommand(program: Command, engine: NocheEngine) {
   const ia = program
     .command("ia")
     .description("Information architecture — extract, create, and visualize site structure");
 
-  // ── ark ia extract <name> ──────────────────────────────
+  // ── noche ia extract <name> ──────────────────────────────
   ia
     .command("extract <name>")
     .description("Extract IA from connected Figma file's page structure")
@@ -96,7 +96,7 @@ export function registerIACommand(program: Command, engine: ArkEngine) {
       console.log(`  Run \`noche ia show ${name}\` to visualize.\n`);
     });
 
-  // ── ark ia create <name> ───────────────────────────────
+  // ── noche ia create <name> ───────────────────────────────
   ia
     .command("create <name>")
     .description("Create an empty IA spec manually")
@@ -129,7 +129,7 @@ export function registerIACommand(program: Command, engine: ArkEngine) {
       console.log("  Edit the spec to add pages, sections, and navigation flows.\n");
     });
 
-  // ── ark ia show [name] ─────────────────────────────────
+  // ── noche ia show [name] ─────────────────────────────────
   ia
     .command("show [name]")
     .description("Print IA tree to terminal")
@@ -182,7 +182,7 @@ export function registerIACommand(program: Command, engine: ArkEngine) {
       console.log();
     });
 
-  // ── ark ia validate [name] ─────────────────────────────
+  // ── noche ia validate [name] ─────────────────────────────
   ia
     .command("validate [name]")
     .description("Validate IA spec cross-references against page specs")
@@ -231,7 +231,7 @@ export function registerIACommand(program: Command, engine: ArkEngine) {
       console.log(`\n  ${targets.length} IA spec(s) checked, ${totalWarnings} warning(s).\n`);
     });
 
-  // ── ark ia list ────────────────────────────────────────
+  // ── noche ia list ────────────────────────────────────────
   ia
     .command("list")
     .description("List all IA specs")

@@ -20,7 +20,7 @@
  */
 
 import { Command } from "commander";
-import { ArkEngine } from "./engine/core.js";
+import { NocheEngine } from "./engine/core.js";
 import { registerConnectCommand } from "./commands/connect.js";
 import { registerPullCommand } from "./commands/pull.js";
 import { registerResearchCommand } from "./commands/research.js";
@@ -43,7 +43,7 @@ program
   .version("0.1.0");
 
 // Create engine instance (shared across commands)
-const engine = new ArkEngine({
+const engine = new NocheEngine({
   projectRoot: process.cwd(),
   figmaToken: process.env.FIGMA_TOKEN,
   figmaFileKey: process.env.FIGMA_FILE_KEY,

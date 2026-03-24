@@ -5,7 +5,7 @@
 import { createServer } from "http";
 import { readFile } from "fs/promises";
 import { join, extname } from "path";
-import type { ArkEngine } from "../engine/core.js";
+import type { NocheEngine } from "../engine/core.js";
 
 const MIME_TYPES: Record<string, string> = {
   ".html": "text/html",
@@ -18,12 +18,12 @@ const MIME_TYPES: Record<string, string> = {
 };
 
 export class PreviewApiServer {
-  private engine: ArkEngine;
+  private engine: NocheEngine;
   private staticDir: string;
   private port: number;
   private server: ReturnType<typeof createServer> | null = null;
 
-  constructor(engine: ArkEngine, staticDir: string, port = 3030) {
+  constructor(engine: NocheEngine, staticDir: string, port = 3030) {
     this.engine = engine;
     this.staticDir = staticDir;
     this.port = port;

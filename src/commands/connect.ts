@@ -1,5 +1,5 @@
 import type { Command } from "commander";
-import type { ArkEngine } from "../engine/core.js";
+import type { NocheEngine } from "../engine/core.js";
 import type { BridgeClient } from "../figma/ws-server.js";
 import { DashboardServer } from "../dashboard/server.js";
 import { readFile, writeFile } from "fs/promises";
@@ -54,7 +54,7 @@ async function setEnvVar(root: string, key: string, value: string): Promise<void
   await writeFile(envPath, content);
 }
 
-export function registerConnectCommand(program: Command, engine: ArkEngine) {
+export function registerConnectCommand(program: Command, engine: NocheEngine) {
   program
     .command("connect")
     .description("Connect to Figma — guided setup if first time")

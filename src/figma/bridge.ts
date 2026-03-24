@@ -13,8 +13,8 @@
 
 import { EventEmitter } from "events";
 import { createLogger } from "../engine/logger.js";
-import { ArkWsServer } from "./ws-server.js";
-import type { ArkEvent } from "../engine/core.js";
+import { NocheWsServer } from "./ws-server.js";
+import type { NocheEvent } from "../engine/core.js";
 import type { DesignSystem, DesignToken, DesignComponent, DesignStyle } from "../engine/registry.js";
 import type { IANode, IASpec } from "../specs/types.js";
 
@@ -23,7 +23,7 @@ export interface FigmaBridgeConfig {
   fileKey?: string;
   port?: number;
   instanceName?: string;
-  onEvent?: (event: ArkEvent) => void;
+  onEvent?: (event: NocheEvent) => void;
   onChat?: (text: string, from: string) => void;
 }
 
@@ -94,13 +94,13 @@ interface RawSticky {
 export class FigmaBridge extends EventEmitter {
   private log = createLogger("figma-bridge");
   private config: FigmaBridgeConfig;
-  private server: ArkWsServer;
+  private server: NocheWsServer;
   private _connected = false;
 
   constructor(config: FigmaBridgeConfig) {
     super();
     this.config = config;
-    this.server = new ArkWsServer({
+    this.server = new NocheWsServer({
       port: config.port,
       instanceName: config.instanceName,
       onChat: config.onChat,
@@ -133,7 +133,7 @@ export class FigmaBridge extends EventEmitter {
     return this._connected;
   }
 
-  get wsServer(): ArkWsServer {
+  get wsServer(): NocheWsServer {
     return this.server;
   }
 
@@ -342,8 +342,8 @@ export class FigmaBridge extends EventEmitter {
     }));
   }
 
-  private emitEvent(type: ArkEvent["type"], message: string): void {
-    const event: ArkEvent = {
+  private emitEvent(type: NocheEvent["type"], message: string): void {
+    const event: NocheEvent = {
       type,
       source: "figma",
       message,

@@ -1,7 +1,7 @@
 import type { Command } from "commander";
-import type { ArkEngine } from "../engine/core.js";
+import type { NocheEngine } from "../engine/core.js";
 
-export function registerPullCommand(program: Command, engine: ArkEngine) {
+export function registerPullCommand(program: Command, engine: NocheEngine) {
   program
     .command("pull")
     .description("Pull design system from connected Figma file")
@@ -15,6 +15,6 @@ export function registerPullCommand(program: Command, engine: ArkEngine) {
 
       console.log("\n  Pulling design system...\n");
       await engine.pullDesignSystem();
-      console.log("\n  Done. Design system saved to .ark/design-system.json\n");
+      console.log("\n  Done. Design system saved to .noche/design-system.json\n");
     });
 }

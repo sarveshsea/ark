@@ -1,7 +1,7 @@
 import type { Command } from "commander";
-import type { ArkEngine } from "../engine/core.js";
+import type { NocheEngine } from "../engine/core.js";
 
-export function registerGenerateCommand(program: Command, engine: ArkEngine) {
+export function registerGenerateCommand(program: Command, engine: NocheEngine) {
   program
     .command("generate [specName]")
     .description("Generate code from a spec (or all specs if no name given)")

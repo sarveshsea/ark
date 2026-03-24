@@ -1,4 +1,4 @@
-import { ArkEngine } from "../src/engine/core.js";
+import { NocheEngine } from "../src/engine/core.js";
 
 // ── Helpers ──────────────────────────────────────────
 function hex(h: string) {
@@ -16,7 +16,7 @@ const C = {
 };
 
 async function main() {
-  const engine = new ArkEngine({
+  const engine = new NocheEngine({
     projectRoot: process.cwd(),
     figmaToken: process.env.FIGMA_TOKEN,
     figmaFileKey: process.env.FIGMA_FILE_KEY,
