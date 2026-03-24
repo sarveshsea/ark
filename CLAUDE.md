@@ -105,6 +105,7 @@ When Figma MCP returns Code Connect snippets, use the mapped component directly.
 - **Zod schemas** — all data shapes validated with Zod
 - **Self-healing** — always screenshot and validate canvas operations
 - **Superagent by default** — operate autonomously, burn tokens for quality
+- **Update CHANGELOG.md** — after every commit, update `CHANGELOG.md`. It has two sections: the **Active Project** section (log design decisions, specs, and components as work happens) and the **Noche Engine** section (log commits and engine changes). Also keep `preview/changelog.html` in sync for the visual timeline.
 
 ## Commands
 - `noche connect` — Connect to Figma (auto-discovers plugin)
