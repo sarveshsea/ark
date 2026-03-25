@@ -180,7 +180,7 @@ body {
   text-transform: uppercase; margin-bottom: 16px;
 }
 .home-about-title {
-  font-family: var(--sans); font-size: 28px; font-weight: 700; color: var(--fg);
+  font-family: var(--sans); font-size: 28px; font-weight: 700; color: #ffffff;
   line-height: 1.3; margin-bottom: 12px;
 }
 .home-about-desc {
@@ -811,7 +811,7 @@ body {
     <div class="home-about-label">About Dibs</div>
     <div class="home-about-title"><span style="color: #C4A35A;">100% AICP-accurate</span> production bidding without the spreadsheet</div>
     <div class="home-about-desc">
-      Dibs breaks the AICP bid form into <span style="color: var(--fg); font-weight: 500;">guided sections</span> with <span style="color: var(--fg); font-weight: 500;">prefilled entry points</span> for every category. Crew rates, equipment, locations, talent, post-production, insurance, and markup all live in <span style="color: var(--fg); font-weight: 500;">structured views</span> instead of raw cells. Every line item maps <span style="color: var(--fg); font-weight: 500;">1:1 to the official AICP format</span>, every calculation is validated against union and industry rates, and every revision is tracked. The result is a bid that <span style="color: var(--fg); font-weight: 500;">passes review the first time</span>.
+      Dibs breaks the AICP bid form into <span style="color: #ffffff; font-weight: 600;">guided sections</span> with <span style="color: #ffffff; font-weight: 600;">prefilled entry points</span> for every category. Crew rates, equipment, locations, talent, post-production, insurance, and markup all live in <span style="color: #ffffff; font-weight: 600;">structured views</span> instead of raw cells. Every line item maps <span style="color: #ffffff; font-weight: 600;">1:1 to the official AICP format</span>, every calculation is validated against union and industry rates, and every revision is tracked. The result is a bid that <span style="color: #ffffff; font-weight: 600;">passes review the first time</span>.
     </div>
   </div>
 
@@ -857,19 +857,7 @@ body {
           </div>
         </div>
       </div>
-      <div class="home-feature-card">
-                <div class="home-feature-thumb"><iframe src="dibs-lineitem.html#ai-open" tabindex="-1" scrolling="no"></iframe></div>
-<div class="home-feature-body">
-          <div class="home-feature-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
-          <div class="home-feature-name">AI Assistant</div>
-          <div class="home-feature-desc">Conversational budget intelligence. Ask for totals, biggest cost drivers, savings opportunities, market benchmarks, or bid validation &mdash; get answers with inline action buttons.</div>
-          <div class="home-feature-cites">
-            <a class="home-feature-cite" onclick="goToInsight('ri-14')">[9] AICP form hides a calculation graph — markups, fringes, and cross-category dependencies</a>
-            <a class="home-feature-cite" onclick="goToInsight('ri-15')">[10] Producers forced to mentally compute what software should handle</a>
-            <a class="home-feature-cite" onclick="goToInsight('ri-12')">[11] Estimation accuracy depends entirely on individual producer experience — no institutional knowledge</a>
-          </div>
-        </div>
-      </div>
+
       <div class="home-feature-card">
                 <div class="home-feature-thumb"><iframe src="dibs-lineitem.html" tabindex="-1" scrolling="no"></iframe></div>
 <div class="home-feature-body">
@@ -4415,7 +4403,7 @@ body {
 #section-changelog .commit { display: flex; align-items: flex-start; gap: 12px; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius, 2px); background: var(--bg-card); transition: border-color 0.15s; }
 #section-changelog .commit:hover { border-color: var(--accent-dim); }
 #section-changelog .commit-hash { font-size: 10px; color: var(--accent); font-weight: 700; min-width: 56px; flex-shrink: 0; padding-top: 1px; }
-#section-changelog .commit-msg { font-size: 11px; color: var(--fg); font-weight: 500; margin-bottom: 2px; }
+#section-changelog .commit-msg { font-size: 11px; color: #ffffff; font-weight: 600; margin-bottom: 2px; }
 #section-changelog .commit-meta { font-size: 9px; color: var(--fg-muted); }
 #section-changelog .decisions { margin-top: 16px; padding: 16px; border: 1px solid var(--border); border-radius: var(--radius, 2px); background: var(--bg-card); }
 #section-changelog .decisions-title { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
@@ -6364,13 +6352,14 @@ function goToInsight(id) {
   // Switch to Insights panel
   var insBtn = document.querySelector('.res-nav-btn[onclick*="insights"]');
   if (insBtn) showResPanel('insights', insBtn);
-  // Scroll to and highlight the insight
+  // Scroll to and highlight the insight — target inside #res-insights to avoid duplicate IDs
   setTimeout(function() {
-    var el = document.getElementById(id);
+    var panel = document.getElementById('res-insights');
+    var el = panel ? panel.querySelector('#' + id) : document.getElementById(id);
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       el.style.borderLeftColor = 'var(--accent-bright)';
-      el.style.background = 'rgba(157,131,62,0.15)';
+      el.style.background = 'rgba(255,255,255,0.08)';
       setTimeout(function() {
         el.style.borderLeftColor = '';
         el.style.background = '';
