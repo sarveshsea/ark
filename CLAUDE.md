@@ -73,6 +73,7 @@ AI-native design intelligence engine. Bridges Figma, user research, and code gen
 | Component Catalog | `skills/COMPONENT_CATALOG.md` | 56-component universal registry, spec scaffolding |
 | Dashboard from Research | `skills/DASHBOARD_FROM_RESEARCH.md` | Research data → dashboards |
 | /motion-video | `skills/MOTION_VIDEO_DESIGN.md` | Animation, motion, video production |
+| Design System Reference | `skills/DESIGN_SYSTEM_REFERENCE.md` | Cross-industry component gallery, 110+ systems indexed |
 
 ## Changelog Protocol
 After every Mémoire engine commit: add the hash and message to `CHANGELOG.md`, log architectural decisions, and keep `preview/changelog.html` in sync. This tracks Mémoire the product — user project state lives in `.memoire/` locally.

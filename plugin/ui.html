@@ -68,9 +68,19 @@
   .brand-icon.scanning { opacity: 0.5; animation: pulse 2s ease-in-out infinite; }
   .brand-icon.dead { opacity: 0.2; }
 
+  .brand-icon.just-connected {
+    animation: connect-flash 0.6s ease-out;
+  }
+
   @keyframes pulse {
     0%, 100% { opacity: 0.5; }
     50% { opacity: 0.2; }
+  }
+
+  @keyframes connect-flash {
+    0% { filter: brightness(1); transform: scale(1); }
+    30% { filter: brightness(1.5); transform: scale(1.3); }
+    100% { filter: brightness(1); transform: scale(1); }
   }
 
   .brand-name {
@@ -88,7 +98,8 @@
     letter-spacing: 0.5px;
     padding: 2px 6px;
     border-radius: 3px;
-    text-transform: uppercase;
+    text-transform: lowercase;
+    transition: all 0.2s;
   }
 
   .brand-status.live { color: var(--green); background: var(--green-soft); }
@@ -115,6 +126,7 @@
     height: 6px;
     border-radius: 50%;
     flex-shrink: 0;
+    transition: background 0.3s;
   }
   .conn-quality.healthy { background: var(--green); }
   .conn-quality.degraded { background: var(--warn); }
@@ -140,6 +152,7 @@
     font-family: var(--mono);
     font-size: 11px;
     flex-shrink: 0;
+    transition: all 0.15s;
   }
   .minimize-btn:hover { border-color: var(--fg-muted); color: var(--fg); }
 
@@ -175,11 +188,17 @@
     font-variant-numeric: tabular-nums;
     color: var(--fg);
     line-height: 1.2;
+    transition: color 0.2s;
+  }
+
+  .stat-value.changed {
+    color: var(--green);
   }
 
   .stat-sub {
     font-size: 8px;
     color: var(--fg-muted);
+    transition: color 0.2s;
   }
 
   /* ── Connection Card (offline/scanning) ─────────── */
@@ -222,6 +241,7 @@
     letter-spacing: 0.5px;
     cursor: pointer;
     border-radius: 3px;
+    transition: all 0.15s;
   }
   .retry-btn:hover { border-color: var(--fg); color: var(--fg); }
 
@@ -251,8 +271,25 @@
     border-radius: 3px;
     font-size: 9px;
     font-variant-numeric: tabular-nums;
-    color: var(--fg-muted);
+    color: var(--fg-dim);
     transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .port-cell.scanning {
+    border-color: var(--warn);
+    color: var(--warn);
+    animation: port-scan 0.8s ease-in-out infinite alternate;
+  }
+
+  @keyframes port-scan {
+    from { background: transparent; }
+    to { background: var(--warn-soft); }
+  }
+
+  .port-cell.tried {
+    opacity: 0.4;
   }
 
   .port-cell.active {
@@ -266,6 +303,16 @@
     border-color: var(--warn);
     color: var(--warn);
     background: var(--warn-soft);
+  }
+
+  .port-cell.just-connected {
+    animation: port-connect 0.5s ease-out;
+  }
+
+  @keyframes port-connect {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.1); }
+    100% { transform: scale(1); }
   }
 
   /* ── Tabs ───────────────────────────────────────── */
@@ -300,34 +347,95 @@
   .panel.active { display: flex; }
 
   /* ── Log Panel ──────────────────────────────────── */
-  .log-counter {
-    padding: 5px 12px;
-    font-size: 8px;
-    color: var(--fg-dim);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    border-bottom: 1px solid var(--border);
+  .log-toolbar {
     display: flex;
-    justify-content: space-between;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    border-bottom: 1px solid var(--border);
     flex-shrink: 0;
   }
+
+  .log-filter {
+    font-family: var(--mono);
+    font-size: 8px;
+    padding: 2px 6px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: none;
+    color: var(--fg-dim);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .log-filter.active { color: var(--fg); border-color: var(--fg-muted); background: var(--bg-hover); }
+  .log-filter.active[data-level="ok"] { color: var(--green); border-color: var(--green); background: var(--green-soft); }
+  .log-filter.active[data-level="warn"] { color: var(--warn); border-color: var(--warn); background: var(--warn-soft); }
+  .log-filter.active[data-level="err"] { color: var(--error); border-color: var(--error); background: var(--rose-soft); }
+
+  .log-spacer { flex: 1; }
+
+  .log-counter-text {
+    font-size: 8px;
+    color: var(--fg-dim);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .log-clear-btn {
+    font-family: var(--mono);
+    font-size: 8px;
+    padding: 2px 6px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: none;
+    color: var(--fg-dim);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .log-clear-btn:hover { color: var(--error); border-color: var(--error); }
 
   .log {
     flex: 1;
     overflow-y: auto;
-    padding: 4px 0;
+    padding: 2px 0;
   }
 
   .log-entry {
     display: flex;
     align-items: flex-start;
     gap: 6px;
-    padding: 3px 12px;
+    padding: 2px 12px;
     font-size: 10px;
-    transition: background 0.1s;
+    position: relative;
+    animation: log-enter 0.15s ease-out;
+  }
+
+  .log-entry.filtered { display: none; }
+
+  @keyframes log-enter {
+    from { opacity: 0; transform: translateY(-3px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   .log-entry:hover { background: var(--bg-hover); }
+
+  .log-entry:hover .log-copy {
+    opacity: 1;
+  }
+
+  .log-copy {
+    position: absolute;
+    right: 8px;
+    top: 2px;
+    opacity: 0;
+    font-size: 8px;
+    color: var(--fg-dim);
+    cursor: pointer;
+    padding: 1px 4px;
+    border-radius: 2px;
+    transition: opacity 0.1s;
+  }
+  .log-copy:hover { color: var(--fg); }
 
   .log-time {
     color: var(--fg-dim);
@@ -357,21 +465,20 @@
     margin-top: 1px;
     padding-left: 16px;
     word-break: break-all;
-    max-height: 60px;
+    max-height: 80px;
     overflow-y: auto;
+    cursor: pointer;
   }
 
-  .log-entry .log-badge {
-    display: inline-block;
-    font-size: 7px;
-    padding: 0 3px;
-    border: 1px solid var(--border);
-    border-radius: 2px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--fg-muted);
-    margin-left: 4px;
-    vertical-align: middle;
+  .log-detail.collapsed {
+    max-height: 14px;
+    overflow: hidden;
+    opacity: 0.6;
+  }
+
+  .log-detail.collapsed::after {
+    content: ' ...';
+    color: var(--fg-dim);
   }
 
   /* ── Actions Panel ──────────────────────────────── */
@@ -409,6 +516,7 @@
     background: none;
     transition: all 0.15s;
     white-space: nowrap;
+    position: relative;
   }
 
   .action-pill:hover {
@@ -418,7 +526,34 @@
   }
 
   .action-pill:active { transform: scale(0.97); }
-  .action-pill.disabled { opacity: 0.3; pointer-events: none; }
+
+  .action-pill.offline {
+    opacity: 0.3;
+    pointer-events: none;
+  }
+
+  .action-pill.loading {
+    color: var(--warn);
+    border-color: var(--warn);
+    pointer-events: none;
+  }
+
+  .action-pill.loading::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 1.5px;
+    background: var(--warn);
+    animation: pill-load 1.2s ease-in-out infinite;
+    border-radius: 0 0 12px 12px;
+  }
+
+  @keyframes pill-load {
+    0% { width: 0; left: 0; }
+    50% { width: 100%; left: 0; }
+    100% { width: 0; left: 100%; }
+  }
 
   /* ── Selection Panel ────────────────────────────── */
   .sel-panel {
@@ -435,6 +570,9 @@
     font-size: 13px;
     font-style: italic;
     line-height: 2;
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    margin: 10px 0;
   }
 
   .sel-node {
@@ -449,7 +587,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
   }
 
   .sel-name { font-weight: 500; font-size: 10px; }
@@ -463,6 +601,14 @@
     letter-spacing: 0.5px;
   }
 
+  .sel-section {
+    font-family: var(--serif);
+    font-size: 10px;
+    font-style: italic;
+    color: var(--fg-dim);
+    margin: 6px 0 2px;
+  }
+
   .sel-props {
     display: grid;
     grid-template-columns: auto 1fr;
@@ -472,6 +618,23 @@
   }
 
   .sel-props .k { color: var(--fg); font-weight: 500; }
+
+  .sel-fill-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 9px;
+    color: var(--fg-muted);
+    margin: 2px 0;
+  }
+
+  .sel-fill-swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+  }
 
   /* ── Scrollbar ──────────────────────────────────── */
   ::-webkit-scrollbar { width: 3px; }
@@ -488,7 +651,7 @@
   body.minimized { height: auto; }
   body.minimized .top-bar { border-bottom: none; }
 
-  /* ── Hidden helper for status-detail compatibility ── */
+  /* ── Hidden compat ──────────────────────────────── */
   .status-detail { display: none; }
 </style>
 </head>
@@ -523,12 +686,12 @@
   <div class="stat-card">
     <div class="stat-label">Port</div>
     <div class="stat-value" id="detailPort">--</div>
-    <div class="stat-sub">bridge</div>
+    <div class="stat-sub" id="connNameSub">bridge</div>
   </div>
   <div class="stat-card">
     <div class="stat-label">Events</div>
     <div class="stat-value" id="statEvents">0</div>
-    <div class="stat-sub">this session</div>
+    <div class="stat-sub" id="statEventsBreakdown">--</div>
   </div>
   <div class="stat-card">
     <div class="stat-label">Uptime</div>
@@ -569,9 +732,14 @@
 
 <!-- Activity Panel -->
 <div class="panel active" id="panel-activity">
-  <div class="log-counter" id="logCounter">
-    <span id="logStats">0 events</span>
-    <span id="logSessionLabel"></span>
+  <div class="log-toolbar">
+    <button class="log-filter active" data-level="ok" onclick="toggleFilter('ok')">+</button>
+    <button class="log-filter active" data-level="warn" onclick="toggleFilter('warn')">!</button>
+    <button class="log-filter active" data-level="err" onclick="toggleFilter('err')">x</button>
+    <button class="log-filter active" data-level="info" onclick="toggleFilter('info')">.</button>
+    <span class="log-spacer"></span>
+    <span class="log-counter-text" id="logStats">0</span>
+    <button class="log-clear-btn" onclick="clearLog()">clear</button>
   </div>
   <div class="log" id="logEl"></div>
 </div>
@@ -581,22 +749,22 @@
   <div class="actions" id="actionsEl">
     <div class="action-section">Design System</div>
     <div class="action-pills">
-      <button class="action-pill" onclick="act('pull-tokens')">Tokens</button>
-      <button class="action-pill" onclick="act('pull-components')">Components</button>
-      <button class="action-pill" onclick="act('pull-styles')">Styles</button>
+      <button class="action-pill offline" data-action="pull-tokens" onclick="act('pull-tokens',this)">Tokens</button>
+      <button class="action-pill offline" data-action="pull-components" onclick="act('pull-components',this)">Components</button>
+      <button class="action-pill offline" data-action="pull-styles" onclick="act('pull-styles',this)">Styles</button>
     </div>
     <div class="action-section">Research</div>
     <div class="action-pills">
-      <button class="action-pill" onclick="act('stickies')">Stickies</button>
+      <button class="action-pill offline" data-action="stickies" onclick="act('stickies',this)">Stickies</button>
     </div>
     <div class="action-section">Inspect</div>
     <div class="action-pills">
-      <button class="action-pill" onclick="act('selection-info')">Selection</button>
-      <button class="action-pill" onclick="act('page-tree')">Page Tree</button>
+      <button class="action-pill offline" data-action="selection-info" onclick="act('selection-info',this)">Selection</button>
+      <button class="action-pill offline" data-action="page-tree" onclick="act('page-tree',this)">Page Tree</button>
     </div>
     <div class="action-section">Sync</div>
     <div class="action-pills">
-      <button class="action-pill" onclick="act('full-sync')">Full Sync</button>
+      <button class="action-pill offline" data-action="full-sync" onclick="act('full-sync',this)">Full Sync</button>
     </div>
   </div>
 </div>
@@ -616,10 +784,10 @@
 
 <script>
 // ── State ───────────────────────────────────────────
-let ws = null;           // Mémoire CLI connection
-let fcWs = null;         // figma-console MCP connection
-let status = 'dead';     // dead | scanning | live
-let fcStatus = 'dead';   // dead | live
+let ws = null;
+let fcWs = null;
+let status = 'dead';
+let fcStatus = 'dead';
 let connPort = 0;
 let fcPort = 0;
 let connName = '';
@@ -634,37 +802,59 @@ const PORT_START = 9223;
 const PORT_END = 9232;
 let currentScanPort = PORT_START;
 
-// Track pending figma-console commands for response routing
-const fcPending = new Map(); // id → true
+// Port memory — remember last successful ports for instant reconnect
+let lastMemoirePort = 0;
+let lastFcPort = 0;
+try {
+  lastMemoirePort = parseInt(localStorage.getItem('memoire_last_port') || '0');
+  lastFcPort = parseInt(localStorage.getItem('memoire_last_fc_port') || '0');
+} catch {}
+
+// Port scan state for grid visualization
+const portStates = {};
+for (let p = PORT_START; p <= PORT_END; p++) portStates[p] = 'idle';
+
+// Pending figma-console commands
+const fcPending = new Map();
+
+// Active action pills for loading state
+const activeActions = new Set();
+
+// Log filter state
+const logFilters = { ok: true, warn: true, err: true, info: true };
 
 // ── Heartbeat / Keep-alive ──────────────────────────
 let memoireHeartbeat = null;
 let fcHeartbeat = null;
 let memoireMissedPongs = 0;
 let fcMissedPongs = 0;
-const HEARTBEAT_MS = 10000;   // ping every 10s
-const MAX_MISSED = 3;         // 3 missed = dead
-let reconnectDelay = 1000;    // backoff start
+const HEARTBEAT_MS = 10000;
+const MAX_MISSED = 3;
+let reconnectDelay = 1000;
 const MAX_RECONNECT_DELAY = 16000;
 
 // ── Latency Tracking ────────────────────────────────
 let memoirePingSentAt = 0;
-let memoireLatencyHistory = [];  // last 10 ping latencies
+let memoireLatencyHistory = [];
 let lastPingLatency = 0;
 const LATENCY_HISTORY_SIZE = 10;
-const HIGH_LATENCY_THRESHOLD = 500; // ms
+const HIGH_LATENCY_THRESHOLD = 500;
 let latencyWarned = false;
+
+// ── Throughput Tracking ─────────────────────────────
+let msgsSent = 0;
+let msgsRecv = 0;
+let lastMsgsSent = 0;
+let lastMsgsRecv = 0;
 
 function recordLatency(ms) {
   lastPingLatency = ms;
   memoireLatencyHistory.push(ms);
-  if (memoireLatencyHistory.length > LATENCY_HISTORY_SIZE) {
-    memoireLatencyHistory.shift();
-  }
+  if (memoireLatencyHistory.length > LATENCY_HISTORY_SIZE) memoireLatencyHistory.shift();
   const avg = memoireLatencyHistory.reduce((a, b) => a + b, 0) / memoireLatencyHistory.length;
   if (avg > HIGH_LATENCY_THRESHOLD && !latencyWarned) {
     latencyWarned = true;
-    log('warn', 'High avg latency: ' + avg.toFixed(0) + 'ms — connection may be degraded');
+    log('warn', 'High avg latency: ' + avg.toFixed(0) + 'ms');
     updateConnectionQuality('degraded');
   } else if (avg <= HIGH_LATENCY_THRESHOLD && latencyWarned) {
     latencyWarned = false;
@@ -673,12 +863,7 @@ function recordLatency(ms) {
   updateStatusBar();
 }
 
-function getAvgLatency() {
-  if (memoireLatencyHistory.length === 0) return 0;
-  return memoireLatencyHistory.reduce((a, b) => a + b, 0) / memoireLatencyHistory.length;
-}
-
-// ── Connection Quality Indicator ─────────────────────
+// ── Connection Quality ──────────────────────────────
 let connQualityState = 'disconnected';
 
 function updateConnectionQuality(state) {
@@ -686,39 +871,25 @@ function updateConnectionQuality(state) {
   const dot = document.getElementById('connQuality');
   if (dot) {
     dot.className = 'conn-quality ' + state;
-    const titles = {
-      healthy: 'Connected — healthy',
-      degraded: 'Connected — high latency',
-      reconnecting: 'Reconnecting...',
-      disconnected: 'Disconnected'
-    };
-    dot.title = titles[state] || state;
+    dot.title = { healthy: 'Healthy', degraded: 'High latency', reconnecting: 'Reconnecting...', disconnected: 'Disconnected' }[state] || state;
   }
 }
 
 function updateStatusBar() {
   const portEl = document.getElementById('detailPort');
-  const clientsEl = document.getElementById('detailClients');
   const latencyEl = document.getElementById('detailLatency');
-  const queueEl = document.getElementById('detailQueue');
   const pingQEl = document.getElementById('pingQuality');
+  const connNameEl = document.getElementById('connNameSub');
+  const evtBreakdownEl = document.getElementById('statEventsBreakdown');
 
   if (portEl) portEl.textContent = connPort > 0 ? ':' + connPort : '--';
-
-  if (clientsEl) {
-    let clients = 0;
-    if (status === 'live') clients++;
-    if (fcStatus === 'live') clients++;
-    clientsEl.textContent = String(clients);
-  }
+  if (connNameEl) connNameEl.textContent = connName || (status === 'live' ? 'bridge' : '--');
 
   if (latencyEl) {
     if (lastPingLatency > 0) {
       latencyEl.textContent = lastPingLatency + 'ms';
-      latencyEl.style.color = lastPingLatency > HIGH_LATENCY_THRESHOLD ? 'var(--warn)' : '';
     } else {
       latencyEl.textContent = '--';
-      latencyEl.style.color = '';
     }
   }
 
@@ -730,38 +901,71 @@ function updateStatusBar() {
     }
   }
 
-  if (queueEl) {
-    queueEl.textContent = String(commandQueue.length);
+  if (evtBreakdownEl) {
+    evtBreakdownEl.textContent = logCount.ok + '+ ' + logCount.warn + '! ' + logCount.err + 'x';
   }
 
-  // Update port grid
-  updatePortGrid();
-
-  // Update stat events
   const evtEl = document.getElementById('statEvents');
-  if (evtEl) evtEl.textContent = String(logCount.total);
+  if (evtEl) {
+    const prev = evtEl.textContent;
+    evtEl.textContent = String(logCount.total);
+    if (prev !== String(logCount.total)) flashChanged(evtEl);
+  }
+
+  updatePortGrid();
+}
+
+function flashChanged(el) {
+  el.classList.add('changed');
+  setTimeout(() => el.classList.remove('changed'), 400);
 }
 
 function updatePortGrid() {
   for (let p = PORT_START; p <= PORT_END; p++) {
     const cell = document.getElementById('port-' + p);
     if (!cell) continue;
-    cell.className = 'port-cell';
-    if (p === connPort) cell.classList.add('active');
-    else if (p === fcPort) cell.classList.add('fc-active');
+    let cls = 'port-cell';
+    if (p === connPort) cls += ' active';
+    else if (p === fcPort) cls += ' fc-active';
+    else if (portStates[p] === 'scanning') cls += ' scanning';
+    else if (portStates[p] === 'tried') cls += ' tried';
+    cell.className = cls;
   }
 }
 
-// ── Command Queue (offline buffering) ───────────────
+// ── Action pill state ───────────────────────────────
+function updateActionPills() {
+  document.querySelectorAll('.action-pill').forEach(pill => {
+    const action = pill.dataset.action;
+    if (status !== 'live') {
+      pill.classList.add('offline');
+      pill.classList.remove('loading');
+    } else {
+      pill.classList.remove('offline');
+      if (activeActions.has(action)) pill.classList.add('loading');
+      else pill.classList.remove('loading');
+    }
+  });
+}
+
+function completeAction(actionId) {
+  const action = actionId.replace('action:', '').replace('sync:', '');
+  activeActions.delete(action);
+  // Also clear full-sync sub-actions
+  if (action === 'tokens' || action === 'components' || action === 'styles') {
+    activeActions.delete('full-sync');
+  }
+  updateActionPills();
+}
+
+// ── Command Queue ───────────────────────────────────
 const commandQueue = [];
 const MAX_QUEUED_COMMANDS = 50;
 
 function queueCommand(msg) {
-  if (commandQueue.length >= MAX_QUEUED_COMMANDS) {
-    commandQueue.shift();
-  }
+  if (commandQueue.length >= MAX_QUEUED_COMMANDS) commandQueue.shift();
   commandQueue.push(msg);
-  log('info', 'Queued command (' + commandQueue.length + '/' + MAX_QUEUED_COMMANDS + '): ' + (msg.method || msg.type || 'unknown'));
+  log('info', 'Queued (' + commandQueue.length + '): ' + (msg.method || msg.type || '?'));
 }
 
 function replayCommandQueue() {
@@ -769,10 +973,9 @@ function replayCommandQueue() {
   const count = commandQueue.length;
   log('info', 'Replaying ' + count + ' queued command' + (count !== 1 ? 's' : '') + '...');
   while (commandQueue.length > 0) {
-    const msg = commandQueue.shift();
-    parent.postMessage({ pluginMessage: msg }, '*');
+    parent.postMessage({ pluginMessage: commandQueue.shift() }, '*');
   }
-  log('ok', 'Replayed ' + count + ' queued command' + (count !== 1 ? 's' : ''));
+  log('ok', 'Replayed ' + count);
 }
 
 function startMemoireHeartbeat() {
@@ -784,13 +987,13 @@ function startMemoireHeartbeat() {
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
     memoireMissedPongs++;
     if (memoireMissedPongs >= MAX_MISSED) {
-      log('warn', 'Heartbeat timeout (' + MAX_MISSED + ' missed) — reconnecting');
+      log('warn', 'Heartbeat timeout — reconnecting');
       updateConnectionQuality('disconnected');
       ws.close();
       return;
     }
     memoirePingSentAt = Date.now();
-    try { ws.send(JSON.stringify({ type: 'ping' })); } catch {}
+    try { ws.send(JSON.stringify({ type: 'ping' })); msgsSent++; } catch {}
   }, HEARTBEAT_MS);
 }
 
@@ -801,81 +1004,132 @@ function startFcHeartbeat() {
     if (!fcWs || fcWs.readyState !== WebSocket.OPEN) return;
     fcMissedPongs++;
     if (fcMissedPongs >= MAX_MISSED) {
-      log('warn', 'Figma Console heartbeat timeout (' + MAX_MISSED + ' missed) — reconnecting');
+      log('warn', 'FC heartbeat timeout — reconnecting');
       fcWs.close();
       return;
     }
-    try { fcWs.send(JSON.stringify({ type: 'ping' })); } catch {}
+    try { fcWs.send(JSON.stringify({ type: 'ping' })); msgsSent++; } catch {}
   }, HEARTBEAT_MS);
 }
 
-// ── Connection (multi-protocol scanning) ────────────
+// ── Smart Scanning ──────────────────────────────────
+// Phase 1: Try remembered ports first (fast).
+// Phase 2: Parallel batch scan remaining ports.
+
 function scan() {
   if (status === 'live' && fcStatus === 'live') return;
   if (scanTimer) { clearTimeout(scanTimer); scanTimer = null; }
+
+  // Reset port states
+  for (let p = PORT_START; p <= PORT_END; p++) {
+    if (p !== connPort && p !== fcPort) portStates[p] = 'idle';
+  }
+  updatePortGrid();
+
   if (status !== 'live') setStatus('scanning');
-  currentScanPort = PORT_START;
-  tryNext();
-}
 
-function scheduleReconnect() {
-  if (scanTimer) return;
-  log('info', 'Reconnecting in ' + (reconnectDelay / 1000).toFixed(1) + 's...');
-  updateConnectionQuality('reconnecting');
-  scanTimer = setTimeout(() => {
-    scanTimer = null;
-    scan();
-  }, reconnectDelay);
-  reconnectDelay = Math.min(reconnectDelay * 2, MAX_RECONNECT_DELAY);
-}
+  // Phase 1: Try remembered ports first
+  const priorityPorts = [];
+  if (lastMemoirePort >= PORT_START && lastMemoirePort <= PORT_END && lastMemoirePort !== connPort) {
+    priorityPorts.push(lastMemoirePort);
+  }
+  if (lastFcPort >= PORT_START && lastFcPort <= PORT_END && lastFcPort !== fcPort && lastFcPort !== lastMemoirePort) {
+    priorityPorts.push(lastFcPort);
+  }
 
-function resetBackoff() {
-  reconnectDelay = 1000;
-}
-
-function tryNext() {
-  if (currentScanPort > PORT_END) {
-    if (status !== 'live') {
-      setStatus('dead');
+  if (priorityPorts.length > 0) {
+    let resolved = 0;
+    const total = priorityPorts.length;
+    for (const port of priorityPorts) {
+      tryPort(port, () => {
+        resolved++;
+        if (resolved >= total) {
+          // Phase 2: scan remaining if still needed
+          if (status !== 'live' || fcStatus !== 'live') {
+            scanRemaining(priorityPorts);
+          }
+        }
+      });
     }
+    // Fallback: if priority ports don't respond in 1.5s, start full scan
+    setTimeout(() => {
+      if (status !== 'live') scanRemaining(priorityPorts);
+    }, 1500);
+  } else {
+    scanRemaining([]);
+  }
+}
+
+function scanRemaining(skip) {
+  const ports = [];
+  for (let p = PORT_START; p <= PORT_END; p++) {
+    if (!skip.includes(p) && p !== connPort && p !== fcPort && portStates[p] !== 'tried') {
+      ports.push(p);
+    }
+  }
+  // Scan in batches of 3
+  scanBatch(ports, 0);
+}
+
+function scanBatch(ports, idx) {
+  if (idx >= ports.length) {
+    if (status !== 'live') setStatus('dead');
     renderConn();
     scheduleReconnect();
     return;
   }
 
-  const port = currentScanPort++;
-
-  if (port === connPort || port === fcPort) {
-    tryNext();
-    return;
+  const batch = ports.slice(idx, idx + 3);
+  let done = 0;
+  for (const port of batch) {
+    tryPort(port, () => {
+      done++;
+      if (done >= batch.length) {
+        if (status === 'live' && fcStatus === 'live') return; // both connected
+        scanBatch(ports, idx + 3);
+      }
+    });
   }
+  // Safety timeout for batch
+  setTimeout(() => {
+    if (done < batch.length) {
+      done = batch.length; // force advance
+      if (status !== 'live' || fcStatus !== 'live') scanBatch(ports, idx + 3);
+    }
+  }, 2500);
+}
+
+function tryPort(port, onDone) {
+  portStates[port] = 'scanning';
+  updatePortGrid();
 
   try {
     const sock = new WebSocket('ws://localhost:' + port);
     let identified = false;
-    let identifyTimeout = null;
-    let connectTimeout = null;
+    let timeout = null;
 
-    connectTimeout = setTimeout(() => {
+    timeout = setTimeout(() => {
       if (!identified) {
         identified = true;
+        portStates[port] = 'tried';
+        updatePortGrid();
         try { sock.close(); } catch {}
-        tryNext();
+        onDone();
       }
     }, 2000);
 
-    function cleanup() {
-      if (identifyTimeout) { clearTimeout(identifyTimeout); identifyTimeout = null; }
-      if (connectTimeout) { clearTimeout(connectTimeout); connectTimeout = null; }
-    }
+    function cleanup() { if (timeout) { clearTimeout(timeout); timeout = null; } }
 
     sock.onopen = () => {
-      identifyTimeout = setTimeout(() => {
+      // Wait for protocol identification
+      setTimeout(() => {
         if (!identified) {
           identified = true;
           cleanup();
+          portStates[port] = 'tried';
+          updatePortGrid();
           try { sock.close(); } catch {}
-          tryNext();
+          onDone();
         }
       }, 800);
     };
@@ -883,6 +1137,7 @@ function tryNext() {
     sock.onmessage = (e) => {
       let data;
       try { data = JSON.parse(e.data); } catch { return; }
+      msgsRecv++;
 
       if (sock === ws) {
         memoireMissedPongs = 0;
@@ -902,17 +1157,16 @@ function tryNext() {
           adoptAsMemoire(sock, port);
           handleMsg(data);
         } else {
+          portStates[port] = 'tried';
+          updatePortGrid();
           try { sock.close(); } catch {}
-          tryNext();
         }
+        onDone();
         return;
       }
 
-      if (sock === ws) {
-        handleMsg(data);
-      } else if (sock === fcWs) {
-        handleFcMsg(data);
-      }
+      if (sock === ws) handleMsg(data);
+      else if (sock === fcWs) handleFcMsg(data);
     };
 
     sock.onclose = () => {
@@ -923,7 +1177,7 @@ function tryNext() {
         clearInterval(memoireHeartbeat);
         setStatus('dead');
         renderConn();
-        log('warn', 'Disconnected from Memoire');
+        log('warn', 'Disconnected');
         scheduleReconnect();
       } else if (sock === fcWs) {
         fcWs = null;
@@ -931,11 +1185,13 @@ function tryNext() {
         clearInterval(fcHeartbeat);
         fcStatus = 'dead';
         renderConn();
-        log('warn', 'Figma Console MCP disconnected');
+        log('warn', 'FC disconnected');
         scheduleReconnect();
       } else if (!identified) {
         identified = true;
-        tryNext();
+        portStates[port] = 'tried';
+        updatePortGrid();
+        onDone();
       }
     };
 
@@ -943,35 +1199,61 @@ function tryNext() {
       cleanup();
       if (!identified) {
         identified = true;
+        portStates[port] = 'tried';
+        updatePortGrid();
         try { sock.close(); } catch {}
-        tryNext();
+        onDone();
       }
     };
   } catch {
-    tryNext();
+    portStates[port] = 'tried';
+    updatePortGrid();
+    onDone();
   }
 }
 
+function scheduleReconnect() {
+  if (scanTimer) return;
+  const jitter = Math.random() * 500;
+  const delay = reconnectDelay + jitter;
+  log('info', 'Reconnecting in ' + (delay / 1000).toFixed(1) + 's...');
+  updateConnectionQuality('reconnecting');
+  scanTimer = setTimeout(() => {
+    scanTimer = null;
+    scan();
+  }, delay);
+  reconnectDelay = Math.min(reconnectDelay * 2, MAX_RECONNECT_DELAY);
+}
+
+function resetBackoff() { reconnectDelay = 1000; }
+
 function adoptAsMemoire(sock, port) {
-  if (status === 'live') {
-    sock.close();
-    tryNext();
-    return;
-  }
+  if (status === 'live') { sock.close(); return; }
 
   ws = sock;
   connPort = port;
   connectedAt = new Date();
+  portStates[port] = 'active';
   setStatus('live');
   resetBackoff();
   startMemoireHeartbeat();
   updateConnectionQuality('healthy');
   renderConn();
-  log('ok', 'Connected to Memoire on port ' + port);
+  updateActionPills();
+  log('ok', 'Connected on :' + port);
 
-  if (commandQueue.length > 0) {
-    setTimeout(() => replayCommandQueue(), 200);
-  }
+  // Remember for fast reconnect
+  try { localStorage.setItem('memoire_last_port', String(port)); lastMemoirePort = port; } catch {}
+
+  // Flash port cell
+  const cell = document.getElementById('port-' + port);
+  if (cell) { cell.classList.add('just-connected'); setTimeout(() => cell.classList.remove('just-connected'), 500); }
+
+  // Flash brand icon
+  const icon = document.getElementById('statusDot');
+  if (icon) { icon.classList.add('just-connected'); setTimeout(() => icon.classList.remove('just-connected'), 600); }
+
+  if (commandQueue.length > 0) setTimeout(() => replayCommandQueue(), 200);
 
   sock.send(JSON.stringify({
     type: 'bridge-hello',
@@ -980,24 +1262,23 @@ function adoptAsMemoire(sock, port) {
     fileKey: fileInfo.fileKey || '',
     editor: fileInfo.editor || 'figma',
   }));
-
-  if (fcStatus !== 'live') tryNext();
+  msgsSent++;
 }
 
 function adoptAsFigmaConsole(sock, port, hello) {
-  if (fcStatus === 'live') {
-    sock.close();
-    tryNext();
-    return;
-  }
+  if (fcStatus === 'live') { sock.close(); return; }
 
   fcWs = sock;
   fcPort = port;
   fcStatus = 'live';
+  portStates[port] = 'fc-active';
   resetBackoff();
   startFcHeartbeat();
   renderConn();
-  log('ok', 'Figma Console MCP on port ' + port);
+  updatePortGrid();
+  log('ok', 'FC MCP on :' + port);
+
+  try { localStorage.setItem('memoire_last_fc_port', String(port)); lastFcPort = port; } catch {}
 
   sock.send(JSON.stringify({
     type: 'FILE_INFO',
@@ -1010,8 +1291,7 @@ function adoptAsFigmaConsole(sock, port, hello) {
       pluginVersion: '1.0.0',
     }
   }));
-
-  if (status !== 'live') tryNext();
+  msgsSent++;
 }
 
 function disconnect() {
@@ -1020,16 +1300,14 @@ function disconnect() {
   clearTimeout(scanTimer);
   scanTimer = null;
   if (ws) ws.close();
-  ws = null;
-  connPort = 0;
+  ws = null; connPort = 0;
   setStatus('dead');
   if (fcWs) fcWs.close();
-  fcWs = null;
-  fcPort = 0;
-  fcStatus = 'dead';
+  fcWs = null; fcPort = 0; fcStatus = 'dead';
   lastPingLatency = 0;
   memoireLatencyHistory = [];
   updateConnectionQuality('disconnected');
+  updateActionPills();
   renderConn();
 }
 
@@ -1040,29 +1318,18 @@ window.__figmaPendingRequests = new Map();
 
 function handleFcMsg(msg) {
   if (msg.id && msg.method) {
-    const fcId = msg.id;
-    const method = msg.method;
-    const params = msg.params || {};
-
-    fcPending.set(fcId, true);
-
-    const pluginMsg = Object.assign({ type: method, requestId: fcId }, params);
-    parent.postMessage({ pluginMessage: pluginMsg }, '*');
-
-    log('info', 'FC ' + method, Object.keys(params).length ? params : null);
+    fcPending.set(msg.id, true);
+    parent.postMessage({ pluginMessage: Object.assign({ type: msg.method, requestId: msg.id }, msg.params || {}) }, '*');
+    log('info', 'FC ' + msg.method);
     return;
   }
-
-  if (msg.type === 'SERVER_HELLO') return;
-
-  if (msg.type === 'RESIZE_UI' || msg.type === 'BOOT_LOAD_UI' || msg.type === 'RELOAD_UI' || msg.type === 'BOOT_FALLBACK') {
-    return;
-  }
+  if (msg.type === 'SERVER_HELLO' || msg.type === 'RESIZE_UI' || msg.type === 'BOOT_LOAD_UI' || msg.type === 'RELOAD_UI' || msg.type === 'BOOT_FALLBACK') return;
 }
 
 function fcBroadcast(data) {
   if (fcWs && fcWs.readyState === WebSocket.OPEN) {
     fcWs.send(JSON.stringify(data));
+    msgsSent++;
   }
 }
 
@@ -1085,102 +1352,74 @@ function setStatus(s) {
     txt.textContent = 'offline';
     updateConnectionQuality('disconnected');
   }
+  updateActionPills();
   updateStatusBar();
 }
 
-// ── Connection Card Rendering ───────────────────────
-
+// ── Connection Card ─────────────────────────────────
 function renderConn() {
   const el = document.getElementById('connCard');
-  let html = '';
-
   if (status === 'live') {
-    // Hide conn card when connected — stats row handles it
     el.className = 'conn-card';
     el.innerHTML = '';
   } else if (status === 'scanning') {
     el.className = 'conn-card visible';
-    el.innerHTML = '<div class="help-text">Scanning ports ' + PORT_START + '–' + PORT_END + '...</div>';
+    el.innerHTML = '<div class="help-text">Scanning for Memoire...</div>';
   } else {
     el.className = 'conn-card visible';
-    el.innerHTML =
-      '<div class="help-text">No instance found.<br>Run <code>memi connect</code> in terminal.</div>' +
-      '<button class="retry-btn" onclick="scan()">Retry</button>';
+    el.innerHTML = '<div class="help-text">Run <code>memi connect</code> in terminal</div><button class="retry-btn" onclick="scan()">Retry</button>';
   }
-
   updateStatusBar();
 }
 
 // ── Message Handling ────────────────────────────────
-
 function handleMsg(msg) {
   if (msg.type === 'command' && msg.id && msg.method) {
-    parent.postMessage({
-      pluginMessage: {
-        type: 'command',
-        id: msg.id,
-        method: msg.method,
-        params: msg.params || {},
-      }
-    }, '*');
-    log('info', 'CMD ' + msg.method, msg.params && Object.keys(msg.params).length ? msg.params : null);
+    parent.postMessage({ pluginMessage: { type: 'command', id: msg.id, method: msg.method, params: msg.params || {} } }, '*');
+    log('info', 'CMD ' + msg.method);
     return;
   }
-
   if (msg.type === 'identify') {
     connName = msg.name || connName;
     renderConn();
     log('ok', 'Identified: ' + (msg.name || 'Memoire'));
     return;
   }
-
-  if (msg.type === 'chat') {
-    log('info', '[' + (msg.from || 'memoire') + '] ' + msg.text);
-    return;
-  }
-
+  if (msg.type === 'chat') { log('info', '[' + (msg.from || 'memoire') + '] ' + msg.text); return; }
   if (msg.type === 'event') {
     const level = msg.level === 'success' ? 'ok' : msg.level === 'error' ? 'err' : msg.level || 'info';
     log(level, msg.message, msg.data || null);
     return;
   }
-
-  if (msg.type === 'error') {
-    log('err', msg.message, msg.details || null);
-    return;
-  }
-
+  if (msg.type === 'error') { log('err', msg.message, msg.details || null); return; }
   log('info', 'MSG:' + msg.type, msg.data || null);
 }
 
 function send(data) {
   if (ws && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify(data));
+    msgsSent++;
     return true;
   }
-  if (data && data.type === 'command' || (data && data.method)) {
-    queueCommand(data);
-  }
+  if (data && (data.type === 'command' || data.method)) queueCommand(data);
   return false;
 }
 
 // ── Actions ─────────────────────────────────────────
+function act(action, pill) {
+  if (status !== 'live') { log('warn', 'Not connected'); return; }
 
-function act(action) {
-  if (status !== 'live') {
-    log('warn', 'Not connected — run memi connect first');
-    return;
-  }
-
+  activeActions.add(action);
+  updateActionPills();
   log('info', 'Running: ' + action);
 
   const cmds = {
-    'pull-tokens':      { method: 'getVariables', params: {} },
-    'pull-components':  { method: 'getComponents', params: {} },
-    'pull-styles':      { method: 'getStyles', params: {} },
-    'stickies':         { method: 'getStickies', params: {} },
-    'selection-info':   { method: 'getSelection', params: {} },
-    'page-tree':        { method: 'getPageTree', params: { depth: 2 } },
+    'pull-tokens': { method: 'getVariables', params: {} },
+    'pull-components': { method: 'getComponents', params: {} },
+    'pull-styles': { method: 'getStyles', params: {} },
+    'stickies': { method: 'getStickies', params: {} },
+    'selection-info': { method: 'getSelection', params: {} },
+    'page-tree': { method: 'getPageTree', params: { depth: 2 } },
   };
 
   if (action === 'full-sync') {
@@ -1197,16 +1436,12 @@ function act(action) {
   }
 
   const cmd = cmds[action];
-  if (cmd) {
-    parent.postMessage({ pluginMessage: { type: 'command', id: 'action:' + action, method: cmd.method, params: cmd.params } }, '*');
-  }
+  if (cmd) parent.postMessage({ pluginMessage: { type: 'command', id: 'action:' + action, method: cmd.method, params: cmd.params } }, '*');
 }
 
 // ── Selection Rendering ─────────────────────────────
-
 function renderSel(nodes) {
   const panel = document.getElementById('selPanel');
-
   if (!nodes || nodes.length === 0) {
     panel.innerHTML = '<div class="sel-empty">Select something in Figma<br>to inspect it here</div>';
     return;
@@ -1217,60 +1452,81 @@ function renderSel(nodes) {
     const el = document.createElement('div');
     el.className = 'sel-node';
 
-    const props = [
-      ['id', n.id],
-      ['x', n.x != null ? n.x.toFixed(0) : null],
-      ['y', n.y != null ? n.y.toFixed(0) : null],
-      ['w', n.width != null ? n.width.toFixed(0) : null],
-      ['h', n.height != null ? n.height.toFixed(0) : null],
-    ];
-    if (n.characters) props.push(['text', n.characters.slice(0, 50)]);
-    if (n.opacity != null && n.opacity < 1) props.push(['opacity', n.opacity.toFixed(2)]);
-    if (n.childCount) props.push(['children', n.childCount]);
+    let html = '<div class="sel-header"><span class="sel-name">' + esc(n.name) + '</span><span class="sel-type">' + n.type + '</span></div>';
 
-    let propsHtml = '';
-    for (const [k, v] of props) {
-      if (v != null) propsHtml += '<span class="k">' + k + '</span><span>' + esc(String(v)) + '</span>';
+    // Position & Size
+    html += '<div class="sel-section">Position & Size</div><div class="sel-props">';
+    if (n.x != null) html += '<span class="k">x</span><span>' + n.x.toFixed(0) + '</span>';
+    if (n.y != null) html += '<span class="k">y</span><span>' + n.y.toFixed(0) + '</span>';
+    if (n.width != null) html += '<span class="k">w</span><span>' + n.width.toFixed(0) + '</span>';
+    if (n.height != null) html += '<span class="k">h</span><span>' + n.height.toFixed(0) + '</span>';
+    if (n.rotation) html += '<span class="k">rotation</span><span>' + n.rotation.toFixed(1) + '</span>';
+    html += '</div>';
+
+    // Appearance
+    if (n.fills || n.opacity != null || n.cornerRadius != null) {
+      html += '<div class="sel-section">Appearance</div>';
+      if (n.opacity != null && n.opacity < 1) {
+        html += '<div class="sel-props"><span class="k">opacity</span><span>' + (n.opacity * 100).toFixed(0) + '%</span></div>';
+      }
+      if (n.cornerRadius != null) {
+        html += '<div class="sel-props"><span class="k">radius</span><span>' + n.cornerRadius + '</span></div>';
+      }
+      if (n.fills && n.fills.length > 0) {
+        for (const f of n.fills) {
+          if (f.color) {
+            const r = Math.round(f.color.r * 255);
+            const g = Math.round(f.color.g * 255);
+            const b = Math.round(f.color.b * 255);
+            const hex = '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
+            html += '<div class="sel-fill-row"><span class="sel-fill-swatch" style="background:' + hex + '"></span>' + hex + ' <span style="color:var(--fg-dim)">' + f.type + '</span></div>';
+          }
+        }
+      }
     }
 
-    el.innerHTML =
-      '<div class="sel-header">' +
-        '<span class="sel-name">' + esc(n.name) + '</span>' +
-        '<span class="sel-type">' + n.type + '</span>' +
-      '</div>' +
-      '<div class="sel-props">' + propsHtml + '</div>';
+    // Content
+    if (n.characters) {
+      html += '<div class="sel-section">Content</div><div class="sel-props"><span class="k">text</span><span>' + esc(n.characters.slice(0, 80)) + '</span></div>';
+    }
+
+    // Meta
+    html += '<div class="sel-section">Meta</div><div class="sel-props"><span class="k">id</span><span>' + n.id + '</span>';
+    if (n.childCount) html += '<span class="k">children</span><span>' + n.childCount + '</span>';
+    html += '</div>';
+
+    el.innerHTML = html;
     panel.appendChild(el);
   }
 }
 
 // ── Log ─────────────────────────────────────────────
-
 function log(level, msg, detail) {
   const el = document.getElementById('logEl');
   const icons = { ok: '+', warn: '!', err: 'x', info: '.' };
-
   const wasAtBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
 
   const entry = document.createElement('div');
   entry.className = 'log-entry ' + level;
+  if (!logFilters[level]) entry.classList.add('filtered');
+  entry.dataset.level = level;
 
+  const msgText = esc(msg);
   let html =
     '<span class="log-time">' + timeStr() + '</span>' +
     '<span class="log-icon">' + (icons[level] || '.') + '</span>' +
-    '<span class="log-msg">' + esc(msg) + '</span>';
+    '<span class="log-msg">' + msgText + '</span>' +
+    '<span class="log-copy" onclick="copyLog(this)" title="Copy">cp</span>';
 
   if (detail) {
     const detailStr = typeof detail === 'object' ? JSON.stringify(detail, null, 2) : String(detail);
-    html += '<div class="log-detail">' + esc(detailStr) + '</div>';
+    html += '<div class="log-detail collapsed" onclick="this.classList.toggle(\'collapsed\')">' + esc(detailStr) + '</div>';
   }
 
   entry.innerHTML = html;
   el.appendChild(entry);
 
-  if (wasAtBottom) {
-    requestAnimationFrame(() => { el.scrollTop = el.scrollHeight; });
-  }
-
+  if (wasAtBottom) requestAnimationFrame(() => { el.scrollTop = el.scrollHeight; });
   while (el.children.length > 500) el.removeChild(el.firstChild);
 
   logCount.total++;
@@ -1278,13 +1534,48 @@ function log(level, msg, detail) {
   updateLogStats();
 }
 
+function copyLog(btn) {
+  const entry = btn.parentElement;
+  const msg = entry.querySelector('.log-msg');
+  const detail = entry.querySelector('.log-detail');
+  let text = msg ? msg.textContent : '';
+  if (detail) text += '\n' + detail.textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'ok';
+    setTimeout(() => { btn.textContent = 'cp'; }, 800);
+  });
+}
+
+function clearLog() {
+  document.getElementById('logEl').innerHTML = '';
+  logCount = { total: 0, ok: 0, warn: 0, err: 0, info: 0 };
+  updateLogStats();
+  log('info', 'Log cleared');
+}
+
+function toggleFilter(level) {
+  logFilters[level] = !logFilters[level];
+  const btn = document.querySelector('.log-filter[data-level="' + level + '"]');
+  if (btn) btn.classList.toggle('active', logFilters[level]);
+
+  document.querySelectorAll('.log-entry[data-level="' + level + '"]').forEach(entry => {
+    entry.classList.toggle('filtered', !logFilters[level]);
+  });
+}
+
 function updateLogStats() {
   const stats = document.getElementById('logStats');
-  if (stats) {
-    stats.textContent = logCount.total + ' events  ' + logCount.ok + '+ ' + logCount.warn + '! ' + logCount.err + 'x';
-  }
+  if (stats) stats.textContent = String(logCount.total);
+
   const evtEl = document.getElementById('statEvents');
-  if (evtEl) evtEl.textContent = String(logCount.total);
+  if (evtEl) {
+    const prev = evtEl.textContent;
+    evtEl.textContent = String(logCount.total);
+    if (prev !== String(logCount.total)) flashChanged(evtEl);
+  }
+
+  const breakdown = document.getElementById('statEventsBreakdown');
+  if (breakdown) breakdown.textContent = logCount.ok + '+ ' + logCount.warn + '! ' + logCount.err + 'x';
 }
 
 function updateSessionTimer() {
@@ -1305,8 +1596,6 @@ function toggleMinimize() {
   btn.title = minimized ? 'Expand' : 'Minimize';
 }
 
-// ── Tab Switching ───────────────────────────────────
-
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
@@ -1315,21 +1604,20 @@ function switchTab(name) {
 }
 
 // ── Plugin Message Handler ──────────────────────────
-
 onmessage = (event) => {
   const msg = event.data.pluginMessage;
   if (!msg) return;
+  msgsRecv++;
 
   switch (msg.type) {
     case 'ready':
-      log('ok', 'Plugin loaded — ' + (msg.data.pages || 0) + ' pages', msg.data);
+      log('ok', 'Plugin loaded — ' + (msg.data.pages || 0) + ' pages');
       break;
 
     case 'pong': {
       fileInfo = msg.data;
       figmaFileName = msg.data.file || '';
       document.getElementById('fileName').textContent = figmaFileName;
-      log('info', 'File: ' + (msg.data.file || 'untitled'), { editor: msg.data.editor, fileKey: msg.data.fileKey });
       break;
     }
 
@@ -1360,7 +1648,7 @@ onmessage = (event) => {
       if (ceRid && fcPending.has(ceRid)) {
         fcPending.delete(ceRid);
         fcBroadcast({ id: ceRid, error: msg.error });
-        log('err', 'FC component error: ' + msg.error);
+        log('err', 'FC error: ' + msg.error);
       }
       break;
     }
@@ -1370,54 +1658,24 @@ onmessage = (event) => {
       renderSel(nodes);
       send({ type: 'selection', data: msg.data });
       if (nodes.length > 0) {
-        const names = nodes.map(n => n.name).join(', ');
-        log('info', 'Selection: ' + nodes.length + ' node' + (nodes.length > 1 ? 's' : '') + ' — ' + names);
+        log('info', 'Selection: ' + nodes.length + ' — ' + nodes.map(n => n.name).join(', '));
       }
-      fcBroadcast({
-        type: 'SELECTION_CHANGE',
-        data: {
-          selectedNodeIds: nodes.map(n => n.id),
-          selectedNodeCount: nodes.length,
-        }
-      });
+      fcBroadcast({ type: 'SELECTION_CHANGE', data: { selectedNodeIds: nodes.map(n => n.id), selectedNodeCount: nodes.length } });
       break;
     }
 
     case 'page-changed':
-      log('info', 'Page > ' + msg.data.page, msg.data);
+      log('info', 'Page > ' + msg.data.page);
       send({ type: 'page-changed', data: msg.data });
-      fcBroadcast({
-        type: 'PAGE_CHANGE',
-        data: {
-          pageName: msg.data.page,
-          pageId: msg.data.pageId || '',
-        }
-      });
-      fcBroadcast({
-        type: 'FILE_INFO',
-        data: {
-          fileName: figmaFileName,
-          fileKey: fileInfo.fileKey || '',
-          currentPage: msg.data.page,
-          currentPageId: msg.data.pageId || '',
-          editorType: fileInfo.editor || 'figma',
-          pluginVersion: '1.0.0',
-        }
-      });
+      fcBroadcast({ type: 'PAGE_CHANGE', data: { pageName: msg.data.page, pageId: msg.data.pageId || '' } });
+      fcBroadcast({ type: 'FILE_INFO', data: { fileName: figmaFileName, fileKey: fileInfo.fileKey || '', currentPage: msg.data.page, currentPageId: msg.data.pageId || '', editorType: fileInfo.editor || 'figma', pluginVersion: '1.0.0' } });
       break;
 
     case 'document-changed': {
-      const changeCount = msg.data.changes || 0;
-      log('info', 'Document changed — ' + changeCount + ' change' + (changeCount !== 1 ? 's' : ''));
+      const cc = msg.data.changes || 0;
+      log('info', 'Doc changed — ' + cc + ' change' + (cc !== 1 ? 's' : ''));
       send({ type: 'document-changed', data: msg.data });
-      fcBroadcast({
-        type: 'DOCUMENT_CHANGE',
-        data: {
-          hasNodeChanges: true,
-          changeCount: changeCount,
-          timestamp: Date.now(),
-        }
-      });
+      fcBroadcast({ type: 'DOCUMENT_CHANGE', data: { hasNodeChanges: true, changeCount: cc, timestamp: Date.now() } });
       break;
     }
 
@@ -1426,18 +1684,16 @@ onmessage = (event) => {
       const resultSize = msg.result ? JSON.stringify(msg.result).length : 0;
       const sizeLabel = resultSize > 1024 ? (resultSize / 1024).toFixed(1) + 'KB' : resultSize + 'B';
 
+      // Complete action pill loading state
+      if (id) completeAction(id);
+
       if (id && id.startsWith('fc:')) {
         const origId = fcPending.get(id);
         fcPending.delete(id);
         if (origId) {
           const resp = { id: origId };
-          if (msg.error) {
-            resp.error = msg.error;
-            log('err', 'FC error: ' + msg.error);
-          } else {
-            resp.result = msg.result;
-            log('ok', 'FC response (' + sizeLabel + ')');
-          }
+          if (msg.error) { resp.error = msg.error; log('err', 'FC: ' + msg.error); }
+          else { resp.result = msg.result; log('ok', 'FC (' + sizeLabel + ')'); }
           fcBroadcast(resp);
         }
         return;
@@ -1445,29 +1701,23 @@ onmessage = (event) => {
 
       if (id && !id.includes(':')) {
         if (send({ type: 'response', id, result: msg.result, error: msg.error })) {
-          log('ok', 'Response > ' + id + ' (' + sizeLabel + ')');
+          log('ok', id + ' (' + sizeLabel + ')');
         }
-        if (msg.error) log('err', 'Error in ' + id, msg.error);
+        if (msg.error) log('err', id + ': ' + msg.error);
         return;
       }
 
       if (id && id.startsWith('action:')) {
         const action = id.replace('action:', '');
-        if (msg.error) {
-          log('err', 'Failed: ' + action, msg.error);
-        } else {
-          log('ok', 'Done: ' + action + ' (' + sizeLabel + ')');
-        }
+        if (msg.error) log('err', action + ' failed', msg.error);
+        else log('ok', action + ' (' + sizeLabel + ')');
         send({ type: 'action-result', action, result: msg.result, error: msg.error });
       }
 
       if (id && id.startsWith('sync:')) {
         const part = id.replace('sync:', '');
-        if (msg.error) {
-          log('err', 'Sync failed: ' + part, msg.error);
-        } else {
-          log('ok', 'Synced: ' + part + ' (' + sizeLabel + ')');
-        }
+        if (msg.error) log('err', 'Sync ' + part + ' failed', msg.error);
+        else log('ok', 'Synced ' + part + ' (' + sizeLabel + ')');
         send({ type: 'sync-data', part, result: msg.result, error: msg.error });
       }
 
@@ -1475,26 +1725,23 @@ onmessage = (event) => {
     }
 
     default: {
-      const msgType = msg.type || '';
-      if (msgType.endsWith('_RESULT') && msg.requestId && fcPending.has(msg.requestId)) {
+      const mt = msg.type || '';
+      if (mt.endsWith('_RESULT') && msg.requestId && fcPending.has(msg.requestId)) {
         fcPending.delete(msg.requestId);
         const resp = { id: msg.requestId };
         if (msg.success === false) {
           resp.error = msg.error || 'Unknown error';
-          log('err', 'FC: ' + msgType.replace('_RESULT', ''), msg.error);
+          log('err', 'FC: ' + mt.replace('_RESULT', ''));
         } else {
           const result = {};
           for (const key in msg) {
-            if (key !== 'type' && key !== 'requestId' && key !== 'success') {
-              result[key] = msg[key];
-            }
+            if (key !== 'type' && key !== 'requestId' && key !== 'success') result[key] = msg[key];
           }
           resp.result = result;
-          log('ok', 'FC < ' + msgType.replace('_RESULT', ''));
+          log('ok', 'FC < ' + mt.replace('_RESULT', ''));
         }
         fcBroadcast(resp);
-      }
-      else if (msgType === 'SELECTION_CHANGE' || msgType === 'PAGE_CHANGE' || msgType === 'DOCUMENT_CHANGE') {
+      } else if (mt === 'SELECTION_CHANGE' || mt === 'PAGE_CHANGE' || mt === 'DOCUMENT_CHANGE') {
         fcBroadcast(msg);
       }
       break;
@@ -1503,17 +1750,8 @@ onmessage = (event) => {
 };
 
 // ── Helpers ─────────────────────────────────────────
-
-function esc(s) {
-  const d = document.createElement('div');
-  d.textContent = s;
-  return d.innerHTML;
-}
-
-function timeStr() {
-  return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-}
-
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function timeStr() { return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }
 function timeSince(date) {
   const s = Math.floor((Date.now() - date.getTime()) / 1000);
   if (s < 60) return s + 's';
@@ -1522,14 +1760,23 @@ function timeSince(date) {
 }
 
 // ── Init ────────────────────────────────────────────
-
 parent.postMessage({ pluginMessage: { type: 'ping' } }, '*');
 renderConn();
 log('info', 'Memoire starting...');
 
 sessionTimer = setInterval(updateSessionTimer, 1000);
+setTimeout(scan, 200);
 
-setTimeout(scan, 300);
+// Auto-reconnect when Figma tab regains focus
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    parent.postMessage({ pluginMessage: { type: 'ping' } }, '*');
+    if (status !== 'live') {
+      resetBackoff();
+      scan();
+    }
+  }
+});
 </script>
 </body>
 </html>

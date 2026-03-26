@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='6' fill='%230a0a0a'/%3E%3C/svg%3E">
+<title>memoire / monitor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #fafaf9; --bg-card: rgba(255, 255, 255, 0.65); --bg-hover: rgba(0, 0, 0, 0.03);
+  --fg: #0a0a0a; --fg-muted: #8a8a8a; --fg-dim: #b0b0b0; --border: rgba(0, 0, 0, 0.08);
+  --mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+  --serif: 'Cormorant Garamond', 'Georgia', serif;
+  --radius: 2px;
+  --green: #16a34a; --yellow: #ca8a04; --red: #dc2626; --blue: #2563eb;
+}
+body { font-family: var(--mono); font-size: 12px; background: var(--bg); color: var(--fg); line-height: 1.6; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+a { color: var(--fg); text-decoration: none; }
+a:hover { text-decoration: underline; }
+::selection { background: rgba(0, 0, 0, 0.08); }
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #b0b0b0; border-radius: 2px; }
+
+/* -- Nav ----------------------------------------- */
+.hdr { display: flex; align-items: center; padding: 14px 24px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: rgba(250, 250, 249, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 100; }
+.hdr-brand { font-family: var(--serif); font-size: 18px; font-weight: 300; font-style: italic; letter-spacing: 2px; color: var(--fg); margin-right: 32px; white-space: nowrap; }
+.hdr-nav { display: flex; gap: 2px; align-items: center; flex: 1; }
+.hdr-nav a { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: var(--radius); color: var(--fg-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; text-decoration: none; transition: color 0.15s, background 0.15s; }
+.hdr-nav a:hover { color: var(--fg); background: var(--bg-hover); text-decoration: none; }
+.hdr-nav a.active { color: var(--fg); background: rgba(0, 0, 0, 0.05); text-decoration: none; }
+.hdr-nav a svg { width: 14px; height: 14px; opacity: 0.4; }
+.hdr-nav a.active svg { opacity: 0.8; }
+.hdr-stats { display: flex; gap: 16px; margin-left: auto; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg-muted); }
+.hdr-stats .n { color: var(--fg); font-weight: 500; margin-right: 2px; }
+
+/* -- Main ---------------------------------------- */
+.main { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
+
+/* -- Connection banner --------------------------- */
+.conn-banner { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 24px; background: var(--bg-card); backdrop-filter: blur(8px); }
+.conn-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.conn-dot.connected { background: var(--green); box-shadow: 0 0 6px rgba(22, 163, 74, 0.4); }
+.conn-dot.disconnected { background: var(--red); }
+.conn-dot.connecting { background: var(--yellow); animation: pulse 1.5s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+.conn-label { font-size: 11px; font-weight: 500; }
+.conn-meta { font-size: 10px; color: var(--fg-muted); margin-left: auto; }
+
+/* -- Stats grid ---------------------------------- */
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+@media (max-width: 768px) { .stats-grid { grid-template-columns: 1fr 1fr; } }
+.stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; backdrop-filter: blur(8px); }
+.stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--fg-muted); margin-bottom: 6px; }
+.stat-value { font-size: 24px; font-weight: 500; }
+.stat-sub { font-size: 10px; color: var(--fg-muted); margin-top: 4px; }
+
+/* -- Clients table ------------------------------- */
+.section-label { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: var(--fg-muted); margin: 32px 0 12px; }
+.section-label:first-child { margin-top: 0; }
+.clients-table { width: 100%; border-collapse: collapse; margin-bottom: 32px; }
+.clients-table th { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg-muted); font-weight: 400; }
+.clients-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 12px; }
+.clients-table tr:last-child td { border-bottom: none; }
+.clients-empty { padding: 32px; text-align: center; color: var(--fg-muted); font-size: 11px; }
+
+/* -- Actions bar --------------------------------- */
+.actions-bar { display: flex; gap: 8px; margin-bottom: 32px; flex-wrap: wrap; }
+.action-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-card); color: var(--fg-muted); font-family: var(--mono); font-size: 11px; cursor: pointer; transition: all 0.15s; backdrop-filter: blur(8px); }
+.action-btn:hover { color: var(--fg); border-color: rgba(0, 0, 0, 0.15); background: rgba(0, 0, 0, 0.02); }
+.action-btn:active { background: rgba(0, 0, 0, 0.04); }
+.action-btn.running { color: var(--yellow); border-color: rgba(202, 138, 4, 0.3); }
+.action-btn svg { width: 12px; height: 12px; }
+
+/* -- Event log ----------------------------------- */
+.event-log { border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-card); backdrop-filter: blur(8px); overflow: hidden; }
+.event-log-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+.event-log-title { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--fg-muted); }
+.event-log-actions { display: flex; gap: 8px; }
+.event-log-btn { background: none; border: none; color: var(--fg-muted); font-family: var(--mono); font-size: 10px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; }
+.event-log-btn:hover { color: var(--fg); }
+.event-log-btn.active { color: var(--fg); }
+.event-entries { max-height: 520px; overflow-y: auto; }
+.event-row { display: grid; grid-template-columns: 80px 120px 1fr; gap: 12px; padding: 8px 16px; border-bottom: 1px solid rgba(0, 0, 0, 0.03); font-size: 11px; transition: background 0.15s; }
+.event-row:hover { background: var(--bg-hover); }
+.event-row:last-child { border-bottom: none; }
+.event-row.new { animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { background: rgba(22, 163, 74, 0.06); } to { background: transparent; } }
+.event-time { color: var(--fg-dim); font-size: 10px; }
+.event-type { font-weight: 500; }
+.event-type.selection { color: var(--blue); }
+.event-type.plugin-connected { color: var(--green); }
+.event-type.plugin-disconnected { color: var(--red); }
+.event-type.page-changed { color: var(--yellow); }
+.event-type.document-changed { color: var(--yellow); }
+.event-type.action-result { color: var(--fg); }
+.event-type.sync-data { color: var(--blue); }
+.event-type.chat { color: var(--fg-muted); }
+.event-type.event { color: var(--fg-muted); }
+.event-data { color: var(--fg-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.event-empty { padding: 48px 24px; text-align: center; color: var(--fg-muted); font-size: 11px; }
+
+/* -- Port scanner -------------------------------- */
+.port-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 32px; }
+@media (max-width: 768px) { .port-grid { grid-template-columns: repeat(3, 1fr); } }
+.port-cell { padding: 10px; border: 1px solid var(--border); border-radius: var(--radius); text-align: center; font-size: 11px; background: var(--bg-card); }
+.port-cell.active { border-color: rgba(22, 163, 74, 0.3); }
+.port-cell .port-num { font-weight: 500; margin-bottom: 2px; }
+.port-cell .port-status { font-size: 10px; color: var(--fg-muted); }
+.port-cell.active .port-status { color: var(--green); }
+
+/* -- Footer -------------------------------------- */
+.footer { padding: 24px; text-align: center; color: var(--fg-muted); font-size: 10px; border-top: 1px solid var(--border); margin-top: 48px; }
+</style>
+</head>
+<body>
+  <header class="hdr">
+    <div class="hdr-brand">m&eacute;moire</div>
+    <nav class="hdr-nav"><a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12l9-8 9 8M5 11v8a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-8"/></svg>Home</a><a href="research.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>Research</a><a href="specs.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M8 7h8M8 11h8M8 15h4"/></svg>Specs</a><a href="design-system.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Systems</a><a href="monitor.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Monitor</a><a href="changelog.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>Changelog</a></nav>
+    <div class="hdr-stats">
+      <span id="stat-events"><span class="n">0</span> events</span>
+      <span id="stat-clients"><span class="n">0</span> clients</span>
+    </div>
+  </header>
+
+  <div class="main">
+
+    <!-- Connection banner -->
+    <div class="conn-banner" id="conn-banner">
+      <div class="conn-dot connecting" id="conn-dot"></div>
+      <div class="conn-label" id="conn-label">Connecting to dashboard...</div>
+      <div class="conn-meta" id="conn-meta"></div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Bridge Port</div>
+        <div class="stat-value" id="s-port">--</div>
+        <div class="stat-sub">WebSocket server</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Connected Plugins</div>
+        <div class="stat-value" id="s-clients">0</div>
+        <div class="stat-sub" id="s-clients-sub">No active connections</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Events Received</div>
+        <div class="stat-value" id="s-events">0</div>
+        <div class="stat-sub" id="s-events-sub">Since page load</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Uptime</div>
+        <div class="stat-value" id="s-uptime">--</div>
+        <div class="stat-sub" id="s-uptime-sub">SSE stream</div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="section-label">Actions</div>
+    <div class="actions-bar">
+      <button class="action-btn" data-action="inspect" title="Get current Figma selection">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+        Inspect Selection
+      </button>
+      <button class="action-btn" data-action="pull-tokens" title="Pull design tokens from Figma">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a1 1 0 001 1h14a1 1 0 001-1v-2"/></svg>
+        Pull Tokens
+      </button>
+      <button class="action-btn" data-action="pull-components" title="Pull components from Figma">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Pull Components
+      </button>
+      <button class="action-btn" data-action="page-tree" title="Get page tree structure">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h16M4 12h16M4 18h8"/></svg>
+        Page Tree
+      </button>
+      <button class="action-btn" data-action="stickies" title="Get sticky notes from Figma">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="4" width="16" height="16" rx="1"/><path d="M14 4v6h6"/></svg>
+        Stickies
+      </button>
+      <button class="action-btn" data-action="full-sync" title="Full sync: tokens + components + styles">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4v5h5M20 20v-5h-5"/><path d="M20.49 9A9 9 0 005.64 5.64L4 4m16 16l-1.64-1.64A9 9 0 013.51 15"/></svg>
+        Full Sync
+      </button>
+    </div>
+
+    <!-- Connected clients -->
+    <div class="section-label">Connected Plugins</div>
+    <table class="clients-table" id="clients-table">
+      <thead>
+        <tr>
+          <th>Client ID</th>
+          <th>File</th>
+          <th>Editor</th>
+          <th>Connected</th>
+          <th>Last Ping</th>
+        </tr>
+      </thead>
+      <tbody id="clients-body">
+        <tr><td colspan="5" class="clients-empty">No plugins connected</td></tr>
+      </tbody>
+    </table>
+
+    <!-- Port scanner -->
+    <div class="section-label">Port Scanner (9223-9232)</div>
+    <div class="port-grid" id="port-grid"></div>
+
+    <!-- Event log -->
+    <div class="event-log">
+      <div class="event-log-header">
+        <div class="event-log-title">Live Event Stream</div>
+        <div class="event-log-actions">
+          <button class="event-log-btn active" id="btn-auto">Auto-scroll</button>
+          <button class="event-log-btn" id="btn-clear">Clear</button>
+        </div>
+      </div>
+      <div class="event-entries" id="event-entries">
+        <div class="event-empty" id="event-empty">Waiting for events...</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">memoire monitor -- real-time figma plugin activity</div>
+
+<script>
+(function() {
+  // --- State ---
+  let sse = null;
+  let events = [];
+  let eventCount = 0;
+  let autoScroll = true;
+  let connectedAt = null;
+  let dashboardPort = 3333;
+  let bridgeStatus = null;
+
+  // --- DOM refs ---
+  const $connDot = document.getElementById('conn-dot');
+  const $connLabel = document.getElementById('conn-label');
+  const $connMeta = document.getElementById('conn-meta');
+  const $sPort = document.getElementById('s-port');
+  const $sClients = document.getElementById('s-clients');
+  const $sClientsSub = document.getElementById('s-clients-sub');
+  const $sEvents = document.getElementById('s-events');
+  const $sUptime = document.getElementById('s-uptime');
+  const $clientsBody = document.getElementById('clients-body');
+  const $eventEntries = document.getElementById('event-entries');
+  const $eventEmpty = document.getElementById('event-empty');
+  const $portGrid = document.getElementById('port-grid');
+  const $statEvents = document.querySelector('#stat-events .n');
+  const $statClients = document.querySelector('#stat-clients .n');
+
+  // --- Port grid init ---
+  for (let p = 9223; p <= 9232; p++) {
+    const cell = document.createElement('div');
+    cell.className = 'port-cell';
+    cell.id = 'port-' + p;
+    cell.innerHTML = '<div class="port-num">' + p + '</div><div class="port-status">--</div>';
+    $portGrid.appendChild(cell);
+  }
+
+  // --- Uptime ticker ---
+  setInterval(function() {
+    if (!connectedAt) return;
+    const d = Math.floor((Date.now() - connectedAt) / 1000);
+    const m = Math.floor(d / 60);
+    const s = d % 60;
+    $sUptime.textContent = m > 0 ? m + 'm ' + s + 's' : s + 's';
+  }, 1000);
+
+  // --- SSE connection ---
+  function connect() {
+    $connDot.className = 'conn-dot connecting';
+    $connLabel.textContent = 'Connecting to dashboard...';
+
+    sse = new EventSource('http://localhost:' + dashboardPort + '/events');
+
+    sse.onopen = function() {
+      connectedAt = Date.now();
+      $connDot.className = 'conn-dot connected';
+      $connLabel.textContent = 'Connected to dashboard';
+      $connMeta.textContent = 'port ' + dashboardPort;
+    };
+
+    sse.onmessage = function(e) {
+      try {
+        var msg = JSON.parse(e.data);
+        handleEvent(msg);
+      } catch(err) {
+        console.error('SSE parse error:', err);
+      }
+    };
+
+    sse.onerror = function() {
+      $connDot.className = 'conn-dot disconnected';
+      $connLabel.textContent = 'Dashboard disconnected';
+      $connMeta.textContent = 'Retrying...';
+      connectedAt = null;
+      $sUptime.textContent = '--';
+
+      sse.close();
+      // Try next port or retry
+      setTimeout(function() {
+        dashboardPort++;
+        if (dashboardPort > 3399) dashboardPort = 3333;
+        connect();
+      }, 2000);
+    };
+  }
+
+  // --- Handle events ---
+  function handleEvent(msg) {
+    if (msg.type === 'init') {
+      // Initial state from dashboard
+      bridgeStatus = msg.data.status;
+      updateBridgeUI();
+      // Load recent events
+      if (msg.data.recentEvents) {
+        msg.data.recentEvents.forEach(function(ev) {
+          addEventRow(ev.type, ev.data, ev.ts, false);
+        });
+      }
+      return;
+    }
+
+    eventCount++;
+    $sEvents.textContent = eventCount;
+    $statEvents.textContent = eventCount;
+    addEventRow(msg.type, msg.data, msg.ts, true);
+
+    // Update bridge status on connection events
+    if (msg.type === 'plugin-connected' || msg.type === 'plugin-disconnected') {
+      fetchStatus();
+    }
+  }
+
+  // --- Update bridge UI ---
+  function updateBridgeUI() {
+    if (!bridgeStatus) return;
+    $sPort.textContent = bridgeStatus.port || '--';
+    $sClients.textContent = bridgeStatus.clients || 0;
+    $statClients.textContent = bridgeStatus.clients || 0;
+    $sClientsSub.textContent = bridgeStatus.clients
+      ? bridgeStatus.clients + ' active connection' + (bridgeStatus.clients > 1 ? 's' : '')
+      : 'No active connections';
+
+    // Update port grid
+    var activePort = bridgeStatus.port;
+    for (var p = 9223; p <= 9232; p++) {
+      var cell = document.getElementById('port-' + p);
+      if (p === activePort) {
+        cell.className = 'port-cell active';
+        cell.querySelector('.port-status').textContent = 'LISTENING';
+      } else {
+        cell.className = 'port-cell';
+        cell.querySelector('.port-status').textContent = '--';
+      }
+    }
+
+    // Update clients table
+    updateClientsTable(bridgeStatus.recentClients || []);
+  }
+
+  // --- Clients table ---
+  function updateClientsTable(clients) {
+    if (!clients || clients.length === 0) {
+      $clientsBody.innerHTML = '<tr><td colspan="5" class="clients-empty">No plugins connected</td></tr>';
+      return;
+    }
+    $clientsBody.innerHTML = clients.map(function(c) {
+      var connected = c.connectedAt ? formatTime(c.connectedAt) : '--';
+      var lastPing = c.lastPing ? formatAgo(c.lastPing) : '--';
+      return '<tr>'
+        + '<td>' + (c.id || '--') + '</td>'
+        + '<td>' + (c.file || '--') + '</td>'
+        + '<td>' + (c.editor || '--') + '</td>'
+        + '<td>' + connected + '</td>'
+        + '<td>' + lastPing + '</td>'
+        + '</tr>';
+    }).join('');
+  }
+
+  // --- Event log ---
+  function addEventRow(type, data, ts, isNew) {
+    if ($eventEmpty) $eventEmpty.remove();
+
+    var row = document.createElement('div');
+    row.className = 'event-row' + (isNew ? ' new' : '');
+    var summary = summarizeEvent(type, data);
+    row.innerHTML =
+      '<div class="event-time">' + formatTime(ts) + '</div>' +
+      '<div class="event-type ' + type + '">' + type + '</div>' +
+      '<div class="event-data" title="' + escapeAttr(JSON.stringify(data)) + '">' + summary + '</div>';
+    $eventEntries.appendChild(row);
+
+    // Cap at 200 entries
+    while ($eventEntries.children.length > 200) {
+      $eventEntries.removeChild($eventEntries.firstChild);
+    }
+
+    if (autoScroll) {
+      $eventEntries.scrollTop = $eventEntries.scrollHeight;
+    }
+  }
+
+  function summarizeEvent(type, data) {
+    if (!data) return '';
+    switch (type) {
+      case 'plugin-connected':
+        return (data.file || 'unknown') + ' via ' + (data.editor || '?');
+      case 'plugin-disconnected':
+        return 'Plugin disconnected';
+      case 'selection':
+        if (data.nodes) return data.nodes.length + ' node(s) selected';
+        if (data.count !== undefined) return data.count + ' node(s) selected';
+        return JSON.stringify(data).slice(0, 80);
+      case 'page-changed':
+        return data.name || data.pageName || JSON.stringify(data).slice(0, 80);
+      case 'document-changed':
+        return 'Document structure changed';
+      case 'action-result':
+        return (data.action || '') + ' ' + (data.success ? 'OK' : 'FAILED');
+      case 'sync-data':
+        return (data.type || 'sync') + ': ' + (data.count || '?') + ' items';
+      case 'chat':
+        return (data.from || '?') + ': ' + (data.text || '').slice(0, 60);
+      case 'event':
+        return '[' + (data.level || 'info') + '] ' + (data.message || JSON.stringify(data).slice(0, 60));
+      default:
+        return JSON.stringify(data).slice(0, 80);
+    }
+  }
+
+  // --- Actions ---
+  document.querySelectorAll('.action-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var action = btn.dataset.action;
+      btn.classList.add('running');
+      btn.disabled = true;
+
+      fetch('http://localhost:' + dashboardPort + '/api/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: action })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(res) {
+        btn.classList.remove('running');
+        btn.disabled = false;
+        if (res.error) {
+          addEventRow('action-result', { action: action, success: false, error: res.error }, Date.now(), true);
+        } else {
+          addEventRow('action-result', { action: action, success: true }, Date.now(), true);
+        }
+      })
+      .catch(function(err) {
+        btn.classList.remove('running');
+        btn.disabled = false;
+        addEventRow('action-result', { action: action, success: false, error: err.message }, Date.now(), true);
+      });
+    });
+  });
+
+  // --- Auto-scroll toggle ---
+  document.getElementById('btn-auto').addEventListener('click', function() {
+    autoScroll = !autoScroll;
+    this.classList.toggle('active', autoScroll);
+  });
+
+  // --- Clear log ---
+  document.getElementById('btn-clear').addEventListener('click', function() {
+    $eventEntries.innerHTML = '<div class="event-empty" id="event-empty">Log cleared</div>';
+    eventCount = 0;
+    $sEvents.textContent = '0';
+    $statEvents.textContent = '0';
+  });
+
+  // --- Fetch status ---
+  function fetchStatus() {
+    fetch('http://localhost:' + dashboardPort + '/api/status')
+      .then(function(r) { return r.json(); })
+      .then(function(status) {
+        bridgeStatus = status;
+        updateBridgeUI();
+      })
+      .catch(function() {});
+  }
+
+  // --- Helpers ---
+  function formatTime(ts) {
+    if (!ts) return '--';
+    var d = new Date(ts);
+    return pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+  }
+
+  function formatAgo(ts) {
+    var diff = Math.floor((Date.now() - ts) / 1000);
+    if (diff < 5) return 'just now';
+    if (diff < 60) return diff + 's ago';
+    if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+    return Math.floor(diff / 3600) + 'h ago';
+  }
+
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+  function escapeAttr(s) {
+    return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  // --- Start ---
+  connect();
+
+  // Poll status every 10s for client list updates
+  setInterval(fetchStatus, 10000);
+})();
+</script>
+</body>
+</html>
