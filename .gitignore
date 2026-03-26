@@ -1,7 +1,6 @@
 node_modules/
 dist/
 .memoire/
-.ark/
 *.tsbuildinfo
 preview/dist/
 

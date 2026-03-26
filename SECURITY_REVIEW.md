@@ -275,7 +275,7 @@ The CSS `background:` property value is escaped, which is correct.
 
 2. **Line 448-449** — Data from project context:
 ```typescript
-~$ ARK DASHBOARD &middot; ${esc(data.project?.framework?.toUpperCase() ?? "PROJECT")} &middot; ${esc(new Date().toLocaleTimeString())}
+~$ MEMOIRE DASHBOARD &middot; ${esc(data.project?.framework?.toUpperCase() ?? "PROJECT")} &middot; ${esc(new Date().toLocaleTimeString())}
 ```
 This looks safe (escaped), but `new Date().toLocaleTimeString()` should not need escaping (returns safe locale string).
 

@@ -964,7 +964,7 @@ async function handleFigmaConsoleCommand(msg) {
 }
 
 // ══════════════════════════════════════════════════════════════
-// ARK COMMAND IMPLEMENTATIONS
+// MEMOIRE COMMAND IMPLEMENTATIONS
 // ══════════════════════════════════════════════════════════════
 
 // ── Execute Safety ────────────────────────────────────────

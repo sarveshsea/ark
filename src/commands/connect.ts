@@ -72,7 +72,7 @@ export function registerConnectCommand(program: Command, engine: MemoireEngine) 
       if (!token && !opts.skipSetup) {
         console.log(`
   ┌─────────────────────────────────────────────────┐
-  │  FIGMA ARK — CONNECTION SETUP                   │
+  │  FIGMA MEMOIRE — CONNECTION SETUP                │
   │  Let's get you connected step by step.          │
   └─────────────────────────────────────────────────┘
 `);

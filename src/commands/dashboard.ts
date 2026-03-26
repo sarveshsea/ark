@@ -459,7 +459,7 @@ tr:hover td { background: hsl(var(--muted) / 0.4); }
 
   <!-- Breadcrumb / terminal prompt -->
   <div style="font-size:11px; color:hsl(var(--muted-foreground)); margin-bottom: 12px; letter-spacing:1px;">
-    ~$ ARK DASHBOARD &middot; ${esc(data.project?.framework?.toUpperCase() ?? "PROJECT")} &middot; ${esc(new Date().toLocaleTimeString())}
+    ~$ MEMOIRE DASHBOARD &middot; ${esc(data.project?.framework?.toUpperCase() ?? "PROJECT")} &middot; ${esc(new Date().toLocaleTimeString())}
   </div>
 
   <!-- Nav -->

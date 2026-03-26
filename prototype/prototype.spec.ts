@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Ark Cinematic Prototype', () => {
+test.describe('Memoire Cinematic Prototype', () => {
   test.use({
     viewport: { width: 1440, height: 900 },
     video: {

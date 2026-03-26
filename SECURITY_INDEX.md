@@ -1,4 +1,4 @@
-# Ark Security Review — Document Index
+# Memoire Security Review — Document Index
 
 **Review Completed:** March 23, 2026
 **Status:** 8 findings identified (2 CRITICAL, 3 HIGH, 3 MEDIUM)
