@@ -88,11 +88,11 @@ export function registerPreviewCommand(program: Command, engine: MemoireEngine) 
         await writeFile(join(previewDir, "research.html"), researchHtml);
       }
 
-      const components = specs.filter((s) => s.type === "component");
-      const pages = specs.filter((s) => s.type === "page");
-      const dataviz = specs.filter((s) => s.type === "dataviz");
-      const design = specs.filter((s) => s.type === "design");
-      const ia = specs.filter((s) => s.type === "ia");
+      const components = specs.filter((s: AnySpec) => s.type === "component");
+      const pages = specs.filter((s: AnySpec) => s.type === "page");
+      const dataviz = specs.filter((s: AnySpec) => s.type === "dataviz");
+      const design = specs.filter((s: AnySpec) => s.type === "design");
+      const ia = specs.filter((s: AnySpec) => s.type === "ia");
 
       console.log(`  Preview built:`);
       console.log(`    ${components.length} components`);

@@ -19,6 +19,7 @@ import type { DesignToken, DesignSystem, DesignComponent } from "../engine/regis
 import type { AnySpec, ComponentSpec, PageSpec, DataVizSpec } from "../specs/types.js";
 import { AGENT_PROMPTS } from "./prompts.js";
 import { getAI, type AnthropicClient } from "../ai/index.js";
+import { resolveForIntent, wrapWithNotes, type ResolvedSkill } from "../notes/index.js";
 
 const log = createLogger("agent-orchestrator");
 
@@ -161,8 +162,16 @@ export class AgentOrchestrator {
     const category = classifyIntent(intent);
     log.info({ intent, category }, "Classified design intent");
 
+    // Resolve Mémoire Notes for this intent
+    const resolvedNotes = this.engine.notes.loaded
+      ? await resolveForIntent(category, this.engine.notes.notes)
+      : [];
+    if (resolvedNotes.length > 0) {
+      log.info({ notes: resolvedNotes.map((n) => n.noteId), category }, "Notes activated for intent");
+    }
+
     const context = await this.buildContext();
-    const plan = this.buildPlan(intent, category, context);
+    const plan = this.buildPlan(intent, category, context, resolvedNotes);
 
     log.info({ planId: plan.id, tasks: plan.subTasks.length }, "Execution plan ready");
     this.onUpdate?.(plan);
@@ -194,10 +203,15 @@ export class AgentOrchestrator {
 
   // ── Plan Building ──────────────────────────────────────
 
-  buildPlan(intent: string, category: IntentCategory, context: AgentContext): AgentPlan {
+  buildPlan(intent: string, category: IntentCategory, context: AgentContext, resolvedNotes: ResolvedSkill[] = []): AgentPlan {
     const planId = `plan-${++this.planCounter}-${Date.now()}`;
 
     const subTasks = this.decompose(intent, category, context);
+
+    // Inject resolved Note skills into the first task's prompt
+    if (resolvedNotes.length > 0 && subTasks.length > 0) {
+      subTasks[0].prompt = wrapWithNotes(subTasks[0].prompt, resolvedNotes);
+    }
 
     return {
       id: planId,

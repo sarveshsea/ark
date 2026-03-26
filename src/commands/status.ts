@@ -1,6 +1,7 @@
 import type { Command } from "commander";
 import type { MemoireEngine } from "../engine/core.js";
 import { hasAI, getTracker } from "../ai/index.js";
+import { NoteLoader } from "../notes/loader.js";
 
 export function registerStatusCommand(program: Command, engine: MemoireEngine) {
   program
@@ -58,7 +59,7 @@ export function registerStatusCommand(program: Command, engine: MemoireEngine) {
       }
 
       // AI
-      console.log("  AI");
+      console.log("\n  AI");
       console.log(`    API key:      ${hasAI() ? "set" : "not set"}`);
       const tracker = getTracker();
       if (tracker) {
@@ -67,6 +68,18 @@ export function registerStatusCommand(program: Command, engine: MemoireEngine) {
       } else {
         console.log(`    Status:       Claude Code mode (no direct API)`);
       }
+
+      // Notes
+      const noteLoader = new NoteLoader(engine.config.projectRoot);
+      await noteLoader.loadAll();
+      const allNotes = noteLoader.notes;
+      const builtInCount = allNotes.filter((n) => n.builtIn).length;
+      const installedCount = allNotes.filter((n) => !n.builtIn).length;
+
+      console.log("\n  Notes");
+      console.log(`    Built-in:     ${builtInCount}`);
+      console.log(`    Installed:    ${installedCount}`);
+      console.log(`    Total:        ${allNotes.length}`);
 
       console.log();
     });

@@ -14,6 +14,7 @@ import { EventEmitter } from "events";
 import { readFile, writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { initWorkspace, readSoul } from "./workspace-init.js";
+import { NoteLoader } from "../notes/loader.js";
 
 export interface MemoireConfig {
   projectRoot: string;
@@ -38,6 +39,7 @@ export class MemoireEngine extends EventEmitter {
   readonly figma: FigmaBridge;
   readonly research: ResearchEngine;
   readonly codegen: CodeGenerator;
+  readonly notes: NoteLoader;
 
   private _project: ProjectContext | null = null;
   private _initialized = false;
@@ -47,6 +49,7 @@ export class MemoireEngine extends EventEmitter {
     super();
     this.config = config;
     this.registry = new Registry(join(config.projectRoot, ".memoire"));
+    this.notes = new NoteLoader(config.projectRoot);
     this.figma = new FigmaBridge({
       token: config.figmaToken,
       fileKey: config.figmaFileKey,
@@ -91,6 +94,9 @@ export class MemoireEngine extends EventEmitter {
 
     // Load design soul for agent context
     this._soul = await readSoul(memoireDir);
+
+    // Load Mémoire Notes
+    await this.notes.loadAll();
 
     this._initialized = true;
     this.emit("event", {

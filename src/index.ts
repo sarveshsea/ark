@@ -39,6 +39,7 @@ import { registerIACommand } from "./commands/ia.js";
 import { registerComposeCommand } from "./commands/compose.js";
 import { registerGoCommand } from "./commands/go.js";
 import { registerExportCommand } from "./commands/export.js";
+import { registerNotesCommand } from "./commands/notes.js";
 
 const program = new Command();
 
@@ -79,6 +80,7 @@ registerIACommand(program, engine);
 registerComposeCommand(program, engine);
 registerGoCommand(program, engine);
 registerExportCommand(program, engine);
+registerNotesCommand(program, engine);
 
 // Parse and execute
 program.parse();

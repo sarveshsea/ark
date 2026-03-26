@@ -61,6 +61,7 @@ export function registerInitCommand(program: Command, engine: MemoireEngine) {
         "generated/dataviz",
         "prototype",
         ".memoire",
+        ".memoire/notes",
       ];
 
       for (const dir of dirs) {
