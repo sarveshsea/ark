@@ -341,6 +341,10 @@ async function handleFigmaConsoleCommand(msg) {
       if (typeof code !== 'string' || code.trim().length === 0) throw new Error('Code must be a non-empty string');
       if (code.length > 100000) throw new Error('Code exceeds maximum length (100KB)');
 
+      // Run through same safety checks as Mémoire protocol
+      var safetyCheck = isCodeSafe(code);
+      if (!safetyCheck.safe) throw new Error('Blocked: ' + safetyCheck.reason);
+
       var timeoutMs = msg.timeout || 5000;
       var timeoutPromise = new Promise(function(_, reject) {
         setTimeout(function() { reject(new Error('Execution timed out after ' + timeoutMs + 'ms')); }, timeoutMs);
@@ -348,7 +352,7 @@ async function handleFigmaConsoleCommand(msg) {
 
       var codePromise;
       try {
-        codePromise = eval("(async function() {\n" + code + "\n})()");
+        codePromise = (new Function("figma", '"use strict"; return (async () => { ' + code + ' })()') )(figma);
       } catch (syntaxError) {
         ok({ result: null, error: 'Syntax error: ' + (syntaxError.message || String(syntaxError)) });
         return;

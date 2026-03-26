@@ -294,6 +294,7 @@ export class MemoireWsServer extends EventEmitter {
           // Basic size check — reject messages over 10MB
           if (raw.length > 10_000_000) {
             log.warn({ clientId, sizeMB: Math.round(raw.length / 1_000_000) }, "Oversized message, dropping");
+            ws.send(JSON.stringify({ type: "error", message: "Message too large (>10MB). Reduce payload size." }));
             return;
           }
           // Rate limiting

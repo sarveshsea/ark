@@ -809,6 +809,27 @@ export class AgentOrchestrator {
       return { status: "completed", action: "pulled" };
     }
 
+    if (task.name.includes("Diff")) {
+      // Snapshot local state, pull remote, then compare
+      const localBefore = this.engine.registry.designSystem;
+      const localTokenCount = localBefore.tokens.length;
+      const localComponentCount = localBefore.components.length;
+
+      await this.engine.pullDesignSystem();
+
+      const afterPull = this.engine.registry.designSystem;
+      return {
+        status: "completed",
+        action: "diffed",
+        localTokensBefore: localTokenCount,
+        localComponentsBefore: localComponentCount,
+        remoteTokens: afterPull.tokens.length,
+        remoteComponents: afterPull.components.length,
+        tokenDelta: afterPull.tokens.length - localTokenCount,
+        componentDelta: afterPull.components.length - localComponentCount,
+      };
+    }
+
     if (task.name.includes("Sync") || task.name.includes("Push")) {
       // Push current design system to Figma
       const ds = this.engine.registry.designSystem;

@@ -95,7 +95,6 @@ export class FigmaBridge extends EventEmitter {
   private log = createLogger("figma-bridge");
   private config: FigmaBridgeConfig;
   private server: MemoireWsServer;
-  private _connected = false;
 
   constructor(config: FigmaBridgeConfig) {
     super();
@@ -112,14 +111,11 @@ export class FigmaBridge extends EventEmitter {
 
     // Forward server events
     this.server.on("client-connected", (client) => {
-      this._connected = true;
       this.emit("plugin-connected", client);
     });
 
     this.server.on("client-disconnected", () => {
-      // Check actual client count after removal (event fires after clients.delete)
-      this._connected = this.server.connectedClients.length > 0;
-      if (!this._connected) {
+      if (this.server.connectedClients.length === 0) {
         this.log.warn("All Figma plugins disconnected — waiting for reconnection on same port");
       }
       this.emit("plugin-disconnected");
@@ -133,8 +129,9 @@ export class FigmaBridge extends EventEmitter {
     this.server.on("sync-data", (data) => this.emit("sync-data", data));
   }
 
+  /** Check connection state directly from server — no stale cache. */
   get isConnected(): boolean {
-    return this._connected;
+    return this.server.connectedClients.length > 0;
   }
 
   get wsServer(): MemoireWsServer {
@@ -153,7 +150,6 @@ export class FigmaBridge extends EventEmitter {
 
   async disconnect(): Promise<void> {
     this.server.stop();
-    this._connected = false;
   }
 
   /**
@@ -164,11 +160,11 @@ export class FigmaBridge extends EventEmitter {
   }
 
   async getSelection(): Promise<unknown> {
-    return this.server.sendCommand("getSelection");
+    return this.server.sendCommand("getSelection", {}, 30000);
   }
 
   async getFileData(depth = 3): Promise<unknown> {
-    return this.server.sendCommand("getFileData", { depth });
+    return this.server.sendCommand("getFileData", { depth }, 60000);
   }
 
   /**
@@ -188,22 +184,17 @@ export class FigmaBridge extends EventEmitter {
   async extractDesignSystem(): Promise<DesignSystem> {
     this.emitEvent("info", "Pulling design tokens, components, and styles from Figma...");
 
-    // Extract tokens (variables)
-    const rawTokens = await this.server.sendCommand("getVariables", {}, 60000) as { collections?: RawVariableCollection[] } | null;
-    const tokens = this.parseTokens(rawTokens);
-
-    // Extract components
-    const rawComponents = await this.server.sendCommand("getComponents", {}, 60000) as RawComponent[] | null;
-    const components = this.parseComponents(rawComponents);
-
-    // Extract styles
-    const rawStyles = await this.server.sendCommand("getStyles", {}, 30000) as RawStyle[] | null;
-    const styles = this.parseStyles(rawStyles);
+    // Extract tokens, components, and styles in parallel
+    const [rawTokens, rawComponents, rawStyles] = await Promise.all([
+      this.server.sendCommand("getVariables", {}, 60000) as Promise<{ collections?: RawVariableCollection[] } | null>,
+      this.server.sendCommand("getComponents", {}, 60000) as Promise<RawComponent[] | null>,
+      this.server.sendCommand("getStyles", {}, 30000) as Promise<RawStyle[] | null>,
+    ]);
 
     return {
-      tokens,
-      components,
-      styles,
+      tokens: this.parseTokens(rawTokens),
+      components: this.parseComponents(rawComponents),
+      styles: this.parseStyles(rawStyles),
       lastSync: new Date().toISOString(),
     };
   }
@@ -213,13 +204,15 @@ export class FigmaBridge extends EventEmitter {
 
     const result = await this.server.sendCommand("getStickies", {}, 30000) as RawSticky[] | null;
 
-    return (result || []).map((s) => ({
-      id: s.id,
-      text: s.text,
-      color: s.fills?.[0]?.color ? rgbToHex(s.fills[0].color) : undefined,
-      position: { x: s.x, y: s.y },
-      size: { width: s.width, height: s.height },
-    }));
+    return (result || [])
+      .filter((s) => s.text?.trim())
+      .map((s) => ({
+        id: s.id,
+        text: s.text,
+        color: s.fills?.[0]?.color ? rgbToHex(s.fills[0].color) : undefined,
+        position: { x: s.x, y: s.y },
+        size: { width: s.width, height: s.height },
+      }));
   }
 
   /**
@@ -315,7 +308,7 @@ export class FigmaBridge extends EventEmitter {
           collection: collection.name,
           type,
           values,
-          cssVariable: `--${variable.name.replace(/[\s/]/g, "-").toLowerCase()}`,
+          cssVariable: `--${variable.name.replace(/[^a-zA-Z0-9-_]/g, "-").toLowerCase()}`,
         });
       }
     }
