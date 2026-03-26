@@ -3,195 +3,224 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='6' fill='%23ffffff'/%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='6' fill='%230a0a0a'/%3E%3C/svg%3E">
 <title>memoire</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,300;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
-  --bg: #111113; --bg-card: #19191c; --bg-hover: #222226;
-  --fg: #ffffff; --fg-muted: #636369; --border: #2a2a2e;
-  --accent: #a0a0a6; --accent-bright: #ffffff;
-  --mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
-  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  --radius: 4px;
-  --green: #4ade80; --yellow: #facc15; --red: #f87171; --blue: #60a5fa;
+  --bg: #fafaf9; --bg-card: rgba(255, 255, 255, 0.65); --bg-hover: rgba(0, 0, 0, 0.03);
+  --fg: #0a0a0a; --fg-muted: #8a8a8a; --fg-dim: #b0b0b0; --border: rgba(0, 0, 0, 0.08);
+  --mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+  --serif: 'Cormorant Garamond', 'Georgia', serif;
+  --radius: 2px;
+  --green: #16a34a; --yellow: #ca8a04; --red: #dc2626; --blue: #2563eb;
 }
-body { font-family: var(--mono); font-size: 12px; background: var(--bg); color: var(--fg); line-height: 1.6; min-height: 100vh; }
-a { color: var(--accent-bright); text-decoration: none; }
+body { font-family: var(--mono); font-size: 12px; background: var(--bg); color: var(--fg); line-height: 1.6; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+a { color: var(--fg); text-decoration: none; }
 a:hover { text-decoration: underline; }
+::selection { background: rgba(0, 0, 0, 0.08); }
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #b0b0b0; border-radius: 2px; }
 
-.hdr { display: flex; align-items: center; justify-content: center; padding: 14px 24px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg); z-index: 100; gap: 0; }
-.hdr-brand { font-family: 'Cormorant Garamond', 'Playfair Display', 'Georgia', serif; font-size: 18px; font-weight: 300; font-style: italic; letter-spacing: 2px; color: var(--fg); margin-right: 32px; white-space: nowrap; }
-.hdr-nav { display: flex; gap: 2px; align-items: center; }
+/* -- Nav -- */
+.hdr { display: flex; align-items: center; padding: 14px 24px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: rgba(250, 250, 249, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 100; }
+.hdr-brand { font-family: var(--serif); font-size: 18px; font-weight: 300; font-style: italic; letter-spacing: 2px; color: var(--fg); margin-right: 32px; white-space: nowrap; }
+.hdr-nav { display: flex; gap: 2px; align-items: center; flex: 1; }
 .hdr-nav a { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: var(--radius); color: var(--fg-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; text-decoration: none; transition: color 0.15s, background 0.15s; }
 .hdr-nav a:hover { color: var(--fg); background: var(--bg-hover); text-decoration: none; }
-.hdr-nav a.active { color: var(--fg); background: var(--bg-card); text-decoration: none; }
-.hdr-nav a svg { width: 14px; height: 14px; opacity: 0.5; }
-.hdr-nav a.active svg { opacity: 1; }
+.hdr-nav a.active { color: var(--fg); background: rgba(0, 0, 0, 0.05); text-decoration: none; }
+.hdr-nav a svg { width: 14px; height: 14px; opacity: 0.4; }
+.hdr-nav a.active svg { opacity: 0.8; }
 
-.main { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
-.section { display: none; }
-.section.active { display: block; }
+/* -- Main -- */
+.main { max-width: 1200px; margin: 0 auto; padding: 48px 24px; }
 
-.card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
-.card-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg-muted); margin-bottom: 12px; }
-.card-value { font-size: 24px; font-weight: 600; }
+/* -- Hero Window -- */
+.hero-window { border: 1px solid rgba(0,0,0,0.10); border-radius: 8px; overflow: hidden; margin-bottom: 48px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+.window-chrome { display: flex; align-items: center; padding: 10px 14px; background: #f5f5f4; border-bottom: 1px solid rgba(0,0,0,0.06); }
+.window-dots { display: flex; gap: 6px; }
+.window-dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(0,0,0,0.08); }
+.window-url { flex: 1; text-align: center; font-size: 10px; color: var(--fg-muted); letter-spacing: 0.5px; }
+.window-body { display: flex; min-height: 280px; }
 
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
-.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-@media (max-width: 768px) { .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; } }
+/* Mini dashboard inside hero */
+.mini-sidebar { width: 180px; background: #fafaf9; border-right: 1px solid rgba(0,0,0,0.06); padding: 16px; display: flex; flex-direction: column; gap: 4px; }
+.mini-brand { font-family: var(--serif); font-size: 13px; font-weight: 300; font-style: italic; letter-spacing: 1.5px; margin-bottom: 16px; color: var(--fg); }
+.mini-nav-item { font-size: 10px; padding: 5px 8px; border-radius: 2px; color: var(--fg-muted); }
+.mini-nav-item.active { color: var(--fg); background: rgba(0,0,0,0.04); }
+.mini-content { flex: 1; padding: 20px 24px; }
+.mini-title { font-size: 14px; font-weight: 500; margin-bottom: 12px; }
+.mini-search { width: 100%; height: 28px; border: 1px solid rgba(0,0,0,0.06); border-radius: 2px; background: #fafaf9; margin-bottom: 16px; }
+.mini-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
+.mini-stat { border: 1px solid rgba(0,0,0,0.06); border-radius: 2px; padding: 10px 8px; text-align: center; background: #fafaf9; }
+.mini-stat-val { font-size: 16px; font-weight: 500; margin-bottom: 2px; }
+.mini-stat-lbl { font-size: 8px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--fg-muted); }
+.mini-chart { display: flex; align-items: flex-end; gap: 6px; height: 48px; margin-bottom: 16px; padding: 0 4px; }
+.mini-bar { flex: 1; background: rgba(0,0,0,0.06); border-radius: 1px; }
+.mini-bar.accent { background: var(--fg); }
+.mini-list { display: flex; flex-direction: column; gap: 6px; }
+.mini-list-row { display: flex; align-items: center; gap: 8px; font-size: 9px; color: var(--fg-muted); }
+.mini-list-dot { width: 4px; height: 4px; border-radius: 50%; background: rgba(0,0,0,0.15); flex-shrink: 0; }
 
-.tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
-.tab { padding: 8px 16px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg-muted); cursor: pointer; border-bottom: 2px solid transparent; background: none; border-top: none; border-left: none; border-right: none; font-family: var(--mono); }
-.tab:hover { color: var(--fg); }
-.tab.active { color: var(--fg); border-bottom-color: var(--fg); }
-.tab-panel { display: none; }
-.tab-panel.active { display: block; }
+/* -- Hero bar -- */
+.hero-bar { display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px; }
+.hero-name { font-family: var(--serif); font-size: 42px; font-weight: 300; font-style: italic; letter-spacing: 3px; }
+.hero-badge { display: inline-block; padding: 3px 10px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg-muted); }
+.hero-desc { color: var(--fg-muted); font-size: 12px; margin-bottom: 48px; max-width: 600px; line-height: 1.7; }
 
-.badge { display: inline-block; padding: 2px 8px; border-radius: var(--radius); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
-.badge-high { background: rgba(74, 222, 128, 0.15); color: var(--green); }
-.badge-medium { background: rgba(250, 204, 21, 0.15); color: var(--yellow); }
-.badge-low { background: rgba(160, 160, 166, 0.15); color: var(--fg-muted); }
-.badge-atom { background: rgba(96, 165, 250, 0.15); color: var(--blue); }
-.badge-molecule { background: rgba(74, 222, 128, 0.15); color: var(--green); }
-.badge-organism { background: rgba(250, 204, 21, 0.15); color: var(--yellow); }
-.badge-template { background: rgba(248, 113, 113, 0.15); color: var(--red); }
+/* -- Figma card -- */
+.figma-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 48px; backdrop-filter: blur(8px); display: flex; align-items: center; gap: 14px; }
+.figma-card svg { width: 20px; height: 20px; color: var(--fg-muted); flex-shrink: 0; }
+.figma-card-text { font-size: 12px; color: var(--fg-muted); }
+.figma-card-text a { color: var(--fg); text-decoration: underline; text-underline-offset: 2px; }
 
-.tag { display: inline-block; padding: 2px 6px; background: var(--bg-hover); border-radius: var(--radius); font-size: 10px; color: var(--fg-muted); margin: 2px; }
+/* -- About -- */
+.about { margin-bottom: 48px; }
+.about-heading { font-family: var(--serif); font-size: 26px; font-weight: 300; font-style: italic; letter-spacing: 1px; margin-bottom: 8px; }
+.about-text { color: var(--fg-muted); font-size: 12px; line-height: 1.8; max-width: 640px; }
 
-.empty { text-align: center; padding: 48px 24px; color: var(--fg-muted); }
-.empty code { background: var(--bg-hover); padding: 2px 6px; border-radius: var(--radius); }
+/* -- Feature grid -- */
+.feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 48px; }
+@media (max-width: 900px) { .feature-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) { .feature-grid { grid-template-columns: 1fr; } }
+.feature-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; backdrop-filter: blur(8px); }
+.feature-icon { width: 28px; height: 28px; margin-bottom: 12px; color: var(--fg-muted); }
+.feature-icon svg { width: 100%; height: 100%; }
+.feature-title { font-size: 12px; font-weight: 500; margin-bottom: 6px; }
+.feature-desc { font-size: 11px; color: var(--fg-muted); line-height: 1.7; }
 
-.token-swatch { width: 32px; height: 32px; border-radius: var(--radius); border: 1px solid var(--border); display: inline-block; vertical-align: middle; margin-right: 8px; }
-
-table { width: 100%; border-collapse: collapse; }
-th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 12px; }
-th { color: var(--fg-muted); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; font-weight: 400; }
-
-.sidebar-layout { display: grid; grid-template-columns: 240px 1fr; gap: 0; min-height: calc(100vh - 60px); }
-.sidebar { border-right: 1px solid var(--border); padding: 20px; }
-.sidebar-section { margin-bottom: 24px; }
-.sidebar-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg-muted); margin-bottom: 8px; }
-.sidebar-item { display: block; padding: 6px 8px; border-radius: var(--radius); color: var(--fg-muted); cursor: pointer; font-size: 11px; }
-.sidebar-item:hover, .sidebar-item.active { color: var(--fg); background: var(--bg-hover); }
-.sidebar-count { float: right; color: var(--fg-muted); font-size: 10px; }
-.content-panel { padding: 24px; overflow-y: auto; }
-
+/* -- Footer -- */
 .footer { padding: 24px; text-align: center; color: var(--fg-muted); font-size: 10px; border-top: 1px solid var(--border); margin-top: 48px; }
-
-
-.stat-row { display: flex; gap: 12px; margin-bottom: 32px; }
-.stat-box { flex: 1; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; text-align: center; }
-.stat-box .val { font-size: 28px; font-weight: 600; margin-bottom: 4px; }
-.stat-box .lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg-muted); }
-
-.conf-bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 8px; background: var(--bg-hover); }
-.conf-bar .seg { height: 100%; }
-.conf-bar .seg-high { background: var(--fg); }
-.conf-bar .seg-med { background: var(--fg-muted); }
-.conf-bar .seg-low { background: var(--bg-hover); }
-.conf-legend { display: flex; gap: 16px; font-size: 11px; color: var(--fg-muted); margin-bottom: 32px; }
-.conf-legend .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
-
-.freq-row { display: flex; align-items: center; margin-bottom: 8px; font-size: 12px; }
-.freq-label { width: 200px; flex-shrink: 0; }
-.freq-bar-wrap { flex: 1; height: 6px; background: var(--bg-hover); border-radius: 3px; margin: 0 12px; }
-.freq-bar { height: 100%; background: var(--fg-muted); border-radius: 3px; }
-.freq-count { width: 30px; text-align: right; color: var(--fg-muted); font-size: 11px; }
-
-.finding-card { background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--fg); border-radius: var(--radius); padding: 20px; margin-bottom: 12px; }
-.finding-card .finding-text { font-size: 13px; font-weight: 500; margin-bottom: 8px; }
-.finding-card .finding-meta { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--fg-muted); }
-
-.token-row { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
-.token-swatch-sm { width: 24px; height: 24px; border-radius: 3px; border: 1px solid var(--border); margin-right: 12px; flex-shrink: 0; }
-.token-name { font-size: 12px; color: var(--fg-muted); margin-right: auto; }
-.token-val { font-size: 12px; color: var(--fg-muted); }
-.group-header { font-size: 13px; font-weight: 500; margin: 24px 0 8px; }
-.group-sub { font-size: 11px; color: var(--fg-muted); margin: 16px 0 4px; padding-left: 8px; }
-
-.sidebar-item-indent { padding-left: 24px; }
 </style>
 </head>
 <body>
   <header class="hdr">
     <div class="hdr-brand">m&eacute;moire</div>
-    <nav class="hdr-nav"><a href="index.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12l9-8 9 8M5 11v8a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-8"/></svg>Home</a><a href="research.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>Research</a><a href="specs.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M8 7h8M8 11h8M8 15h4"/></svg>Specs</a><a href="design-system.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Systems</a><a href="portal.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>Portal</a><a href="changelog.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>Changelog</a></nav>
+    <nav class="hdr-nav"><a href="index.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12l9-8 9 8M5 11v8a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-8"/></svg>Home</a><a href="research.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>Research</a><a href="specs.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M8 7h8M8 11h8M8 15h4"/></svg>Specs</a><a href="design-system.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Systems</a><a href="changelog.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>Changelog</a></nav>
   </header>
-  
+
   <div class="main">
-    <div style="margin-bottom: 48px;">
-      <h1 style="font-family: 'Cormorant Garamond', Georgia, serif; font-size: 42px; font-weight: 300; font-style: italic; letter-spacing: 3px; margin-bottom: 8px;">m&eacute;moire</h1>
-      <p style="color: var(--fg-muted); font-size: 13px;">Spec-driven design intelligence. Figma bridge. Research synthesis. Atomic design. Code generation.</p>
-    </div>
 
-    <div class="grid-4" style="margin-bottom: 32px;">
-      <div class="card">
-        <div class="card-title">Components</div>
-        <div class="card-value">1</div>
+    <!-- Hero Window -->
+    <div class="hero-window">
+      <div class="window-chrome">
+        <div class="window-dots">
+          <div class="window-dot"></div>
+          <div class="window-dot"></div>
+          <div class="window-dot"></div>
+        </div>
+        <div class="window-url">localhost:9400/preview</div>
+        <div style="width: 54px;"></div>
       </div>
-      <div class="card">
-        <div class="card-title">Pages</div>
-        <div class="card-value">1</div>
-      </div>
-      <div class="card">
-        <div class="card-title">Data Viz</div>
-        <div class="card-value">2</div>
-      </div>
-      <div class="card">
-        <div class="card-title">Tokens</div>
-        <div class="card-value">0</div>
-      </div>
-    </div>
-
-    <div class="grid-3" style="margin-bottom: 32px;">
-      <div class="card">
-        <div class="card-title">Token Coverage</div>
-        <div style="margin-top: 8px;">
-          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;"><span style="color: var(--fg-muted);">Color</span><span>0</span></div>
-          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;"><span style="color: var(--fg-muted);">Spacing</span><span>0</span></div>
-          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;"><span style="color: var(--fg-muted);">Typography</span><span>0</span></div>
-          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;"><span style="color: var(--fg-muted);">Radius</span><span>0</span></div>
-          <div style="display: flex; justify-content: space-between;"><span style="color: var(--fg-muted);">Shadow</span><span>0</span></div>
+      <div class="window-body">
+        <div class="mini-sidebar">
+          <div class="mini-brand">m&eacute;moire</div>
+          <div class="mini-nav-item active">Dashboard</div>
+          <div class="mini-nav-item">Components</div>
+          <div class="mini-nav-item">Research</div>
+          <div class="mini-nav-item">Tokens</div>
+          <div class="mini-nav-item">Settings</div>
+        </div>
+        <div class="mini-content">
+          <div class="mini-title">Lorem ipsum dolor sit</div>
+          <div class="mini-search"></div>
+          <div class="mini-stats">
+            <div class="mini-stat">
+              <div class="mini-stat-val">148</div>
+              <div class="mini-stat-lbl">Specs</div>
+            </div>
+            <div class="mini-stat">
+              <div class="mini-stat-val">72</div>
+              <div class="mini-stat-lbl">Tokens</div>
+            </div>
+            <div class="mini-stat">
+              <div class="mini-stat-val">36</div>
+              <div class="mini-stat-lbl">Pages</div>
+            </div>
+            <div class="mini-stat">
+              <div class="mini-stat-val">891</div>
+              <div class="mini-stat-lbl">Syncs</div>
+            </div>
+          </div>
+          <div class="mini-chart">
+            <div class="mini-bar" style="height: 60%;"></div>
+            <div class="mini-bar accent" style="height: 90%;"></div>
+            <div class="mini-bar" style="height: 45%;"></div>
+            <div class="mini-bar" style="height: 70%;"></div>
+            <div class="mini-bar accent" style="height: 100%;"></div>
+            <div class="mini-bar" style="height: 55%;"></div>
+            <div class="mini-bar" style="height: 30%;"></div>
+            <div class="mini-bar accent" style="height: 80%;"></div>
+            <div class="mini-bar" style="height: 50%;"></div>
+            <div class="mini-bar" style="height: 65%;"></div>
+          </div>
+          <div class="mini-list">
+            <div class="mini-list-row"><div class="mini-list-dot"></div>Lorem ipsum dolor sit amet consectetur</div>
+            <div class="mini-list-row"><div class="mini-list-dot"></div>Adipiscing elit sed do eiusmod tempor</div>
+            <div class="mini-list-row"><div class="mini-list-dot"></div>Incididunt ut labore et dolore magna</div>
+          </div>
         </div>
       </div>
-      <div class="card">
-        <div class="card-title">Research</div>
-        <div style="margin-top: 8px;">
-          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;"><span style="color: var(--fg-muted);">Insights</span><span>0</span></div>
-          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;"><span style="color: var(--fg-muted);">Themes</span><span>0</span></div>
-          <div style="display: flex; justify-content: space-between;"><span style="color: var(--fg-muted);">Personas</span><span>0</span></div>
-        </div>
+    </div>
+
+    <!-- Hero bar -->
+    <div class="hero-bar">
+      <div class="hero-name">m&eacute;moire</div>
+      <div class="hero-badge">v0.1.0</div>
+    </div>
+    <div class="hero-desc">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.</div>
+
+    <!-- Figma link card -->
+    <div class="figma-card">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 5.5A3.5 3.5 0 018.5 2H12v7H8.5A3.5 3.5 0 015 5.5z"/><path d="M12 2h3.5a3.5 3.5 0 010 7H12V2z"/><path d="M12 12.5a3.5 3.5 0 117 0 3.5 3.5 0 01-7 0z"/><path d="M5 19.5A3.5 3.5 0 018.5 16H12v3.5a3.5 3.5 0 01-7 0z"/><path d="M5 12.5A3.5 3.5 0 018.5 9H12v7H8.5A3.5 3.5 0 015 12.5z"/></svg>
+      <div class="figma-card-text">Lorem ipsum dolor sit amet -- <a href="#">figma.com/design/lorem-ipsum</a> -- consectetur adipiscing elit sed do eiusmod tempor.</div>
+    </div>
+
+    <!-- About -->
+    <div class="about">
+      <div class="about-heading">De rerum natura</div>
+      <div class="about-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</div>
+    </div>
+
+    <!-- Feature grid -->
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+        <div class="feature-title">Lorem Ipsum Dolor</div>
+        <div class="feature-desc">Consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</div>
       </div>
-      <div class="card">
-        <div class="card-title">Quick Commands</div>
-        <div style="margin-top: 8px; display: flex; flex-direction: column; gap: 4px;">
-          <code style="color: var(--fg-muted); font-size: 11px;">memi connect</code>
-          <code style="color: var(--fg-muted); font-size: 11px;">memi pull</code>
-          <code style="color: var(--fg-muted); font-size: 11px;">memi generate</code>
-          <code style="color: var(--fg-muted); font-size: 11px;">memi doctor</code>
-          <code style="color: var(--fg-muted); font-size: 11px;">memi compose "&lt;intent&gt;"</code>
-        </div>
+      <div class="feature-card">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
+        <div class="feature-title">Sed Ut Perspiciatis</div>
+        <div class="feature-desc">Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg></div>
+        <div class="feature-title">Quis Autem Vel</div>
+        <div class="feature-desc">Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg></div>
+        <div class="feature-title">Nisi Ut Aliquid</div>
+        <div class="feature-desc">At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></div>
+        <div class="feature-title">Temporibus Autem</div>
+        <div class="feature-desc">Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg></div>
+        <div class="feature-title">Itaque Earum Rerum</div>
+        <div class="feature-desc">Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit.</div>
       </div>
     </div>
 
-    <div class="card" style="margin-bottom: 32px;">
-      <div class="card-title">Architecture</div>
-      <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 12px; font-size: 11px; color: var(--fg-muted);">
-        <span style="color: var(--fg);">engine</span> &rarr;
-        <span>figma bridge</span> &rarr;
-        <span>research</span> &rarr;
-        <span>specs</span> &rarr;
-        <span>codegen</span> &rarr;
-        <span>preview</span>
-      </div>
-    </div>
-
-    <div class="footer">memoire v0.1.0 -- built 2026-03-25</div>
+    <div class="footer">memoire v0.1.0</div>
   </div>
 </body>
 </html>

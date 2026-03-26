@@ -3,146 +3,300 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='6' fill='%23ffffff'/%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='6' fill='%230a0a0a'/%3E%3C/svg%3E">
 <title>memoire / changelog</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,300;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
-  --bg: #111113; --bg-card: #19191c; --bg-hover: #222226;
-  --fg: #ffffff; --fg-muted: #636369; --border: #2a2a2e;
-  --accent: #a0a0a6; --accent-bright: #ffffff;
-  --mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
-  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  --radius: 4px;
-  --green: #4ade80; --yellow: #facc15; --red: #f87171; --blue: #60a5fa;
+  --bg: #fafaf9; --bg-card: rgba(255, 255, 255, 0.65); --bg-hover: rgba(0, 0, 0, 0.03);
+  --fg: #0a0a0a; --fg-muted: #8a8a8a; --fg-dim: #b0b0b0; --border: rgba(0, 0, 0, 0.08);
+  --mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+  --serif: 'Cormorant Garamond', 'Georgia', serif;
+  --radius: 2px;
+  --green: #16a34a; --yellow: #ca8a04; --red: #dc2626; --blue: #2563eb;
 }
-body { font-family: var(--mono); font-size: 12px; background: var(--bg); color: var(--fg); line-height: 1.6; min-height: 100vh; }
-a { color: var(--accent-bright); text-decoration: none; }
+body { font-family: var(--mono); font-size: 12px; background: var(--bg); color: var(--fg); line-height: 1.6; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+a { color: var(--fg); text-decoration: none; }
 a:hover { text-decoration: underline; }
+::selection { background: rgba(0, 0, 0, 0.08); }
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #b0b0b0; border-radius: 2px; }
 
-.hdr { display: flex; align-items: center; justify-content: center; padding: 14px 24px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg); z-index: 100; gap: 0; }
-.hdr-brand { font-family: 'Cormorant Garamond', 'Playfair Display', 'Georgia', serif; font-size: 18px; font-weight: 300; font-style: italic; letter-spacing: 2px; color: var(--fg); margin-right: 32px; white-space: nowrap; }
-.hdr-nav { display: flex; gap: 2px; align-items: center; }
+/* -- Nav ----------------------------------------- */
+.hdr { display: flex; align-items: center; padding: 14px 24px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: rgba(250, 250, 249, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 100; }
+.hdr-brand { font-family: var(--serif); font-size: 18px; font-weight: 300; font-style: italic; letter-spacing: 2px; color: var(--fg); margin-right: 32px; white-space: nowrap; }
+.hdr-nav { display: flex; gap: 2px; align-items: center; flex: 1; }
 .hdr-nav a { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: var(--radius); color: var(--fg-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; text-decoration: none; transition: color 0.15s, background 0.15s; }
 .hdr-nav a:hover { color: var(--fg); background: var(--bg-hover); text-decoration: none; }
-.hdr-nav a.active { color: var(--fg); background: var(--bg-card); text-decoration: none; }
-.hdr-nav a svg { width: 14px; height: 14px; opacity: 0.5; }
-.hdr-nav a.active svg { opacity: 1; }
+.hdr-nav a.active { color: var(--fg); background: rgba(0, 0, 0, 0.05); text-decoration: none; }
+.hdr-nav a svg { width: 14px; height: 14px; opacity: 0.4; }
+.hdr-nav a.active svg { opacity: 0.8; }
+.hdr-stats { display: flex; gap: 16px; margin-left: auto; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg-muted); }
+.hdr-stats .n { color: var(--fg); font-weight: 500; margin-right: 2px; }
 
+/* -- Main ---------------------------------------- */
 .main { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
-.section { display: none; }
-.section.active { display: block; }
 
-.card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
-.card-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg-muted); margin-bottom: 12px; }
-.card-value { font-size: 24px; font-weight: 600; }
+/* -- Section label ------------------------------- */
+.section-label { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: var(--fg-muted); margin: 40px 0 16px; }
+.section-label:first-child { margin-top: 0; }
 
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
-.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-@media (max-width: 768px) { .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; } }
+/* -- Version block ------------------------------- */
+.version-block { margin-bottom: 48px; }
+.version-header { display: flex; align-items: baseline; gap: 16px; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+.version-tag { font-size: 16px; font-weight: 500; }
+.version-date { font-size: 11px; color: var(--fg-muted); }
+.version-count { font-size: 10px; color: var(--fg-dim); text-transform: uppercase; letter-spacing: 1px; margin-left: auto; }
 
-.tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
-.tab { padding: 8px 16px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg-muted); cursor: pointer; border-bottom: 2px solid transparent; background: none; border-top: none; border-left: none; border-right: none; font-family: var(--mono); }
-.tab:hover { color: var(--fg); }
-.tab.active { color: var(--fg); border-bottom-color: var(--fg); }
-.tab-panel { display: none; }
-.tab-panel.active { display: block; }
+/* -- Commit entry -------------------------------- */
+.commit { display: flex; align-items: flex-start; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+.commit:last-child { border-bottom: none; }
+.commit-hash { font-size: 11px; color: var(--fg-dim); flex-shrink: 0; width: 64px; }
+.commit-body { flex: 1; }
+.commit-msg { font-size: 12px; font-weight: 500; margin-bottom: 4px; }
+.commit-desc { font-size: 11px; color: var(--fg-muted); line-height: 1.7; }
+.commit-files { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.commit-file { display: inline-block; padding: 2px 6px; background: rgba(0, 0, 0, 0.04); border-radius: var(--radius); font-size: 10px; color: var(--fg-muted); }
 
+/* -- Decision card ------------------------------- */
+.decision-card { background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--fg); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 12px; backdrop-filter: blur(8px); }
+.decision-title { font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+.decision-body { font-size: 11px; color: var(--fg-muted); line-height: 1.7; }
+.decision-meta { display: flex; gap: 16px; margin-top: 10px; font-size: 10px; color: var(--fg-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* -- Badge --------------------------------------- */
 .badge { display: inline-block; padding: 2px 8px; border-radius: var(--radius); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
-.badge-high { background: rgba(74, 222, 128, 0.15); color: var(--green); }
-.badge-medium { background: rgba(250, 204, 21, 0.15); color: var(--yellow); }
-.badge-low { background: rgba(160, 160, 166, 0.15); color: var(--fg-muted); }
-.badge-atom { background: rgba(96, 165, 250, 0.15); color: var(--blue); }
-.badge-molecule { background: rgba(74, 222, 128, 0.15); color: var(--green); }
-.badge-organism { background: rgba(250, 204, 21, 0.15); color: var(--yellow); }
-.badge-template { background: rgba(248, 113, 113, 0.15); color: var(--red); }
+.badge-feature { background: rgba(22, 163, 74, 0.1); color: var(--green); }
+.badge-fix { background: rgba(220, 38, 38, 0.08); color: var(--red); }
+.badge-refactor { background: rgba(37, 99, 235, 0.1); color: var(--blue); }
+.badge-breaking { background: rgba(202, 138, 4, 0.1); color: var(--yellow); }
 
-.tag { display: inline-block; padding: 2px 6px; background: var(--bg-hover); border-radius: var(--radius); font-size: 10px; color: var(--fg-muted); margin: 2px; }
-
-.empty { text-align: center; padding: 48px 24px; color: var(--fg-muted); }
-.empty code { background: var(--bg-hover); padding: 2px 6px; border-radius: var(--radius); }
-
-.token-swatch { width: 32px; height: 32px; border-radius: var(--radius); border: 1px solid var(--border); display: inline-block; vertical-align: middle; margin-right: 8px; }
-
-table { width: 100%; border-collapse: collapse; }
-th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 12px; }
-th { color: var(--fg-muted); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; font-weight: 400; }
-
-.sidebar-layout { display: grid; grid-template-columns: 240px 1fr; gap: 0; min-height: calc(100vh - 60px); }
-.sidebar { border-right: 1px solid var(--border); padding: 20px; }
-.sidebar-section { margin-bottom: 24px; }
-.sidebar-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg-muted); margin-bottom: 8px; }
-.sidebar-item { display: block; padding: 6px 8px; border-radius: var(--radius); color: var(--fg-muted); cursor: pointer; font-size: 11px; }
-.sidebar-item:hover, .sidebar-item.active { color: var(--fg); background: var(--bg-hover); }
-.sidebar-count { float: right; color: var(--fg-muted); font-size: 10px; }
-.content-panel { padding: 24px; overflow-y: auto; }
-
+/* -- Footer -------------------------------------- */
 .footer { padding: 24px; text-align: center; color: var(--fg-muted); font-size: 10px; border-top: 1px solid var(--border); margin-top: 48px; }
-
-
-.stat-row { display: flex; gap: 12px; margin-bottom: 32px; }
-.stat-box { flex: 1; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; text-align: center; }
-.stat-box .val { font-size: 28px; font-weight: 600; margin-bottom: 4px; }
-.stat-box .lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg-muted); }
-
-.conf-bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 8px; background: var(--bg-hover); }
-.conf-bar .seg { height: 100%; }
-.conf-bar .seg-high { background: var(--fg); }
-.conf-bar .seg-med { background: var(--fg-muted); }
-.conf-bar .seg-low { background: var(--bg-hover); }
-.conf-legend { display: flex; gap: 16px; font-size: 11px; color: var(--fg-muted); margin-bottom: 32px; }
-.conf-legend .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
-
-.freq-row { display: flex; align-items: center; margin-bottom: 8px; font-size: 12px; }
-.freq-label { width: 200px; flex-shrink: 0; }
-.freq-bar-wrap { flex: 1; height: 6px; background: var(--bg-hover); border-radius: 3px; margin: 0 12px; }
-.freq-bar { height: 100%; background: var(--fg-muted); border-radius: 3px; }
-.freq-count { width: 30px; text-align: right; color: var(--fg-muted); font-size: 11px; }
-
-.finding-card { background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--fg); border-radius: var(--radius); padding: 20px; margin-bottom: 12px; }
-.finding-card .finding-text { font-size: 13px; font-weight: 500; margin-bottom: 8px; }
-.finding-card .finding-meta { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--fg-muted); }
-
-.token-row { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
-.token-swatch-sm { width: 24px; height: 24px; border-radius: 3px; border: 1px solid var(--border); margin-right: 12px; flex-shrink: 0; }
-.token-name { font-size: 12px; color: var(--fg-muted); margin-right: auto; }
-.token-val { font-size: 12px; color: var(--fg-muted); }
-.group-header { font-size: 13px; font-weight: 500; margin: 24px 0 8px; }
-.group-sub { font-size: 11px; color: var(--fg-muted); margin: 16px 0 4px; padding-left: 8px; }
-
-.sidebar-item-indent { padding-left: 24px; }
 </style>
 </head>
 <body>
   <header class="hdr">
     <div class="hdr-brand">m&eacute;moire</div>
-    <nav class="hdr-nav"><a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12l9-8 9 8M5 11v8a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-8"/></svg>Home</a><a href="research.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>Research</a><a href="specs.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M8 7h8M8 11h8M8 15h4"/></svg>Specs</a><a href="design-system.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Systems</a><a href="portal.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>Portal</a><a href="changelog.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>Changelog</a></nav>
+    <nav class="hdr-nav"><a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12l9-8 9 8M5 11v8a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-8"/></svg>Home</a><a href="research.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>Research</a><a href="specs.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M8 7h8M8 11h8M8 15h4"/></svg>Specs</a><a href="design-system.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Systems</a><a href="changelog.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>Changelog</a></nav>
+    <div class="hdr-stats">
+      <span><span class="n">12</span> entries</span>
+      <span><span class="n">4</span> versions</span>
+    </div>
   </header>
-  
+
   <div class="main">
-    <div class="card-title" style="margin-bottom: 24px;">Engine Changelog</div>
-    <div class="card" style="margin-bottom: 16px;">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <strong>v0.1.0</strong>
-        <span style="color: var(--fg-muted); font-size: 11px;">2026-03-25</span>
+
+    <!-- v0.3.0 -->
+    <div class="version-block">
+      <div class="version-header">
+        <span class="version-tag">v0.3.0</span>
+        <span class="version-date">2026-03-25</span>
+        <span class="badge badge-feature">feature</span>
+        <span class="version-count">4 commits</span>
       </div>
-      <div style="margin-top: 8px; color: var(--fg-muted); font-size: 11px; line-height: 1.8;">
-        <div>+ MemoireEngine core with Figma bridge, research, codegen</div>
-        <div>+ 19 CLI commands (memi daemon, doctor, heartbeat, compose...)</div>
-        <div>+ Agent orchestrator with 11 sub-agent types including motion-designer</div>
-        <div>+ Workspace markdown system (SOUL.md, AGENTS.md, TOOLS.md, HEARTBEAT.md)</div>
-        <div>+ Obsidian-style research synthesizer with knowledge graph</div>
-        <div>+ Web researcher with cross-validation and entity extraction</div>
-        <div>+ Self-healing loop for Figma canvas operations</div>
-        <div>+ Atomic Design enforcement (atom/molecule/organism/template)</div>
-        <div>+ Motion token system with easing curves and stagger patterns</div>
-        <div>+ Gateway daemon with PID tracking and heartbeat monitoring</div>
+
+      <div class="commit">
+        <span class="commit-hash">a7c3f01</span>
+        <div class="commit-body">
+          <div class="commit-msg">Adipiscing elit sed do eiusmod tempor incididunt</div>
+          <div class="commit-desc">Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit.</div>
+          <div class="commit-files">
+            <span class="commit-file">src/lorem/ipsum.ts</span>
+            <span class="commit-file">src/dolor/sit.ts</span>
+            <span class="commit-file">lib/amet/consectetur.ts</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="commit">
+        <span class="commit-hash">b9d4e22</span>
+        <div class="commit-body">
+          <div class="commit-msg">Quis autem vel eum iure reprehenderit voluptatem</div>
+          <div class="commit-desc">Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit.</div>
+          <div class="commit-files">
+            <span class="commit-file">src/nemo/enim.ts</span>
+            <span class="commit-file">config/voluptas.json</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="commit">
+        <span class="commit-hash">c1f8a33</span>
+        <div class="commit-body">
+          <div class="commit-msg">Temporibus autem quibusdam et aut officiis debitis</div>
+          <div class="commit-desc">Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.</div>
+          <div class="commit-files">
+            <span class="commit-file">src/perspiciatis/unde.ts</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="commit">
+        <span class="commit-hash">d3e9b44</span>
+        <div class="commit-body">
+          <div class="commit-msg">Totam rem aperiam eaque ipsa quae ab illo inventore</div>
+          <div class="commit-desc">Neque porro quisquam est qui dolorem ipsum quia dolor sit amet consectetur.</div>
+          <div class="commit-files">
+            <span class="commit-file">src/totam/rem.ts</span>
+            <span class="commit-file">src/aperiam/eaque.ts</span>
+          </div>
+        </div>
       </div>
     </div>
+
+    <!-- v0.2.0 -->
+    <div class="version-block">
+      <div class="version-header">
+        <span class="version-tag">v0.2.0</span>
+        <span class="version-date">2026-03-18</span>
+        <span class="badge badge-refactor">refactor</span>
+        <span class="version-count">3 commits</span>
+      </div>
+
+      <div class="commit">
+        <span class="commit-hash">e5a1c55</span>
+        <div class="commit-body">
+          <div class="commit-msg">Lorem ipsum dolor sit amet consectetur</div>
+          <div class="commit-desc">At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum.</div>
+          <div class="commit-files">
+            <span class="commit-file">src/vero/eos.ts</span>
+            <span class="commit-file">src/accusamus/iusto.ts</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="commit">
+        <span class="commit-hash">f7b2d66</span>
+        <div class="commit-body">
+          <div class="commit-msg">Nam libero tempore cum soluta nobis eligendi</div>
+          <div class="commit-desc">Itaque earum rerum hic tenetur a sapiente delectus ut aut reiciendis voluptatibus maiores.</div>
+          <div class="commit-files">
+            <span class="commit-file">lib/earum/rerum.ts</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="commit">
+        <span class="commit-hash">a8c3e77</span>
+        <div class="commit-body">
+          <div class="commit-msg">Excepturi sint occaecati cupiditate non provident</div>
+          <div class="commit-desc">Similique sunt in culpa qui officia deserunt mollitia animi id est laborum et dolorum fuga.</div>
+          <div class="commit-files">
+            <span class="commit-file">src/culpa/officia.ts</span>
+            <span class="commit-file">src/mollitia/animi.ts</span>
+            <span class="commit-file">config/laborum.json</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Decisions -->
+    <div class="section-label">Architectural Decisions</div>
+
+    <div class="decision-card">
+      <div class="decision-title">Voluptatem accusantium doloremque laudantium</div>
+      <div class="decision-body">Totam rem aperiam eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores.</div>
+      <div class="decision-meta">
+        <span>v0.3.0</span>
+        <span>a7c3f01</span>
+      </div>
+    </div>
+
+    <div class="decision-card">
+      <div class="decision-title">Sed ut perspiciatis unde omnis iste natus error</div>
+      <div class="decision-body">Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur.</div>
+      <div class="decision-meta">
+        <span>v0.2.0</span>
+        <span>e5a1c55</span>
+      </div>
+    </div>
+
+    <!-- v0.1.0 -->
+    <div class="section-label">Earlier Versions</div>
+
+    <div class="version-block">
+      <div class="version-header">
+        <span class="version-tag">v0.1.0</span>
+        <span class="version-date">2026-03-10</span>
+        <span class="badge badge-feature">feature</span>
+        <span class="version-count">3 commits</span>
+      </div>
+
+      <div class="commit">
+        <span class="commit-hash">b9d4f88</span>
+        <div class="commit-body">
+          <div class="commit-msg">Ut enim ad minima veniam quis nostrum exercitationem</div>
+          <div class="commit-desc">Corporis suscipit laboriosam nisi ut aliquid ex ea commodi consequatur.</div>
+          <div class="commit-files">
+            <span class="commit-file">src/corporis/suscipit.ts</span>
+            <span class="commit-file">src/laboriosam/nisi.ts</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="commit">
+        <span class="commit-hash">c0e5a99</span>
+        <div class="commit-body">
+          <div class="commit-msg">Harum quidem rerum facilis est et expedita distinctio</div>
+          <div class="commit-desc">Nam libero tempore cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus.</div>
+          <div class="commit-files">
+            <span class="commit-file">src/libero/tempore.ts</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="commit">
+        <span class="commit-hash">d1f6b00</span>
+        <div class="commit-body">
+          <div class="commit-msg">Omnis voluptas assumenda est omnis dolor repellendus</div>
+          <div class="commit-desc">Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet.</div>
+          <div class="commit-files">
+            <span class="commit-file">src/temporibus/autem.ts</span>
+            <span class="commit-file">lib/officiis/debitis.ts</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- v0.0.1 -->
+    <div class="version-block">
+      <div class="version-header">
+        <span class="version-tag">v0.0.1</span>
+        <span class="version-date">2026-03-01</span>
+        <span class="badge badge-breaking">initial</span>
+        <span class="version-count">2 commits</span>
+      </div>
+
+      <div class="commit">
+        <span class="commit-hash">e2a7c11</span>
+        <div class="commit-body">
+          <div class="commit-msg">Quis nostrud exercitation ullamco laboris nisi</div>
+          <div class="commit-desc">Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</div>
+          <div class="commit-files">
+            <span class="commit-file">src/index.ts</span>
+            <span class="commit-file">package.json</span>
+            <span class="commit-file">tsconfig.json</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="commit">
+        <span class="commit-hash">f3b8d22</span>
+        <div class="commit-body">
+          <div class="commit-msg">Excepteur sint occaecat cupidatat non proident</div>
+          <div class="commit-desc">Sunt in culpa qui officia deserunt mollit anim id est laborum.</div>
+          <div class="commit-files">
+            <span class="commit-file">src/init/setup.ts</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="footer">memoire changelog</div>
   </div>
 </body>

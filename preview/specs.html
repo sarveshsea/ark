@@ -3,233 +3,189 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='6' fill='%23ffffff'/%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='6' fill='%230a0a0a'/%3E%3C/svg%3E">
 <title>memoire / specs</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,300;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
-  --bg: #111113; --bg-card: #19191c; --bg-hover: #222226;
-  --fg: #ffffff; --fg-muted: #636369; --border: #2a2a2e;
-  --accent: #a0a0a6; --accent-bright: #ffffff;
-  --mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
-  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  --radius: 4px;
-  --green: #4ade80; --yellow: #facc15; --red: #f87171; --blue: #60a5fa;
+  --bg: #fafaf9; --bg-card: rgba(255, 255, 255, 0.65); --bg-hover: rgba(0, 0, 0, 0.03);
+  --fg: #0a0a0a; --fg-muted: #8a8a8a; --fg-dim: #b0b0b0; --border: rgba(0, 0, 0, 0.08);
+  --mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+  --serif: 'Cormorant Garamond', 'Georgia', serif;
+  --radius: 2px;
+  --green: #16a34a; --yellow: #ca8a04; --red: #dc2626; --blue: #2563eb;
 }
-body { font-family: var(--mono); font-size: 12px; background: var(--bg); color: var(--fg); line-height: 1.6; min-height: 100vh; }
-a { color: var(--accent-bright); text-decoration: none; }
+body { font-family: var(--mono); font-size: 12px; background: var(--bg); color: var(--fg); line-height: 1.6; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+a { color: var(--fg); text-decoration: none; }
 a:hover { text-decoration: underline; }
+::selection { background: rgba(0, 0, 0, 0.08); }
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #b0b0b0; border-radius: 2px; }
 
-.hdr { display: flex; align-items: center; justify-content: center; padding: 14px 24px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg); z-index: 100; gap: 0; }
-.hdr-brand { font-family: 'Cormorant Garamond', 'Playfair Display', 'Georgia', serif; font-size: 18px; font-weight: 300; font-style: italic; letter-spacing: 2px; color: var(--fg); margin-right: 32px; white-space: nowrap; }
-.hdr-nav { display: flex; gap: 2px; align-items: center; }
+/* ── Nav ─────────────────────────────────────── */
+.hdr { display: flex; align-items: center; padding: 14px 24px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: rgba(250, 250, 249, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 100; }
+.hdr-brand { font-family: var(--serif); font-size: 18px; font-weight: 300; font-style: italic; letter-spacing: 2px; color: var(--fg); margin-right: 32px; white-space: nowrap; }
+.hdr-nav { display: flex; gap: 2px; align-items: center; flex: 1; }
 .hdr-nav a { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: var(--radius); color: var(--fg-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; text-decoration: none; transition: color 0.15s, background 0.15s; }
 .hdr-nav a:hover { color: var(--fg); background: var(--bg-hover); text-decoration: none; }
-.hdr-nav a.active { color: var(--fg); background: var(--bg-card); text-decoration: none; }
-.hdr-nav a svg { width: 14px; height: 14px; opacity: 0.5; }
-.hdr-nav a.active svg { opacity: 1; }
+.hdr-nav a.active { color: var(--fg); background: rgba(0, 0, 0, 0.05); text-decoration: none; }
+.hdr-nav a svg { width: 14px; height: 14px; opacity: 0.4; }
+.hdr-nav a.active svg { opacity: 0.8; }
+.hdr-stats { display: flex; gap: 16px; margin-left: auto; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg-muted); }
+.hdr-stats .n { color: var(--fg); font-weight: 500; margin-right: 2px; }
 
-.main { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
-.section { display: none; }
-.section.active { display: block; }
-
-.card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
-.card-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg-muted); margin-bottom: 12px; }
-.card-value { font-size: 24px; font-weight: 600; }
-
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
-.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-@media (max-width: 768px) { .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; } }
-
-.tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
-.tab { padding: 8px 16px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg-muted); cursor: pointer; border-bottom: 2px solid transparent; background: none; border-top: none; border-left: none; border-right: none; font-family: var(--mono); }
+/* ── Tabs ────────────────────────────────────── */
+.tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); position: sticky; top: 49px; background: rgba(250, 250, 249, 0.95); backdrop-filter: blur(12px); z-index: 90; padding: 0 24px; }
+.tab { padding: 12px 20px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg-muted); cursor: pointer; border-bottom: 2px solid transparent; background: none; border-top: none; border-left: none; border-right: none; font-family: var(--mono); transition: color 0.15s; }
 .tab:hover { color: var(--fg); }
 .tab.active { color: var(--fg); border-bottom-color: var(--fg); }
 .tab-panel { display: none; }
 .tab-panel.active { display: block; }
 
+/* ── Main ────────────────────────────────────── */
+.main { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
+
+/* ── Badge ───────────────────────────────────── */
 .badge { display: inline-block; padding: 2px 8px; border-radius: var(--radius); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
-.badge-high { background: rgba(74, 222, 128, 0.15); color: var(--green); }
-.badge-medium { background: rgba(250, 204, 21, 0.15); color: var(--yellow); }
-.badge-low { background: rgba(160, 160, 166, 0.15); color: var(--fg-muted); }
-.badge-atom { background: rgba(96, 165, 250, 0.15); color: var(--blue); }
-.badge-molecule { background: rgba(74, 222, 128, 0.15); color: var(--green); }
-.badge-organism { background: rgba(250, 204, 21, 0.15); color: var(--yellow); }
-.badge-template { background: rgba(248, 113, 113, 0.15); color: var(--red); }
+.badge-atom { background: rgba(37, 99, 235, 0.1); color: var(--blue); }
+.badge-molecule { background: rgba(22, 163, 74, 0.1); color: var(--green); }
+.badge-organism { background: rgba(202, 138, 4, 0.1); color: var(--yellow); }
+.badge-template { background: rgba(0, 0, 0, 0.04); color: var(--fg-muted); }
+.badge-page { background: rgba(220, 38, 38, 0.08); color: var(--red); }
+.badge-dataviz { background: rgba(37, 99, 235, 0.08); color: var(--blue); }
+.badge-final { background: rgba(22, 163, 74, 0.1); color: var(--green); }
+.badge-draft { background: rgba(202, 138, 4, 0.1); color: var(--yellow); }
 
-.tag { display: inline-block; padding: 2px 6px; background: var(--bg-hover); border-radius: var(--radius); font-size: 10px; color: var(--fg-muted); margin: 2px; }
-
-.empty { text-align: center; padding: 48px 24px; color: var(--fg-muted); }
-.empty code { background: var(--bg-hover); padding: 2px 6px; border-radius: var(--radius); }
-
-.token-swatch { width: 32px; height: 32px; border-radius: var(--radius); border: 1px solid var(--border); display: inline-block; vertical-align: middle; margin-right: 8px; }
-
+/* ── Tables ──────────────────────────────────── */
 table { width: 100%; border-collapse: collapse; }
-th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 12px; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 12px; }
 th { color: var(--fg-muted); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; font-weight: 400; }
+tr:hover td { background: rgba(0, 0, 0, 0.02); }
 
-.sidebar-layout { display: grid; grid-template-columns: 240px 1fr; gap: 0; min-height: calc(100vh - 60px); }
-.sidebar { border-right: 1px solid var(--border); padding: 20px; }
-.sidebar-section { margin-bottom: 24px; }
-.sidebar-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg-muted); margin-bottom: 8px; }
-.sidebar-item { display: block; padding: 6px 8px; border-radius: var(--radius); color: var(--fg-muted); cursor: pointer; font-size: 11px; }
-.sidebar-item:hover, .sidebar-item.active { color: var(--fg); background: var(--bg-hover); }
-.sidebar-count { float: right; color: var(--fg-muted); font-size: 10px; }
-.content-panel { padding: 24px; overflow-y: auto; }
+/* ── Section labels ──────────────────────────── */
+.section-label { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: var(--fg-muted); margin: 32px 0 16px; }
+.section-label:first-child { margin-top: 0; }
 
+/* ── Footer ──────────────────────────────────── */
 .footer { padding: 24px; text-align: center; color: var(--fg-muted); font-size: 10px; border-top: 1px solid var(--border); margin-top: 48px; }
-
-
-.stat-row { display: flex; gap: 12px; margin-bottom: 32px; }
-.stat-box { flex: 1; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; text-align: center; }
-.stat-box .val { font-size: 28px; font-weight: 600; margin-bottom: 4px; }
-.stat-box .lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg-muted); }
-
-.conf-bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 8px; background: var(--bg-hover); }
-.conf-bar .seg { height: 100%; }
-.conf-bar .seg-high { background: var(--fg); }
-.conf-bar .seg-med { background: var(--fg-muted); }
-.conf-bar .seg-low { background: var(--bg-hover); }
-.conf-legend { display: flex; gap: 16px; font-size: 11px; color: var(--fg-muted); margin-bottom: 32px; }
-.conf-legend .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
-
-.freq-row { display: flex; align-items: center; margin-bottom: 8px; font-size: 12px; }
-.freq-label { width: 200px; flex-shrink: 0; }
-.freq-bar-wrap { flex: 1; height: 6px; background: var(--bg-hover); border-radius: 3px; margin: 0 12px; }
-.freq-bar { height: 100%; background: var(--fg-muted); border-radius: 3px; }
-.freq-count { width: 30px; text-align: right; color: var(--fg-muted); font-size: 11px; }
-
-.finding-card { background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--fg); border-radius: var(--radius); padding: 20px; margin-bottom: 12px; }
-.finding-card .finding-text { font-size: 13px; font-weight: 500; margin-bottom: 8px; }
-.finding-card .finding-meta { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--fg-muted); }
-
-.token-row { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
-.token-swatch-sm { width: 24px; height: 24px; border-radius: 3px; border: 1px solid var(--border); margin-right: 12px; flex-shrink: 0; }
-.token-name { font-size: 12px; color: var(--fg-muted); margin-right: auto; }
-.token-val { font-size: 12px; color: var(--fg-muted); }
-.group-header { font-size: 13px; font-weight: 500; margin: 24px 0 8px; }
-.group-sub { font-size: 11px; color: var(--fg-muted); margin: 16px 0 4px; padding-left: 8px; }
-
-.sidebar-item-indent { padding-left: 24px; }
 </style>
 </head>
 <body>
   <header class="hdr">
     <div class="hdr-brand">m&eacute;moire</div>
-    <nav class="hdr-nav"><a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12l9-8 9 8M5 11v8a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-8"/></svg>Home</a><a href="research.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>Research</a><a href="specs.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M8 7h8M8 11h8M8 15h4"/></svg>Specs</a><a href="design-system.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Systems</a><a href="portal.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>Portal</a><a href="changelog.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>Changelog</a></nav>
+    <nav class="hdr-nav"><a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12l9-8 9 8M5 11v8a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-8"/></svg>Home</a><a href="research.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>Research</a><a href="specs.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M8 7h8M8 11h8M8 15h4"/></svg>Specs</a><a href="design-system.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Systems</a><a href="changelog.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>Changelog</a></nav>
+    <div class="hdr-stats">
+      <span><span class="n">15</span> specs</span>
+      <span><span class="n">8</span> lorem</span>
+      <span><span class="n">3</span> ipsum</span>
+    </div>
   </header>
-  
-  <div class="main">
-    <div class="grid-4" style="margin-bottom: 24px;">
-      <div class="card"><div class="card-title">Components</div><div class="card-value">1</div></div>
-      <div class="card"><div class="card-title">Pages</div><div class="card-value">1</div></div>
-      <div class="card"><div class="card-title">Data Viz</div><div class="card-value">2</div></div>
-      <div class="card"><div class="card-title">Other</div><div class="card-value">0</div></div>
-    </div>
 
-    <div data-tab-group="specs">
-      <div class="tabs">
-        <button class="tab active" data-tab="components" onclick="switchTab('specs','components')">Components</button>
-        <button class="tab" data-tab="pages" onclick="switchTab('specs','pages')">Pages</button>
-        <button class="tab" data-tab="dataviz" onclick="switchTab('specs','dataviz')">Data Viz</button>
-        <button class="tab" data-tab="all" onclick="switchTab('specs','all')">All Specs</button>
-      </div>
-
-      <div class="tab-panel active" data-panel="components">
-        
-        <table>
-          <thead><tr><th>Name</th><th>Level</th><th>shadcn Base</th><th>Props</th><th>Purpose</th></tr></thead>
-          <tbody>
-    <tr>
-      <td><strong>MetricCard</strong></td>
-      <td><span class="badge badge-molecule">molecule</span></td>
-      <td style="color: var(--fg-muted);">Card, Badge</td>
-      <td style="color: var(--fg-muted);">4 props</td>
-      <td style="color: var(--fg-muted);">Display a single KPI metric with title, value, and optional trend indicator</td>
-    </tr></tbody>
-        </table>
-      </div>
-
-      <div class="tab-panel" data-panel="pages">
-        
-        <table>
-          <thead><tr><th>Name</th><th>Layout</th><th>Sections</th><th>Purpose</th></tr></thead>
-          <tbody>
-    <tr>
-      <td><strong>Dashboard</strong></td>
-      <td style="color: var(--fg-muted);">dashboard</td>
-      <td style="color: var(--fg-muted);">2 sections</td>
-      <td style="color: var(--fg-muted);">Main application dashboard showing KPIs and activity trends</td>
-    </tr></tbody>
-        </table>
-      </div>
-
-      <div class="tab-panel" data-panel="dataviz">
-        
-        <table>
-          <thead><tr><th>Name</th><th>Chart Type</th><th>Purpose</th></tr></thead>
-          <tbody>
-    <tr>
-      <td><strong>ActivityChart</strong></td>
-      <td style="color: var(--fg-muted);">area</td>
-      <td style="color: var(--fg-muted);">Show daily activity trend over the last 30 days</td>
-    </tr>
-    <tr>
-      <td><strong>RevenueChart</strong></td>
-      <td style="color: var(--fg-muted);">line</td>
-      <td style="color: var(--fg-muted);">RevenueChart chart</td>
-    </tr></tbody>
-        </table>
-      </div>
-
-      <div class="tab-panel" data-panel="all">
-        <table>
-          <thead><tr><th>Name</th><th>Type</th><th>Purpose</th><th>Updated</th></tr></thead>
-          <tbody>
-            
-            <tr>
-              <td><strong>MetricCard</strong></td>
-              <td><span class="badge badge-low">component</span></td>
-              <td style="color: var(--fg-muted);">Display a single KPI metric with title, value, and optional trend indicator</td>
-              <td style="color: var(--fg-muted);">2026-03-23</td>
-            </tr>
-            <tr>
-              <td><strong>Dashboard</strong></td>
-              <td><span class="badge badge-low">page</span></td>
-              <td style="color: var(--fg-muted);">Main application dashboard showing KPIs and activity trends</td>
-              <td style="color: var(--fg-muted);">2026-03-23</td>
-            </tr>
-            <tr>
-              <td><strong>ActivityChart</strong></td>
-              <td><span class="badge badge-low">dataviz</span></td>
-              <td style="color: var(--fg-muted);">Show daily activity trend over the last 30 days</td>
-              <td style="color: var(--fg-muted);">2026-03-23</td>
-            </tr>
-            <tr>
-              <td><strong>RevenueChart</strong></td>
-              <td><span class="badge badge-low">dataviz</span></td>
-              <td style="color: var(--fg-muted);">RevenueChart chart</td>
-              <td style="color: var(--fg-muted);">2026-03-23</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="footer">memoire specs -- 4 total</div>
+  <!-- Main Tabs -->
+  <div class="tabs" data-tab-group="specs">
+    <button class="tab active" data-tab="components" onclick="switchTab('specs','components')">Components</button>
+    <button class="tab" data-tab="pages" onclick="switchTab('specs','pages')">Pages</button>
+    <button class="tab" data-tab="dataviz" onclick="switchTab('specs','dataviz')">Data Viz</button>
+    <button class="tab" data-tab="all" onclick="switchTab('specs','all')">All Specs</button>
   </div>
-  
-<script>
-function switchTab(group, tabName) {
-  document.querySelectorAll('[data-tab-group="' + group + '"] .tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('[data-tab-group="' + group + '"] .tab-panel').forEach(p => p.classList.remove('active'));
-  document.querySelector('[data-tab-group="' + group + '"] .tab[data-tab="' + tabName + '"]').classList.add('active');
-  document.querySelector('[data-tab-group="' + group + '"] .tab-panel[data-panel="' + tabName + '"]').classList.add('active');
-}
-</script>
+
+  <div class="main" data-tab-group="specs">
+
+    <!-- ════════════════════════════════════════ COMPONENTS ════ -->
+    <div class="tab-panel active" data-panel="components">
+      <p class="section-label">Component Specs</p>
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Level</th><th>Status</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Voluptas</td><td><span class="badge badge-atom">atom</span></td><td><span class="badge badge-final">final</span></td><td>Lorem ipsum dolor sit amet consectetur adipiscing elit</td></tr>
+          <tr><td>Tempore</td><td><span class="badge badge-atom">atom</span></td><td><span class="badge badge-final">final</span></td><td>Sed do eiusmod tempor incididunt ut labore et dolore</td></tr>
+          <tr><td>Aperiam</td><td><span class="badge badge-atom">atom</span></td><td><span class="badge badge-draft">draft</span></td><td>Ut enim ad minim veniam quis nostrud exercitation</td></tr>
+          <tr><td>Dignissimos</td><td><span class="badge badge-molecule">molecule</span></td><td><span class="badge badge-final">final</span></td><td>Duis aute irure dolor in reprehenderit in voluptate</td></tr>
+          <tr><td>Consequatur</td><td><span class="badge badge-molecule">molecule</span></td><td><span class="badge badge-final">final</span></td><td>Excepteur sint occaecat cupidatat non proident sunt</td></tr>
+          <tr><td>Accusantium</td><td><span class="badge badge-organism">organism</span></td><td><span class="badge badge-draft">draft</span></td><td>Nemo enim ipsam voluptatem quia voluptas sit aspernatur</td></tr>
+          <tr><td>Repudiandae</td><td><span class="badge badge-organism">organism</span></td><td><span class="badge badge-final">final</span></td><td>Neque porro quisquam est qui dolorem ipsum quia dolor</td></tr>
+          <tr><td>Perspiciatis</td><td><span class="badge badge-template">template</span></td><td><span class="badge badge-draft">draft</span></td><td>Quis autem vel eum iure reprehenderit qui in ea voluptate</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ════════════════════════════════════════ PAGES ════ -->
+    <div class="tab-panel" data-panel="pages">
+      <p class="section-label">Page Specs</p>
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Level</th><th>Status</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Inventore</td><td><span class="badge badge-page">page</span></td><td><span class="badge badge-final">final</span></td><td>At vero eos et accusamus et iusto odio dignissimos ducimus</td></tr>
+          <tr><td>Blanditiis</td><td><span class="badge badge-page">page</span></td><td><span class="badge badge-draft">draft</span></td><td>Nam libero tempore cum soluta nobis est eligendi optio</td></tr>
+          <tr><td>Praesentium</td><td><span class="badge badge-page">page</span></td><td><span class="badge badge-final">final</span></td><td>Temporibus autem quibusdam et aut officiis debitis rerum</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ════════════════════════════════════════ DATA VIZ ════ -->
+    <div class="tab-panel" data-panel="dataviz">
+      <p class="section-label">Data Visualization Specs</p>
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Level</th><th>Status</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Molestiae</td><td><span class="badge badge-dataviz">dataviz</span></td><td><span class="badge badge-final">final</span></td><td>Itaque earum rerum hic tenetur a sapiente delectus</td></tr>
+          <tr><td>Recusandae</td><td><span class="badge badge-dataviz">dataviz</span></td><td><span class="badge badge-draft">draft</span></td><td>Ut aut reiciendis voluptatibus maiores alias consequatur</td></tr>
+          <tr><td>Distinctio</td><td><span class="badge badge-dataviz">dataviz</span></td><td><span class="badge badge-final">final</span></td><td>Similique sunt in culpa qui officia deserunt mollitia</td></tr>
+          <tr><td>Exercitationem</td><td><span class="badge badge-dataviz">dataviz</span></td><td><span class="badge badge-final">final</span></td><td>Harum quidem rerum facilis est et expedita distinctio</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ════════════════════════════════════════ ALL SPECS ════ -->
+    <div class="tab-panel" data-panel="all">
+      <p class="section-label">All Specs</p>
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Level</th><th>Status</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Voluptas</td><td><span class="badge badge-atom">atom</span></td><td><span class="badge badge-final">final</span></td><td>Lorem ipsum dolor sit amet consectetur adipiscing elit</td></tr>
+          <tr><td>Tempore</td><td><span class="badge badge-atom">atom</span></td><td><span class="badge badge-final">final</span></td><td>Sed do eiusmod tempor incididunt ut labore et dolore</td></tr>
+          <tr><td>Aperiam</td><td><span class="badge badge-atom">atom</span></td><td><span class="badge badge-draft">draft</span></td><td>Ut enim ad minim veniam quis nostrud exercitation</td></tr>
+          <tr><td>Dignissimos</td><td><span class="badge badge-molecule">molecule</span></td><td><span class="badge badge-final">final</span></td><td>Duis aute irure dolor in reprehenderit in voluptate</td></tr>
+          <tr><td>Consequatur</td><td><span class="badge badge-molecule">molecule</span></td><td><span class="badge badge-final">final</span></td><td>Excepteur sint occaecat cupidatat non proident sunt</td></tr>
+          <tr><td>Accusantium</td><td><span class="badge badge-organism">organism</span></td><td><span class="badge badge-draft">draft</span></td><td>Nemo enim ipsam voluptatem quia voluptas sit aspernatur</td></tr>
+          <tr><td>Repudiandae</td><td><span class="badge badge-organism">organism</span></td><td><span class="badge badge-final">final</span></td><td>Neque porro quisquam est qui dolorem ipsum quia dolor</td></tr>
+          <tr><td>Perspiciatis</td><td><span class="badge badge-template">template</span></td><td><span class="badge badge-draft">draft</span></td><td>Quis autem vel eum iure reprehenderit qui in ea voluptate</td></tr>
+          <tr><td>Inventore</td><td><span class="badge badge-page">page</span></td><td><span class="badge badge-final">final</span></td><td>At vero eos et accusamus et iusto odio dignissimos ducimus</td></tr>
+          <tr><td>Blanditiis</td><td><span class="badge badge-page">page</span></td><td><span class="badge badge-draft">draft</span></td><td>Nam libero tempore cum soluta nobis est eligendi optio</td></tr>
+          <tr><td>Praesentium</td><td><span class="badge badge-page">page</span></td><td><span class="badge badge-final">final</span></td><td>Temporibus autem quibusdam et aut officiis debitis rerum</td></tr>
+          <tr><td>Molestiae</td><td><span class="badge badge-dataviz">dataviz</span></td><td><span class="badge badge-final">final</span></td><td>Itaque earum rerum hic tenetur a sapiente delectus</td></tr>
+          <tr><td>Recusandae</td><td><span class="badge badge-dataviz">dataviz</span></td><td><span class="badge badge-draft">draft</span></td><td>Ut aut reiciendis voluptatibus maiores alias consequatur</td></tr>
+          <tr><td>Distinctio</td><td><span class="badge badge-dataviz">dataviz</span></td><td><span class="badge badge-final">final</span></td><td>Similique sunt in culpa qui officia deserunt mollitia</td></tr>
+          <tr><td>Exercitationem</td><td><span class="badge badge-dataviz">dataviz</span></td><td><span class="badge badge-final">final</span></td><td>Harum quidem rerum facilis est et expedita distinctio</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <div class="footer">memoire -- spec registry</div>
+
+  <script>
+  function switchTab(group, tab) {
+    var container = document.querySelector('.tabs[data-tab-group="' + group + '"]');
+    var main = document.querySelector('.main[data-tab-group="' + group + '"]');
+    container.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+    container.querySelector('[data-tab="' + tab + '"]').classList.add('active');
+    main.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+    main.querySelector('[data-panel="' + tab + '"]').classList.add('active');
+  }
+  </script>
 </body>
 </html>

@@ -3,182 +3,665 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='6' fill='%23ffffff'/%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='6' fill='%230a0a0a'/%3E%3C/svg%3E">
 <title>memoire / systems</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,300;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
-  --bg: #111113; --bg-card: #19191c; --bg-hover: #222226;
-  --fg: #ffffff; --fg-muted: #636369; --border: #2a2a2e;
-  --accent: #a0a0a6; --accent-bright: #ffffff;
-  --mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
-  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  --radius: 4px;
-  --green: #4ade80; --yellow: #facc15; --red: #f87171; --blue: #60a5fa;
+  --bg: #fafaf9; --bg-card: rgba(255, 255, 255, 0.65); --bg-hover: rgba(0, 0, 0, 0.03);
+  --fg: #0a0a0a; --fg-muted: #8a8a8a; --fg-dim: #b0b0b0; --border: rgba(0, 0, 0, 0.08);
+  --mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+  --serif: 'Cormorant Garamond', 'Georgia', serif;
+  --radius: 2px;
+  --green: #16a34a; --yellow: #ca8a04; --red: #dc2626; --blue: #2563eb;
 }
-body { font-family: var(--mono); font-size: 12px; background: var(--bg); color: var(--fg); line-height: 1.6; min-height: 100vh; }
-a { color: var(--accent-bright); text-decoration: none; }
+body { font-family: var(--mono); font-size: 12px; background: var(--bg); color: var(--fg); line-height: 1.6; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+a { color: var(--fg); text-decoration: none; }
 a:hover { text-decoration: underline; }
+::selection { background: rgba(0, 0, 0, 0.08); }
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #b0b0b0; border-radius: 2px; }
 
-.hdr { display: flex; align-items: center; justify-content: center; padding: 14px 24px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg); z-index: 100; gap: 0; }
-.hdr-brand { font-family: 'Cormorant Garamond', 'Playfair Display', 'Georgia', serif; font-size: 18px; font-weight: 300; font-style: italic; letter-spacing: 2px; color: var(--fg); margin-right: 32px; white-space: nowrap; }
-.hdr-nav { display: flex; gap: 2px; align-items: center; }
+/* -- Nav ----------------------------------------- */
+.hdr { display: flex; align-items: center; padding: 14px 24px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: rgba(250, 250, 249, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 100; }
+.hdr-brand { font-family: var(--serif); font-size: 18px; font-weight: 300; font-style: italic; letter-spacing: 2px; color: var(--fg); margin-right: 32px; white-space: nowrap; }
+.hdr-nav { display: flex; gap: 2px; align-items: center; flex: 1; }
 .hdr-nav a { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: var(--radius); color: var(--fg-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; text-decoration: none; transition: color 0.15s, background 0.15s; }
 .hdr-nav a:hover { color: var(--fg); background: var(--bg-hover); text-decoration: none; }
-.hdr-nav a.active { color: var(--fg); background: var(--bg-card); text-decoration: none; }
-.hdr-nav a svg { width: 14px; height: 14px; opacity: 0.5; }
-.hdr-nav a.active svg { opacity: 1; }
+.hdr-nav a.active { color: var(--fg); background: rgba(0, 0, 0, 0.05); text-decoration: none; }
+.hdr-nav a svg { width: 14px; height: 14px; opacity: 0.4; }
+.hdr-nav a.active svg { opacity: 0.8; }
+.hdr-stats { display: flex; gap: 16px; margin-left: auto; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg-muted); }
+.hdr-stats .n { color: var(--fg); font-weight: 500; margin-right: 2px; }
 
-.main { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
-.section { display: none; }
-.section.active { display: block; }
-
-.card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
-.card-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg-muted); margin-bottom: 12px; }
-.card-value { font-size: 24px; font-weight: 600; }
-
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
-.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-@media (max-width: 768px) { .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; } }
-
-.tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
-.tab { padding: 8px 16px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg-muted); cursor: pointer; border-bottom: 2px solid transparent; background: none; border-top: none; border-left: none; border-right: none; font-family: var(--mono); }
+/* -- Tabs ---------------------------------------- */
+.tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); position: sticky; top: 49px; background: rgba(250, 250, 249, 0.95); backdrop-filter: blur(12px); z-index: 90; padding: 0 24px; }
+.tab { padding: 12px 20px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg-muted); cursor: pointer; border-bottom: 2px solid transparent; background: none; border-top: none; border-left: none; border-right: none; font-family: var(--mono); transition: color 0.15s; }
 .tab:hover { color: var(--fg); }
 .tab.active { color: var(--fg); border-bottom-color: var(--fg); }
 .tab-panel { display: none; }
 .tab-panel.active { display: block; }
 
+/* -- Main ---------------------------------------- */
+.main { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
+
+/* -- Section label ------------------------------- */
+.section-label { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: var(--fg-muted); margin: 32px 0 16px; }
+.section-label:first-child { margin-top: 0; }
+
+/* -- Tokens: sidebar + content ------------------- */
+.tokens-layout { display: grid; grid-template-columns: 220px 1fr; gap: 24px; }
+@media (max-width: 768px) { .tokens-layout { grid-template-columns: 1fr; } }
+.tokens-sidebar { position: sticky; top: 110px; align-self: start; }
+.sidebar-group { margin-bottom: 20px; }
+.sidebar-group-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--fg-muted); margin-bottom: 8px; }
+.sidebar-item { padding: 6px 12px; font-size: 11px; color: var(--fg-muted); cursor: pointer; border-radius: var(--radius); transition: all 0.15s; border: none; background: none; font-family: var(--mono); display: block; width: 100%; text-align: left; }
+.sidebar-item:hover { color: var(--fg); background: var(--bg-hover); }
+.sidebar-item.active { color: var(--fg); background: rgba(0, 0, 0, 0.05); }
+
+/* -- Color swatches ------------------------------ */
+.swatch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-bottom: 32px; }
+.swatch { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; backdrop-filter: blur(8px); }
+.swatch-color { height: 64px; }
+.swatch-info { padding: 10px 12px; }
+.swatch-name { font-size: 11px; font-weight: 500; margin-bottom: 2px; }
+.swatch-hex { font-size: 10px; color: var(--fg-muted); }
+
+/* -- Token rows ---------------------------------- */
+.token-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+.token-name { font-weight: 500; }
+.token-value { color: var(--fg-muted); font-size: 11px; }
+.token-preview { width: 24px; height: 24px; border-radius: var(--radius); border: 1px solid var(--border); margin-right: 10px; flex-shrink: 0; }
+
+/* -- Component cards ----------------------------- */
+.comp-section { margin-bottom: 40px; }
+.comp-section-title { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+.comp-section-desc { font-size: 11px; color: var(--fg-muted); margin-bottom: 16px; }
+.comp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.comp-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; backdrop-filter: blur(8px); transition: border-color 0.15s; }
+.comp-card:hover { border-color: rgba(0, 0, 0, 0.15); }
+.comp-preview { height: 100px; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.02); border-bottom: 1px solid var(--border); padding: 16px; }
+.comp-meta { padding: 14px 16px; }
+.comp-name { font-size: 12px; font-weight: 500; margin-bottom: 4px; }
+.comp-desc { font-size: 11px; color: var(--fg-muted); margin-bottom: 8px; line-height: 1.5; }
+.comp-footer { display: flex; align-items: center; justify-content: space-between; }
+
+/* -- Badges -------------------------------------- */
 .badge { display: inline-block; padding: 2px 8px; border-radius: var(--radius); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
-.badge-high { background: rgba(74, 222, 128, 0.15); color: var(--green); }
-.badge-medium { background: rgba(250, 204, 21, 0.15); color: var(--yellow); }
-.badge-low { background: rgba(160, 160, 166, 0.15); color: var(--fg-muted); }
-.badge-atom { background: rgba(96, 165, 250, 0.15); color: var(--blue); }
-.badge-molecule { background: rgba(74, 222, 128, 0.15); color: var(--green); }
-.badge-organism { background: rgba(250, 204, 21, 0.15); color: var(--yellow); }
-.badge-template { background: rgba(248, 113, 113, 0.15); color: var(--red); }
+.badge-atom { background: rgba(37, 99, 235, 0.08); color: var(--blue); }
+.badge-molecule { background: rgba(22, 163, 74, 0.08); color: var(--green); }
+.badge-organism { background: rgba(202, 138, 4, 0.08); color: var(--yellow); }
+.badge-template { background: rgba(220, 38, 38, 0.08); color: var(--red); }
+.badge-variant { background: rgba(0, 0, 0, 0.04); color: var(--fg-muted); font-size: 9px; }
 
-.tag { display: inline-block; padding: 2px 6px; background: var(--bg-hover); border-radius: var(--radius); font-size: 10px; color: var(--fg-muted); margin: 2px; }
+/* -- Preview placeholders ------------------------ */
+.preview-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 18px; border-radius: var(--radius); background: var(--fg); color: var(--bg); font-size: 11px; font-family: var(--mono); border: none; }
+.preview-btn-outline { display: inline-flex; align-items: center; gap: 6px; padding: 7px 18px; border-radius: var(--radius); background: none; color: var(--fg); font-size: 11px; font-family: var(--mono); border: 1px solid var(--border); }
+.preview-input { padding: 7px 12px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 11px; font-family: var(--mono); background: none; color: var(--fg); width: 140px; }
+.preview-badge-sm { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 10px; background: rgba(0,0,0,0.04); color: var(--fg-muted); }
+.preview-toggle { width: 32px; height: 18px; border-radius: 9px; background: var(--fg); position: relative; display: inline-block; }
+.preview-toggle::after { content: ''; width: 14px; height: 14px; border-radius: 50%; background: white; position: absolute; top: 2px; right: 2px; }
+.preview-bar { height: 6px; border-radius: 3px; background: rgba(0,0,0,0.08); flex: 1; position: relative; overflow: hidden; }
+.preview-bar-fill { height: 100%; border-radius: 3px; background: var(--fg); }
 
-.empty { text-align: center; padding: 48px 24px; color: var(--fg-muted); }
-.empty code { background: var(--bg-hover); padding: 2px 6px; border-radius: var(--radius); }
+/* -- Layout cards -------------------------------- */
+.layout-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+.layout-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; backdrop-filter: blur(8px); }
+.layout-wireframe { height: 160px; padding: 16px; background: rgba(0, 0, 0, 0.02); border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px; }
+.wire-row { display: flex; gap: 6px; flex: 1; }
+.wire-block { background: rgba(0, 0, 0, 0.06); border-radius: var(--radius); flex: 1; }
+.wire-block-sm { background: rgba(0, 0, 0, 0.06); border-radius: var(--radius); width: 60px; flex-shrink: 0; }
+.wire-block-narrow { background: rgba(0, 0, 0, 0.04); border-radius: var(--radius); height: 8px; width: 60%; }
+.wire-block-wide { background: rgba(0, 0, 0, 0.04); border-radius: var(--radius); height: 8px; width: 90%; }
+.wire-block-header { background: rgba(0, 0, 0, 0.08); border-radius: var(--radius); height: 20px; }
+.layout-meta { padding: 14px 16px; }
+.layout-name { font-size: 12px; font-weight: 500; margin-bottom: 4px; }
+.layout-desc { font-size: 11px; color: var(--fg-muted); line-height: 1.5; }
 
-.token-swatch { width: 32px; height: 32px; border-radius: var(--radius); border: 1px solid var(--border); display: inline-block; vertical-align: middle; margin-right: 8px; }
-
-table { width: 100%; border-collapse: collapse; }
-th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 12px; }
-th { color: var(--fg-muted); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; font-weight: 400; }
-
-.sidebar-layout { display: grid; grid-template-columns: 240px 1fr; gap: 0; min-height: calc(100vh - 60px); }
-.sidebar { border-right: 1px solid var(--border); padding: 20px; }
-.sidebar-section { margin-bottom: 24px; }
-.sidebar-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg-muted); margin-bottom: 8px; }
-.sidebar-item { display: block; padding: 6px 8px; border-radius: var(--radius); color: var(--fg-muted); cursor: pointer; font-size: 11px; }
-.sidebar-item:hover, .sidebar-item.active { color: var(--fg); background: var(--bg-hover); }
-.sidebar-count { float: right; color: var(--fg-muted); font-size: 10px; }
-.content-panel { padding: 24px; overflow-y: auto; }
-
+/* -- Footer -------------------------------------- */
 .footer { padding: 24px; text-align: center; color: var(--fg-muted); font-size: 10px; border-top: 1px solid var(--border); margin-top: 48px; }
-
-
-.stat-row { display: flex; gap: 12px; margin-bottom: 32px; }
-.stat-box { flex: 1; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; text-align: center; }
-.stat-box .val { font-size: 28px; font-weight: 600; margin-bottom: 4px; }
-.stat-box .lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg-muted); }
-
-.conf-bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 8px; background: var(--bg-hover); }
-.conf-bar .seg { height: 100%; }
-.conf-bar .seg-high { background: var(--fg); }
-.conf-bar .seg-med { background: var(--fg-muted); }
-.conf-bar .seg-low { background: var(--bg-hover); }
-.conf-legend { display: flex; gap: 16px; font-size: 11px; color: var(--fg-muted); margin-bottom: 32px; }
-.conf-legend .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
-
-.freq-row { display: flex; align-items: center; margin-bottom: 8px; font-size: 12px; }
-.freq-label { width: 200px; flex-shrink: 0; }
-.freq-bar-wrap { flex: 1; height: 6px; background: var(--bg-hover); border-radius: 3px; margin: 0 12px; }
-.freq-bar { height: 100%; background: var(--fg-muted); border-radius: 3px; }
-.freq-count { width: 30px; text-align: right; color: var(--fg-muted); font-size: 11px; }
-
-.finding-card { background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--fg); border-radius: var(--radius); padding: 20px; margin-bottom: 12px; }
-.finding-card .finding-text { font-size: 13px; font-weight: 500; margin-bottom: 8px; }
-.finding-card .finding-meta { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--fg-muted); }
-
-.token-row { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
-.token-swatch-sm { width: 24px; height: 24px; border-radius: 3px; border: 1px solid var(--border); margin-right: 12px; flex-shrink: 0; }
-.token-name { font-size: 12px; color: var(--fg-muted); margin-right: auto; }
-.token-val { font-size: 12px; color: var(--fg-muted); }
-.group-header { font-size: 13px; font-weight: 500; margin: 24px 0 8px; }
-.group-sub { font-size: 11px; color: var(--fg-muted); margin: 16px 0 4px; padding-left: 8px; }
-
-.sidebar-item-indent { padding-left: 24px; }
 </style>
 </head>
 <body>
   <header class="hdr">
     <div class="hdr-brand">m&eacute;moire</div>
-    <nav class="hdr-nav"><a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12l9-8 9 8M5 11v8a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-8"/></svg>Home</a><a href="research.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>Research</a><a href="specs.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M8 7h8M8 11h8M8 15h4"/></svg>Specs</a><a href="design-system.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Systems</a><a href="portal.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>Portal</a><a href="changelog.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>Changelog</a></nav>
+    <nav class="hdr-nav"><a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12l9-8 9 8M5 11v8a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-8"/></svg>Home</a><a href="research.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>Research</a><a href="specs.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M8 7h8M8 11h8M8 15h4"/></svg>Specs</a><a href="design-system.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Systems</a><a href="changelog.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>Changelog</a></nav>
+    <div class="hdr-stats">
+      <span><span class="n">42</span> tokens</span>
+      <span><span class="n">18</span> components</span>
+      <span><span class="n">6</span> layouts</span>
+    </div>
   </header>
-  
-  <div class="sidebar-layout">
-    <div class="sidebar"><div class="sidebar-section">
-      <div class="sidebar-label">Components <span class="sidebar-count">1</span></div><div class="sidebar-item" data-group="components-all" onclick="showGroup('components-all')">All <span class="sidebar-count">1</span></div><div class="sidebar-item sidebar-item-indent" data-group="components-all" onclick="showGroup('components-all')" style="font-size: 10px;">molecule <span class="sidebar-count">1</span></div></div><div class="sidebar-section">
-    <div class="sidebar-label">Architecture</div>
-    <div class="sidebar-item" data-group="layout-atomic" onclick="showGroup('layout-atomic')">Atomic Design</div>
-    <div class="sidebar-item" data-group="layout-breakpoints" onclick="showGroup('layout-breakpoints')">Breakpoints</div>
-  </div></div>
-    <div class="content-panel">
-      <div class="stat-row" style="margin-bottom: 24px;">
-        <div class="stat-box"><div class="val">0</div><div class="lbl">Tokens</div></div>
-        <div class="stat-box"><div class="val">0</div><div class="lbl">Colors</div></div>
-        <div class="stat-box"><div class="val">0</div><div class="lbl">Spacing</div></div>
-        <div class="stat-box"><div class="val">0</div><div class="lbl">Typography</div></div>
-        <div class="stat-box"><div class="val">1</div><div class="lbl">Components</div></div>
-      </div>
-      <div class="group-panel" id="panel-components-all" style="display: none;">
-      <div class="group-header">Components</div>
-      <div style="color: var(--fg-muted); font-size: 11px; margin-bottom: 16px;">1 component specs across 1 atomic levels</div>
-      <div class="group-sub">molecule (1)</div><div class="card" style="margin-bottom: 8px; padding: 12px;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <strong style="font-size: 12px;">MetricCard</strong>
-            <span class="badge badge-molecule">molecule</span>
+
+  <!-- Main Tabs -->
+  <div class="tabs">
+    <button class="tab active" data-tab="tokens" onclick="switchTab('tokens')">Tokens</button>
+    <button class="tab" data-tab="components" onclick="switchTab('components')">Components</button>
+    <button class="tab" data-tab="layout" onclick="switchTab('layout')">Layout</button>
+  </div>
+
+  <div class="main">
+
+    <!-- ═══════════════════════════════════════ TOKENS ═══ -->
+    <div class="tab-panel active" data-panel="tokens">
+      <div class="tokens-layout">
+        <aside class="tokens-sidebar">
+          <div class="sidebar-group">
+            <div class="sidebar-group-label">Collections</div>
+            <button class="sidebar-item active" onclick="showTokenGroup('colors')">Colors</button>
+            <button class="sidebar-item" onclick="showTokenGroup('typography')">Typography</button>
+            <button class="sidebar-item" onclick="showTokenGroup('spacing')">Spacing</button>
+            <button class="sidebar-item" onclick="showTokenGroup('radii')">Radii</button>
+            <button class="sidebar-item" onclick="showTokenGroup('shadows')">Shadows</button>
           </div>
-          <div style="margin-top: 4px; color: var(--fg-muted); font-size: 10px;">
-            shadcn: Card, Badge | 4 props
+          <div class="sidebar-group">
+            <div class="sidebar-group-label">Semantic</div>
+            <button class="sidebar-item" onclick="showTokenGroup('surfaces')">Surfaces</button>
+            <button class="sidebar-item" onclick="showTokenGroup('interactive')">Interactive</button>
+            <button class="sidebar-item" onclick="showTokenGroup('feedback')">Feedback</button>
+          </div>
+        </aside>
+
+        <div class="tokens-content">
+          <!-- Colors group (default) -->
+          <div class="token-group active" data-group="colors">
+            <div class="section-label">Primitives / Gray</div>
+            <div class="swatch-grid">
+              <div class="swatch"><div class="swatch-color" style="background:#fafaf9"></div><div class="swatch-info"><div class="swatch-name">gray-50</div><div class="swatch-hex">#fafaf9</div></div></div>
+              <div class="swatch"><div class="swatch-color" style="background:#f5f5f4"></div><div class="swatch-info"><div class="swatch-name">gray-100</div><div class="swatch-hex">#f5f5f4</div></div></div>
+              <div class="swatch"><div class="swatch-color" style="background:#e7e5e4"></div><div class="swatch-info"><div class="swatch-name">gray-200</div><div class="swatch-hex">#e7e5e4</div></div></div>
+              <div class="swatch"><div class="swatch-color" style="background:#d6d3d1"></div><div class="swatch-info"><div class="swatch-name">gray-300</div><div class="swatch-hex">#d6d3d1</div></div></div>
+              <div class="swatch"><div class="swatch-color" style="background:#a8a29e"></div><div class="swatch-info"><div class="swatch-name">gray-400</div><div class="swatch-hex">#a8a29e</div></div></div>
+              <div class="swatch"><div class="swatch-color" style="background:#78716c"></div><div class="swatch-info"><div class="swatch-name">gray-500</div><div class="swatch-hex">#78716c</div></div></div>
+              <div class="swatch"><div class="swatch-color" style="background:#57534e"></div><div class="swatch-info"><div class="swatch-name">gray-600</div><div class="swatch-hex">#57534e</div></div></div>
+              <div class="swatch"><div class="swatch-color" style="background:#44403c"></div><div class="swatch-info"><div class="swatch-name">gray-700</div><div class="swatch-hex">#44403c</div></div></div>
+              <div class="swatch"><div class="swatch-color" style="background:#292524"></div><div class="swatch-info"><div class="swatch-name">gray-800</div><div class="swatch-hex">#292524</div></div></div>
+              <div class="swatch"><div class="swatch-color" style="background:#1c1917"></div><div class="swatch-info"><div class="swatch-name">gray-900</div><div class="swatch-hex">#1c1917</div></div></div>
+            </div>
+
+            <div class="section-label">Primitives / Blue</div>
+            <div class="swatch-grid">
+              <div class="swatch"><div class="swatch-color" style="background:#eff6ff"></div><div class="swatch-info"><div class="swatch-name">blue-50</div><div class="swatch-hex">#eff6ff</div></div></div>
+              <div class="swatch"><div class="swatch-color" style="background:#dbeafe"></div><div class="swatch-info"><div class="swatch-name">blue-100</div><div class="swatch-hex">#dbeafe</div></div></div>
+              <div class="swatch"><div class="swatch-color" style="background:#93c5fd"></div><div class="swatch-info"><div class="swatch-name">blue-300</div><div class="swatch-hex">#93c5fd</div></div></div>
+              <div class="swatch"><div class="swatch-color" style="background:#3b82f6"></div><div class="swatch-info"><div class="swatch-name">blue-500</div><div class="swatch-hex">#3b82f6</div></div></div>
+              <div class="swatch"><div class="swatch-color" style="background:#2563eb"></div><div class="swatch-info"><div class="swatch-name">blue-600</div><div class="swatch-hex">#2563eb</div></div></div>
+              <div class="swatch"><div class="swatch-color" style="background:#1d4ed8"></div><div class="swatch-info"><div class="swatch-name">blue-700</div><div class="swatch-hex">#1d4ed8</div></div></div>
+            </div>
+
+            <div class="section-label">Primitives / Green</div>
+            <div class="swatch-grid">
+              <div class="swatch"><div class="swatch-color" style="background:#f0fdf4"></div><div class="swatch-info"><div class="swatch-name">green-50</div><div class="swatch-hex">#f0fdf4</div></div></div>
+              <div class="swatch"><div class="swatch-color" style="background:#bbf7d0"></div><div class="swatch-info"><div class="swatch-name">green-200</div><div class="swatch-hex">#bbf7d0</div></div></div>
+              <div class="swatch"><div class="swatch-color" style="background:#4ade80"></div><div class="swatch-info"><div class="swatch-name">green-400</div><div class="swatch-hex">#4ade80</div></div></div>
+              <div class="swatch"><div class="swatch-color" style="background:#16a34a"></div><div class="swatch-info"><div class="swatch-name">green-600</div><div class="swatch-hex">#16a34a</div></div></div>
+              <div class="swatch"><div class="swatch-color" style="background:#15803d"></div><div class="swatch-info"><div class="swatch-name">green-700</div><div class="swatch-hex">#15803d</div></div></div>
+            </div>
+
+            <div class="section-label">Primitives / Amber</div>
+            <div class="swatch-grid">
+              <div class="swatch"><div class="swatch-color" style="background:#fffbeb"></div><div class="swatch-info"><div class="swatch-name">amber-50</div><div class="swatch-hex">#fffbeb</div></div></div>
+              <div class="swatch"><div class="swatch-color" style="background:#fde68a"></div><div class="swatch-info"><div class="swatch-name">amber-200</div><div class="swatch-hex">#fde68a</div></div></div>
+              <div class="swatch"><div class="swatch-color" style="background:#f59e0b"></div><div class="swatch-info"><div class="swatch-name">amber-500</div><div class="swatch-hex">#f59e0b</div></div></div>
+              <div class="swatch"><div class="swatch-color" style="background:#ca8a04"></div><div class="swatch-info"><div class="swatch-name">amber-600</div><div class="swatch-hex">#ca8a04</div></div></div>
+            </div>
+
+            <div class="section-label">Primitives / Red</div>
+            <div class="swatch-grid">
+              <div class="swatch"><div class="swatch-color" style="background:#fef2f2"></div><div class="swatch-info"><div class="swatch-name">red-50</div><div class="swatch-hex">#fef2f2</div></div></div>
+              <div class="swatch"><div class="swatch-color" style="background:#fecaca"></div><div class="swatch-info"><div class="swatch-name">red-200</div><div class="swatch-hex">#fecaca</div></div></div>
+              <div class="swatch"><div class="swatch-color" style="background:#f87171"></div><div class="swatch-info"><div class="swatch-name">red-400</div><div class="swatch-hex">#f87171</div></div></div>
+              <div class="swatch"><div class="swatch-color" style="background:#dc2626"></div><div class="swatch-info"><div class="swatch-name">red-600</div><div class="swatch-hex">#dc2626</div></div></div>
+            </div>
+          </div>
+
+          <!-- Typography group -->
+          <div class="token-group" data-group="typography">
+            <div class="section-label">Font Families</div>
+            <div class="token-row"><span class="token-name">font-mono</span><span class="token-value">'JetBrains Mono', 'SF Mono', monospace</span></div>
+            <div class="token-row"><span class="token-name">font-serif</span><span class="token-value">'Cormorant Garamond', Georgia, serif</span></div>
+            <div class="token-row"><span class="token-name">font-sans</span><span class="token-value">-apple-system, BlinkMacSystemFont, system-ui</span></div>
+
+            <div class="section-label">Font Sizes</div>
+            <div class="token-row"><span class="token-name">text-xs</span><span class="token-value">10px / 0.625rem</span></div>
+            <div class="token-row"><span class="token-name">text-sm</span><span class="token-value">11px / 0.6875rem</span></div>
+            <div class="token-row"><span class="token-name">text-base</span><span class="token-value">12px / 0.75rem</span></div>
+            <div class="token-row"><span class="token-name">text-md</span><span class="token-value">13px / 0.8125rem</span></div>
+            <div class="token-row"><span class="token-name">text-lg</span><span class="token-value">16px / 1rem</span></div>
+            <div class="token-row"><span class="token-name">text-xl</span><span class="token-value">18px / 1.125rem</span></div>
+            <div class="token-row"><span class="token-name">text-2xl</span><span class="token-value">24px / 1.5rem</span></div>
+            <div class="token-row"><span class="token-name">text-3xl</span><span class="token-value">28px / 1.75rem</span></div>
+
+            <div class="section-label">Font Weights</div>
+            <div class="token-row"><span class="token-name">weight-light</span><span class="token-value">300</span></div>
+            <div class="token-row"><span class="token-name">weight-regular</span><span class="token-value">400</span></div>
+            <div class="token-row"><span class="token-name">weight-medium</span><span class="token-value">500</span></div>
+            <div class="token-row"><span class="token-name">weight-semibold</span><span class="token-value">600</span></div>
+          </div>
+
+          <!-- Spacing group -->
+          <div class="token-group" data-group="spacing">
+            <div class="section-label">Spacing Scale</div>
+            <div class="token-row"><span class="token-name">space-1</span><span class="token-value">2px</span></div>
+            <div class="token-row"><span class="token-name">space-2</span><span class="token-value">4px</span></div>
+            <div class="token-row"><span class="token-name">space-3</span><span class="token-value">8px</span></div>
+            <div class="token-row"><span class="token-name">space-4</span><span class="token-value">12px</span></div>
+            <div class="token-row"><span class="token-name">space-5</span><span class="token-value">16px</span></div>
+            <div class="token-row"><span class="token-name">space-6</span><span class="token-value">20px</span></div>
+            <div class="token-row"><span class="token-name">space-7</span><span class="token-value">24px</span></div>
+            <div class="token-row"><span class="token-name">space-8</span><span class="token-value">32px</span></div>
+            <div class="token-row"><span class="token-name">space-9</span><span class="token-value">40px</span></div>
+            <div class="token-row"><span class="token-name">space-10</span><span class="token-value">48px</span></div>
+          </div>
+
+          <!-- Radii group -->
+          <div class="token-group" data-group="radii">
+            <div class="section-label">Border Radius</div>
+            <div class="token-row"><span class="token-name">radius-none</span><span class="token-value">0px</span></div>
+            <div class="token-row"><span class="token-name">radius-sm</span><span class="token-value">2px</span></div>
+            <div class="token-row"><span class="token-name">radius-md</span><span class="token-value">4px</span></div>
+            <div class="token-row"><span class="token-name">radius-lg</span><span class="token-value">8px</span></div>
+            <div class="token-row"><span class="token-name">radius-full</span><span class="token-value">9999px</span></div>
+          </div>
+
+          <!-- Shadows group -->
+          <div class="token-group" data-group="shadows">
+            <div class="section-label">Box Shadows</div>
+            <div class="token-row"><span class="token-name">shadow-sm</span><span class="token-value">0 1px 2px rgba(0,0,0,0.04)</span></div>
+            <div class="token-row"><span class="token-name">shadow-md</span><span class="token-value">0 2px 8px rgba(0,0,0,0.06)</span></div>
+            <div class="token-row"><span class="token-name">shadow-lg</span><span class="token-value">0 4px 16px rgba(0,0,0,0.08)</span></div>
+          </div>
+
+          <!-- Surfaces group -->
+          <div class="token-group" data-group="surfaces">
+            <div class="section-label">Surface Tokens</div>
+            <div class="token-row"><div class="token-preview" style="background:#fafaf9"></div><span class="token-name">surface-default</span><span class="token-value">#fafaf9</span></div>
+            <div class="token-row"><div class="token-preview" style="background:rgba(255,255,255,0.65)"></div><span class="token-name">surface-card</span><span class="token-value">rgba(255,255,255,0.65)</span></div>
+            <div class="token-row"><div class="token-preview" style="background:rgba(0,0,0,0.03)"></div><span class="token-name">surface-hover</span><span class="token-value">rgba(0,0,0,0.03)</span></div>
+            <div class="token-row"><div class="token-preview" style="background:rgba(0,0,0,0.05)"></div><span class="token-name">surface-active</span><span class="token-value">rgba(0,0,0,0.05)</span></div>
+            <div class="token-row"><div class="token-preview" style="background:rgba(0,0,0,0.02)"></div><span class="token-name">surface-muted</span><span class="token-value">rgba(0,0,0,0.02)</span></div>
+          </div>
+
+          <!-- Interactive group -->
+          <div class="token-group" data-group="interactive">
+            <div class="section-label">Interactive States</div>
+            <div class="token-row"><span class="token-name">foreground</span><span class="token-value">#0a0a0a</span></div>
+            <div class="token-row"><span class="token-name">foreground-muted</span><span class="token-value">#8a8a8a</span></div>
+            <div class="token-row"><span class="token-name">foreground-dim</span><span class="token-value">#b0b0b0</span></div>
+            <div class="token-row"><span class="token-name">border-default</span><span class="token-value">rgba(0,0,0,0.08)</span></div>
+            <div class="token-row"><span class="token-name">border-hover</span><span class="token-value">rgba(0,0,0,0.15)</span></div>
+            <div class="token-row"><span class="token-name">focus-ring</span><span class="token-value">0 0 0 2px #2563eb</span></div>
+          </div>
+
+          <!-- Feedback group -->
+          <div class="token-group" data-group="feedback">
+            <div class="section-label">Feedback Colors</div>
+            <div class="swatch-grid">
+              <div class="swatch"><div class="swatch-color" style="background:#16a34a"></div><div class="swatch-info"><div class="swatch-name">success</div><div class="swatch-hex">#16a34a</div></div></div>
+              <div class="swatch"><div class="swatch-color" style="background:#ca8a04"></div><div class="swatch-info"><div class="swatch-name">warning</div><div class="swatch-hex">#ca8a04</div></div></div>
+              <div class="swatch"><div class="swatch-color" style="background:#dc2626"></div><div class="swatch-info"><div class="swatch-name">error</div><div class="swatch-hex">#dc2626</div></div></div>
+              <div class="swatch"><div class="swatch-color" style="background:#2563eb"></div><div class="swatch-info"><div class="swatch-name">info</div><div class="swatch-hex">#2563eb</div></div></div>
+            </div>
+            <div class="section-label">Feedback Backgrounds</div>
+            <div class="swatch-grid">
+              <div class="swatch"><div class="swatch-color" style="background:rgba(22,163,74,0.08)"></div><div class="swatch-info"><div class="swatch-name">success-bg</div><div class="swatch-hex">rgba(22,163,74,0.08)</div></div></div>
+              <div class="swatch"><div class="swatch-color" style="background:rgba(202,138,4,0.08)"></div><div class="swatch-info"><div class="swatch-name">warning-bg</div><div class="swatch-hex">rgba(202,138,4,0.08)</div></div></div>
+              <div class="swatch"><div class="swatch-color" style="background:rgba(220,38,38,0.08)"></div><div class="swatch-info"><div class="swatch-name">error-bg</div><div class="swatch-hex">rgba(220,38,38,0.08)</div></div></div>
+              <div class="swatch"><div class="swatch-color" style="background:rgba(37,99,235,0.08)"></div><div class="swatch-info"><div class="swatch-name">info-bg</div><div class="swatch-hex">rgba(37,99,235,0.08)</div></div></div>
+            </div>
           </div>
         </div>
+      </div>
     </div>
-  <div class="group-panel" id="panel-layout-atomic" style="display: none;">
-    <div class="group-header">Atomic Design Hierarchy</div>
-    <div style="margin-top: 16px; font-size: 11px; line-height: 2.4;">
-      <div><span class="badge badge-atom">atom</span> Primitives -- Button, Badge, Input, Label <span style="color: var(--fg-muted);">(components/ui/)</span></div>
-      <div><span class="badge badge-molecule">molecule</span> Composed atoms -- FormField, SearchBar <span style="color: var(--fg-muted);">(components/molecules/)</span></div>
-      <div><span class="badge badge-organism">organism</span> Stateful groups -- LoginForm, Sidebar <span style="color: var(--fg-muted);">(components/organisms/)</span></div>
-      <div><span class="badge badge-template">template</span> Page skeletons -- DashboardTemplate <span style="color: var(--fg-muted);">(components/templates/)</span></div>
+
+    <!-- ═══════════════════════════════════════ COMPONENTS ═══ -->
+    <div class="tab-panel" data-panel="components">
+
+      <!-- Buttons -->
+      <div class="comp-section">
+        <div class="section-label">Buttons</div>
+        <div class="comp-section-desc">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum sodales felis at sem gravida.</div>
+        <div class="comp-grid">
+          <div class="comp-card">
+            <div class="comp-preview">
+              <div style="display:flex;gap:8px;align-items:center">
+                <span class="preview-btn">Submit</span>
+                <span class="preview-btn-outline">Cancel</span>
+              </div>
+            </div>
+            <div class="comp-meta">
+              <div class="comp-name">Button</div>
+              <div class="comp-desc">Lorem ipsum dolor sit amet, adipiscing elit. Praesent vel augue non libero.</div>
+              <div class="comp-footer"><span class="badge badge-atom">atom</span><span class="badge badge-variant">4 variants</span></div>
+            </div>
+          </div>
+          <div class="comp-card">
+            <div class="comp-preview">
+              <div style="display:flex;gap:8px;align-items:center">
+                <span class="preview-btn" style="padding:5px 10px;font-size:10px">Small</span>
+                <span class="preview-btn">Default</span>
+                <span class="preview-btn" style="padding:9px 24px;font-size:12px">Large</span>
+              </div>
+            </div>
+            <div class="comp-meta">
+              <div class="comp-name">ButtonGroup</div>
+              <div class="comp-desc">Donec dignissim nulla vel lorem iaculis, nec tristique velit vulputate.</div>
+              <div class="comp-footer"><span class="badge badge-molecule">molecule</span><span class="badge badge-variant">3 sizes</span></div>
+            </div>
+          </div>
+          <div class="comp-card">
+            <div class="comp-preview">
+              <div style="display:flex;gap:8px;align-items:center">
+                <span class="preview-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> Create</span>
+              </div>
+            </div>
+            <div class="comp-meta">
+              <div class="comp-name">IconButton</div>
+              <div class="comp-desc">Pellentesque habitant morbi tristique senectus et netus et malesuada.</div>
+              <div class="comp-footer"><span class="badge badge-atom">atom</span><span class="badge badge-variant">2 variants</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Inputs -->
+      <div class="comp-section">
+        <div class="section-label">Inputs</div>
+        <div class="comp-section-desc">Fusce vehicula sapien at nisi aliquam, vitae finibus orci tincidunt placerat.</div>
+        <div class="comp-grid">
+          <div class="comp-card">
+            <div class="comp-preview">
+              <div style="display:flex;flex-direction:column;gap:4px;width:100%;max-width:180px">
+                <span style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#8a8a8a">Label</span>
+                <input class="preview-input" style="width:100%" placeholder="Lorem ipsum..." readonly>
+              </div>
+            </div>
+            <div class="comp-meta">
+              <div class="comp-name">TextInput</div>
+              <div class="comp-desc">Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium.</div>
+              <div class="comp-footer"><span class="badge badge-atom">atom</span><span class="badge badge-variant">3 states</span></div>
+            </div>
+          </div>
+          <div class="comp-card">
+            <div class="comp-preview">
+              <div style="display:flex;align-items:center;gap:8px;border:1px solid rgba(0,0,0,0.08);border-radius:2px;padding:7px 12px;width:100%;max-width:200px">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8a8a8a" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+                <span style="font-size:11px;color:#b0b0b0">Lorem ipsum...</span>
+              </div>
+            </div>
+            <div class="comp-meta">
+              <div class="comp-name">SearchBar</div>
+              <div class="comp-desc">Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit.</div>
+              <div class="comp-footer"><span class="badge badge-molecule">molecule</span><span class="badge badge-variant">2 variants</span></div>
+            </div>
+          </div>
+          <div class="comp-card">
+            <div class="comp-preview">
+              <div style="display:flex;flex-direction:column;gap:6px;width:100%;max-width:180px">
+                <span style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#8a8a8a">Select</span>
+                <div style="display:flex;align-items:center;justify-content:space-between;border:1px solid rgba(0,0,0,0.08);border-radius:2px;padding:7px 12px">
+                  <span style="font-size:11px;color:#8a8a8a">Lorem ipsum</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8a8a8a" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                </div>
+              </div>
+            </div>
+            <div class="comp-meta">
+              <div class="comp-name">Select</div>
+              <div class="comp-desc">At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis.</div>
+              <div class="comp-footer"><span class="badge badge-atom">atom</span><span class="badge badge-variant">2 states</span></div>
+            </div>
+          </div>
+          <div class="comp-card">
+            <div class="comp-preview">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span class="preview-toggle"></span>
+                <span style="font-size:11px;color:#8a8a8a">Lorem ipsum</span>
+              </div>
+            </div>
+            <div class="comp-meta">
+              <div class="comp-name">Toggle</div>
+              <div class="comp-desc">Temporibus autem quibusdam et aut officiis debitis rerum necessitatibus.</div>
+              <div class="comp-footer"><span class="badge badge-atom">atom</span><span class="badge badge-variant">2 states</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data Display -->
+      <div class="comp-section">
+        <div class="section-label">Data Display</div>
+        <div class="comp-section-desc">Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam.</div>
+        <div class="comp-grid">
+          <div class="comp-card">
+            <div class="comp-preview">
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <span class="preview-badge-sm">Lorem</span>
+                <span class="preview-badge-sm" style="background:rgba(22,163,74,0.08);color:#16a34a">Ipsum</span>
+                <span class="preview-badge-sm" style="background:rgba(37,99,235,0.08);color:#2563eb">Dolor</span>
+              </div>
+            </div>
+            <div class="comp-meta">
+              <div class="comp-name">Badge</div>
+              <div class="comp-desc">Itaque earum rerum hic tenetur a sapiente delectus ut aut reiciendis.</div>
+              <div class="comp-footer"><span class="badge badge-atom">atom</span><span class="badge badge-variant">6 variants</span></div>
+            </div>
+          </div>
+          <div class="comp-card">
+            <div class="comp-preview">
+              <div style="width:100%;max-width:200px">
+                <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:11px">Lorem ipsum</span><span style="font-size:11px;color:#8a8a8a">68%</span></div>
+                <div class="preview-bar"><div class="preview-bar-fill" style="width:68%"></div></div>
+              </div>
+            </div>
+            <div class="comp-meta">
+              <div class="comp-name">ProgressBar</div>
+              <div class="comp-desc">Excepturi sint occaecati cupiditate non provident similique sunt in culpa.</div>
+              <div class="comp-footer"><span class="badge badge-atom">atom</span><span class="badge badge-variant">3 variants</span></div>
+            </div>
+          </div>
+          <div class="comp-card">
+            <div class="comp-preview">
+              <div style="background:var(--bg-card);border:1px solid rgba(0,0,0,0.08);border-radius:2px;padding:14px 16px;width:100%;max-width:180px">
+                <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#8a8a8a;margin-bottom:6px">Lorem</div>
+                <div style="font-size:22px;font-weight:500">2,847</div>
+                <div style="font-size:10px;color:#16a34a;margin-top:4px">+12.4%</div>
+              </div>
+            </div>
+            <div class="comp-meta">
+              <div class="comp-name">StatCard</div>
+              <div class="comp-desc">Nam libero tempore cum soluta nobis est eligendi optio cumque nihil.</div>
+              <div class="comp-footer"><span class="badge badge-molecule">molecule</span><span class="badge badge-variant">2 variants</span></div>
+            </div>
+          </div>
+          <div class="comp-card">
+            <div class="comp-preview">
+              <div style="width:100%;max-width:220px">
+                <div style="display:flex;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.08);justify-content:space-between"><span style="font-size:10px;color:#8a8a8a;text-transform:uppercase;letter-spacing:1px">Name</span><span style="font-size:10px;color:#8a8a8a;text-transform:uppercase;letter-spacing:1px">Status</span></div>
+                <div style="display:flex;padding:8px 0;border-bottom:1px solid rgba(0,0,0,0.08);justify-content:space-between;font-size:11px"><span>Lorem ipsum</span><span class="preview-badge-sm" style="font-size:9px;background:rgba(22,163,74,0.08);color:#16a34a">Active</span></div>
+                <div style="display:flex;padding:8px 0;border-bottom:1px solid rgba(0,0,0,0.08);justify-content:space-between;font-size:11px"><span>Dolor sit amet</span><span class="preview-badge-sm" style="font-size:9px">Draft</span></div>
+              </div>
+            </div>
+            <div class="comp-meta">
+              <div class="comp-name">DataTable</div>
+              <div class="comp-desc">Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis.</div>
+              <div class="comp-footer"><span class="badge badge-organism">organism</span><span class="badge badge-variant">sortable</span></div>
+            </div>
+          </div>
+          <div class="comp-card">
+            <div class="comp-preview">
+              <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid rgba(0,0,0,0.08);border-radius:2px;width:100%;max-width:220px">
+                <div style="width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,0.06);flex-shrink:0"></div>
+                <div><div style="font-size:11px;font-weight:500">Lorem Ipsum</div><div style="font-size:10px;color:#8a8a8a">Dolor sit amet</div></div>
+              </div>
+            </div>
+            <div class="comp-meta">
+              <div class="comp-name">AvatarRow</div>
+              <div class="comp-desc">Quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo.</div>
+              <div class="comp-footer"><span class="badge badge-molecule">molecule</span><span class="badge badge-variant">2 sizes</span></div>
+            </div>
+          </div>
+          <div class="comp-card">
+            <div class="comp-preview">
+              <div style="padding:12px 16px;border-left:3px solid #0a0a0a;background:rgba(0,0,0,0.02);border-radius:0 2px 2px 0;font-size:11px;line-height:1.6;width:100%;max-width:220px">
+                <div style="font-weight:500;margin-bottom:4px">Lorem ipsum</div>
+                <div style="color:#8a8a8a">Consectetur adipiscing elit sed do eiusmod tempor.</div>
+              </div>
+            </div>
+            <div class="comp-meta">
+              <div class="comp-name">CalloutBanner</div>
+              <div class="comp-desc">Duis aute irure dolor in reprehenderit in voluptate velit esse cillum.</div>
+              <div class="comp-footer"><span class="badge badge-molecule">molecule</span><span class="badge badge-variant">4 variants</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
+
+    <!-- ═══════════════════════════════════════ LAYOUT ═══ -->
+    <div class="tab-panel" data-panel="layout">
+
+      <div class="section-label">Page Structures</div>
+      <div class="layout-grid">
+        <div class="layout-card">
+          <div class="layout-wireframe">
+            <div class="wire-block-header"></div>
+            <div class="wire-row">
+              <div class="wire-block-sm"></div>
+              <div class="wire-block"></div>
+            </div>
+          </div>
+          <div class="layout-meta">
+            <div class="layout-name">SidebarLayout</div>
+            <div class="layout-desc">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus nec iaculis mauris.</div>
+          </div>
+        </div>
+        <div class="layout-card">
+          <div class="layout-wireframe">
+            <div class="wire-block-header"></div>
+            <div class="wire-row"><div class="wire-block"></div></div>
+            <div class="wire-block-narrow"></div>
+          </div>
+          <div class="layout-meta">
+            <div class="layout-name">StackLayout</div>
+            <div class="layout-desc">Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque.</div>
+          </div>
+        </div>
+        <div class="layout-card">
+          <div class="layout-wireframe">
+            <div class="wire-block-header"></div>
+            <div class="wire-row">
+              <div class="wire-block"></div>
+              <div class="wire-block"></div>
+              <div class="wire-block"></div>
+            </div>
+            <div class="wire-block-wide"></div>
+          </div>
+          <div class="layout-meta">
+            <div class="layout-name">GridDashboard</div>
+            <div class="layout-desc">Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit.</div>
+          </div>
+        </div>
+        <div class="layout-card">
+          <div class="layout-wireframe">
+            <div class="wire-block-header"></div>
+            <div style="display:flex;gap:6px;flex:1">
+              <div style="flex:2;display:flex;flex-direction:column;gap:4px">
+                <div class="wire-block" style="flex:2"></div>
+                <div class="wire-block-narrow"></div>
+              </div>
+              <div style="flex:1;display:flex;flex-direction:column;gap:4px">
+                <div class="wire-block" style="flex:1"></div>
+                <div class="wire-block" style="flex:1"></div>
+              </div>
+            </div>
+          </div>
+          <div class="layout-meta">
+            <div class="layout-name">SplitPanel</div>
+            <div class="layout-desc">Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-label">Card Patterns</div>
+      <div class="layout-grid">
+        <div class="layout-card">
+          <div class="layout-wireframe" style="gap:8px;padding:20px">
+            <div style="display:flex;gap:8px">
+              <div style="background:rgba(0,0,0,0.06);border-radius:2px;flex:1;height:40px"></div>
+              <div style="background:rgba(0,0,0,0.06);border-radius:2px;flex:1;height:40px"></div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <div style="background:rgba(0,0,0,0.06);border-radius:2px;flex:1;height:40px"></div>
+              <div style="background:rgba(0,0,0,0.06);border-radius:2px;flex:1;height:40px"></div>
+            </div>
+            <div class="wire-block-narrow"></div>
+          </div>
+          <div class="layout-meta">
+            <div class="layout-name">CardGrid</div>
+            <div class="layout-desc">Itaque earum rerum hic tenetur a sapiente delectus ut aut reiciendis voluptatibus.</div>
+          </div>
+        </div>
+        <div class="layout-card">
+          <div class="layout-wireframe" style="gap:4px;padding:20px">
+            <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,0.06)"><div style="width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,0.06);flex-shrink:0"></div><div class="wire-block-narrow" style="width:40%"></div><div style="margin-left:auto"><div class="wire-block-narrow" style="width:50px"></div></div></div>
+            <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,0.06)"><div style="width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,0.06);flex-shrink:0"></div><div class="wire-block-narrow" style="width:55%"></div><div style="margin-left:auto"><div class="wire-block-narrow" style="width:50px"></div></div></div>
+            <div style="display:flex;align-items:center;gap:8px;padding:8px 0"><div style="width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,0.06);flex-shrink:0"></div><div class="wire-block-narrow" style="width:35%"></div><div style="margin-left:auto"><div class="wire-block-narrow" style="width:50px"></div></div></div>
+          </div>
+          <div class="layout-meta">
+            <div class="layout-name">ListLayout</div>
+            <div class="layout-desc">Nam libero tempore cum soluta nobis est eligendi optio cumque nihil impedit.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
   </div>
-  <div class="group-panel" id="panel-layout-breakpoints" style="display: none;">
-    <div class="group-header">Responsive Breakpoints</div>
-    <div style="margin-top: 16px; font-size: 11px; color: var(--fg-muted);">
-      <div style="display: flex; justify-content: space-between; margin-bottom: 8px; padding: 8px 0; border-bottom: 1px solid var(--border);"><span>Mobile</span><span>&lt; 640px</span></div>
-      <div style="display: flex; justify-content: space-between; margin-bottom: 8px; padding: 8px 0; border-bottom: 1px solid var(--border);"><span>Tablet</span><span>640-1024px</span></div>
-      <div style="display: flex; justify-content: space-between; padding: 8px 0;"><span>Desktop</span><span>&gt; 1024px</span></div>
-    </div>
-  </div>
-    </div>
-  </div>
-  <script>
-  function showGroup(id) {
-    document.querySelectorAll('.group-panel').forEach(p => p.style.display = 'none');
-    document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
-    const panel = document.getElementById('panel-' + id);
-    if (panel) panel.style.display = 'block';
-    document.querySelectorAll('.sidebar-item[data-group="' + id + '"]').forEach(s => s.classList.add('active'));
-  }
-  
-  </script>
+
+  <footer class="footer">memoire systems -- generated by noche engine</footer>
+
+<script>
+function switchTab(tab) {
+  document.querySelectorAll('.tabs .tab').forEach(function(t) {
+    t.classList.toggle('active', t.getAttribute('data-tab') === tab);
+  });
+  document.querySelectorAll('.tab-panel').forEach(function(p) {
+    p.classList.toggle('active', p.getAttribute('data-panel') === tab);
+  });
+}
+
+function showTokenGroup(group) {
+  document.querySelectorAll('.sidebar-item').forEach(function(s) { s.classList.remove('active'); });
+  event.currentTarget.classList.add('active');
+  document.querySelectorAll('.token-group').forEach(function(g) {
+    g.classList.toggle('active', g.getAttribute('data-group') === group);
+  });
+}
+
+// Init: hide non-active token groups
+document.querySelectorAll('.token-group').forEach(function(g) {
+  if (!g.classList.contains('active')) g.style.display = 'none';
+});
+document.querySelectorAll('.token-group.active').forEach(function(g) { g.style.display = 'block'; });
+
+// Override showTokenGroup to use display
+(function() {
+  var orig = showTokenGroup;
+  showTokenGroup = function(group) {
+    document.querySelectorAll('.sidebar-item').forEach(function(s) { s.classList.remove('active'); });
+    if (event && event.currentTarget) event.currentTarget.classList.add('active');
+    document.querySelectorAll('.token-group').forEach(function(g) {
+      var match = g.getAttribute('data-group') === group;
+      g.style.display = match ? 'block' : 'none';
+      g.classList.toggle('active', match);
+    });
+  };
+})();
+</script>
 </body>
 </html>
