@@ -1,28 +1,28 @@
 #!/usr/bin/env node
 
 /**
- * Noche CLI — AI-Native Design Intelligence Engine
+ * Mémoire CLI — AI-Native Design Intelligence Engine
  *
  * Commands:
- * *   noche connect           Connect to Figma Desktop Bridge
- * *   noche pull              Pull design system from Figma
- * *   noche research <sub>    Run research pipeline
- *   noche spec <type> <n>   Create or edit a spec
- *   noche generate <spec>   Generate code from spec
- *   noche preview           Start HTML preview server
- *   noche status            Show project status
- *   noche sync              Full sync: Figma → specs → code → preview
- *   noche go                Full pipeline: connect → pull → auto-spec → generate → preview
- *   noche export            Export generated code into your project
- * *   noche ia <sub>           Information architecture (extract, show, validate)
- * *   noche stickies <url>    Convert FigJam stickies to research
- * *   noche dataviz <name>    Create a dataviz spec
- * *   noche page <name>       Create a page spec
- * *   noche tokens            Export design tokens
+ *    memoire connect           Connect to Figma Desktop Bridge
+ *    memoire pull              Pull design system from Figma
+ *    memoire research <sub>    Run research pipeline
+ *    memoire spec <type> <n>   Create or edit a spec
+ *    memoire generate <spec>   Generate code from spec
+ *    memoire preview           Start HTML preview server
+ *    memoire status            Show project status
+ *    memoire sync              Full sync: Figma → specs → code → preview
+ *    memoire go                Full pipeline: connect → pull → auto-spec → generate → preview
+ *    memoire export            Export generated code into your project
+ *    memoire ia <sub>           Information architecture (extract, show, validate)
+ *    memoire stickies <url>    Convert FigJam stickies to research
+ *    memoire dataviz <name>    Create a dataviz spec
+ *    memoire page <name>       Create a page spec
+ *    memoire tokens            Export design tokens
  */
 
 import { Command } from "commander";
-import { NocheEngine } from "./engine/core.js";
+import { MemoireEngine } from "./engine/core.js";
 import { registerConnectCommand } from "./commands/connect.js";
 import { registerPullCommand } from "./commands/pull.js";
 import { registerResearchCommand } from "./commands/research.js";
@@ -48,7 +48,7 @@ program
   .version("0.1.0");
 
 // Create engine instance (shared across commands)
-const engine = new NocheEngine({
+const engine = new MemoireEngine({
   projectRoot: process.cwd(),
   figmaToken: process.env.FIGMA_TOKEN,
   figmaFileKey: process.env.FIGMA_FILE_KEY,

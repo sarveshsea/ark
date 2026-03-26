@@ -14,7 +14,7 @@
  */
 
 import { createLogger } from "../engine/logger.js";
-import type { NocheEngine } from "../engine/core.js";
+import type { MemoireEngine } from "../engine/core.js";
 import type { DesignToken, DesignSystem, DesignComponent } from "../engine/registry.js";
 import type { AnySpec, ComponentSpec, PageSpec, DataVizSpec } from "../specs/types.js";
 import { AGENT_PROMPTS } from "./prompts.js";
@@ -143,12 +143,12 @@ export function classifyIntent(intent: string): IntentCategory {
 // ── Orchestrator ─────────────────────────────────────────
 
 export class AgentOrchestrator {
-  private engine: NocheEngine;
+  private engine: MemoireEngine;
   private planCounter = 0;
   private taskCounter = 0;
   private onUpdate?: (plan: AgentPlan) => void;
 
-  constructor(engine: NocheEngine, onUpdate?: (plan: AgentPlan) => void) {
+  constructor(engine: MemoireEngine, onUpdate?: (plan: AgentPlan) => void) {
     this.engine = engine;
     this.onUpdate = onUpdate;
   }
@@ -956,7 +956,7 @@ export class AgentOrchestrator {
     ).join("\n");
 
     return [
-      `You are a ${agentType} sub-agent in the Noche design intelligence engine.`,
+      `You are a ${agentType} sub-agent in the Memoire design intelligence engine.`,
       `Role: ${roleDesc}`,
       "",
       "Current design system context:",

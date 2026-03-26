@@ -1,8 +1,8 @@
 import type { Command } from "commander";
-import type { NocheEngine } from "../engine/core.js";
+import type { MemoireEngine } from "../engine/core.js";
 import { hasAI, getTracker } from "../ai/index.js";
 
-export function registerStatusCommand(program: Command, engine: NocheEngine) {
+export function registerStatusCommand(program: Command, engine: MemoireEngine) {
   program
     .command("status")
     .description("Show project status")
@@ -16,7 +16,7 @@ export function registerStatusCommand(program: Command, engine: NocheEngine) {
       const research = engine.research.getStore();
 
       console.log("\n  ┌─────────────────────────────────────────┐");
-      console.log("  │            Noche Project Status            │");
+      console.log("  │            Memoire Project Status            │");
       console.log("  └─────────────────────────────────────────┘\n");
 
       // Project

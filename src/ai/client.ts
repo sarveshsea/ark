@@ -2,7 +2,7 @@
  * Anthropic AI Client — Singleton wrapper for the Anthropic SDK.
  *
  * Provides structured completion, streaming, and JSON extraction.
- * Gracefully degrades when no API key is set — Noche works
+ * Gracefully degrades when no API key is set — Memoire works
  * as a Claude Code tool without it, but gets stronger with it.
  */
 

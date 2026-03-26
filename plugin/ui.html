@@ -2,177 +2,273 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg: #0a0a0a;
-    --bg-card: #111111;
-    --bg-hover: #1a1a1a;
-    --fg: #e0e0e0;
-    --fg-muted: #666666;
-    --border: #222222;
-    --accent: #d4d4d4;
-    --accent-bright: #ffffff;
-    --accent-dim: #444444;
-    --warn: #ffaa00;
-    --error: #ff4444;
-    --mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Cascadia Code', monospace;
-    --radius: 3px;
+    --bg: #fafaf9;
+    --bg-card: #ffffff;
+    --bg-hover: #f5f5f3;
+    --fg: #1a1a1a;
+    --fg-muted: #999;
+    --fg-dim: #bbb;
+    --border: rgba(0,0,0,0.07);
+    --accent: #1a1a1a;
+    --rose: #c0392b;
+    --rose-soft: rgba(192,57,43,0.08);
+    --green: #2d8a4e;
+    --green-soft: rgba(45,138,78,0.08);
+    --warn: #b8860b;
+    --warn-soft: rgba(184,134,11,0.08);
+    --error: #c0392b;
+    --mono: 'JetBrains Mono', 'SF Mono', monospace;
+    --serif: 'Cormorant Garamond', 'Georgia', serif;
+    --radius: 4px;
   }
 
   body {
     font-family: var(--mono);
-    font-size: 11px;
+    font-size: 10px;
     background: var(--bg);
     color: var(--fg);
     height: 100vh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    line-height: 1.6;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
   }
 
-  /* ── Status Bar (top) ─────────────────────────────── */
-  .status-bar {
+  /* ── Top Bar ────────────────────────────────────── */
+  .top-bar {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 10px 14px;
+    gap: 8px;
+    padding: 8px 12px;
     border-bottom: 1px solid var(--border);
-    background: var(--bg-card);
     flex-shrink: 0;
   }
 
-  .status-indicator {
-    width: 16px;
-    height: 16px;
-    flex-shrink: 0;
-    transition: all 0.3s;
+  .brand {
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 6px;
+    flex: 1;
   }
 
-  .status-indicator svg {
+  .brand-icon {
     width: 14px;
     height: 14px;
-    transition: all 0.3s;
+    flex-shrink: 0;
+    transition: opacity 0.3s;
   }
 
-  .status-indicator.live svg {
-    fill: var(--accent-bright);
-    filter: drop-shadow(0 0 4px rgba(255,255,255,0.5));
+  .brand-icon.live { opacity: 1; }
+  .brand-icon.scanning { opacity: 0.5; animation: pulse 2s ease-in-out infinite; }
+  .brand-icon.dead { opacity: 0.2; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 0.2; }
   }
 
-  .status-indicator.scanning svg {
-    fill: var(--warn);
-    animation: moon-pulse 1.8s ease-in-out infinite;
+  .brand-name {
+    font-family: var(--serif);
+    font-size: 15px;
+    font-weight: 300;
+    font-style: italic;
+    letter-spacing: 1px;
+    color: var(--fg);
   }
 
-  .status-indicator.dead svg {
-    fill: #333;
-  }
-
-  @keyframes moon-pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(0.85); }
-  }
-
-  .status-text {
-    flex: 1;
-    font-size: 10px;
+  .brand-status {
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    padding: 2px 6px;
+    border-radius: 3px;
     text-transform: uppercase;
-    letter-spacing: 1.5px;
-    font-weight: 600;
   }
 
-  .status-text.live { color: var(--accent-bright); }
-  .status-text.scanning { color: var(--warn); }
-  .status-text.dead { color: var(--fg-muted); }
+  .brand-status.live { color: var(--green); background: var(--green-soft); }
+  .brand-status.scanning { color: var(--warn); background: var(--warn-soft); }
+  .brand-status.dead { color: var(--fg-muted); background: rgba(0,0,0,0.04); }
+
+  .top-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
 
   .file-name {
-    font-size: 10px;
+    font-size: 9px;
     color: var(--fg-muted);
-    max-width: 140px;
+    max-width: 100px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  /* ── Connection Card ──────────────────────────────── */
-  .conn-card {
-    padding: 12px 14px;
+  .conn-quality {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .conn-quality.healthy { background: var(--green); }
+  .conn-quality.degraded { background: var(--warn); }
+  .conn-quality.reconnecting { background: var(--warn); animation: blink 1.2s ease-in-out infinite; }
+  .conn-quality.disconnected { background: #ddd; }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .minimize-btn {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background: none;
+    color: var(--fg-dim);
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+  .minimize-btn:hover { border-color: var(--fg-muted); color: var(--fg); }
+
+  /* ── Stats Row ──────────────────────────────────── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
   }
 
-  .conn-card.offline {
-    text-align: center;
-    padding: 16px 14px;
-  }
-
-  .conn-card .label {
-    font-size: 9px;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    color: var(--fg-muted);
-    margin-bottom: 6px;
-  }
-
-  .conn-detail {
+  .stat-card {
+    background: var(--bg);
+    padding: 8px 10px;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 11px;
+    flex-direction: column;
+    gap: 1px;
   }
 
-  .conn-detail .port {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--accent);
+  .stat-label {
+    font-size: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--fg-dim);
+    font-weight: 500;
+  }
+
+  .stat-value {
+    font-size: 16px;
+    font-weight: 300;
     font-variant-numeric: tabular-nums;
+    color: var(--fg);
+    line-height: 1.2;
   }
 
-  .conn-detail .meta {
-    text-align: right;
+  .stat-sub {
+    font-size: 8px;
     color: var(--fg-muted);
-    font-size: 10px;
-    line-height: 1.5;
+  }
+
+  /* ── Connection Card (offline/scanning) ─────────── */
+  .conn-card { display: none; }
+  .conn-card.visible {
+    display: block;
+    padding: 14px 12px;
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+    flex-shrink: 0;
   }
 
   .help-text {
-    font-size: 10px;
+    font-family: var(--serif);
+    font-size: 13px;
+    font-style: italic;
     color: var(--fg-muted);
-    line-height: 1.7;
+    line-height: 1.6;
   }
 
   .help-text code {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-style: normal;
     background: var(--bg-hover);
-    padding: 1px 5px;
+    padding: 2px 5px;
     border-radius: 2px;
-    color: var(--accent);
-    font-size: 10px;
+    color: var(--fg);
   }
 
   .retry-btn {
     display: inline-block;
-    margin-top: 10px;
-    padding: 5px 14px;
+    margin-top: 8px;
+    padding: 4px 12px;
     background: none;
     border: 1px solid var(--border);
-    color: var(--fg);
+    color: var(--fg-muted);
     font-family: var(--mono);
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    font-size: 9px;
+    letter-spacing: 0.5px;
     cursor: pointer;
-    border-radius: var(--radius);
+    border-radius: 3px;
+  }
+  .retry-btn:hover { border-color: var(--fg); color: var(--fg); }
+
+  /* ── Port Grid ──────────────────────────────────── */
+  .port-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 4px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
   }
 
-  .retry-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .port-grid-label {
+    grid-column: 1 / -1;
+    font-family: var(--serif);
+    font-size: 11px;
+    font-style: italic;
+    color: var(--fg-dim);
+    margin-bottom: 2px;
+  }
 
-  /* ── Tabs ─────────────────────────────────────────── */
+  .port-cell {
+    text-align: center;
+    padding: 4px 2px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    font-size: 9px;
+    font-variant-numeric: tabular-nums;
+    color: var(--fg-muted);
+    transition: all 0.2s;
+  }
+
+  .port-cell.active {
+    border-color: var(--green);
+    color: var(--green);
+    background: var(--green-soft);
+    font-weight: 500;
+  }
+
+  .port-cell.fc-active {
+    border-color: var(--warn);
+    color: var(--warn);
+    background: var(--warn-soft);
+  }
+
+  /* ── Tabs ───────────────────────────────────────── */
   .tabs {
     display: flex;
     border-bottom: 1px solid var(--border);
@@ -181,120 +277,163 @@
 
   .tab {
     flex: 1;
-    padding: 8px;
+    padding: 6px;
     text-align: center;
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 1px;
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
     text-transform: uppercase;
     cursor: pointer;
-    color: var(--fg-muted);
+    color: var(--fg-dim);
     border: none;
-    border-bottom: 2px solid transparent;
+    border-bottom: 1.5px solid transparent;
     background: none;
     font-family: var(--mono);
     transition: all 0.15s;
   }
 
-  .tab:hover { color: var(--fg); background: var(--bg-card); }
-  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab:hover { color: var(--fg-muted); }
+  .tab.active { color: var(--fg); border-bottom-color: var(--fg); }
 
-  /* ── Panels ───────────────────────────────────────── */
+  /* ── Panels ─────────────────────────────────────── */
   .panel { display: none; flex: 1; overflow: hidden; flex-direction: column; }
   .panel.active { display: flex; }
 
-  /* ── Activity Panel ───────────────────────────────── */
+  /* ── Log Panel ──────────────────────────────────── */
+  .log-counter {
+    padding: 5px 12px;
+    font-size: 8px;
+    color: var(--fg-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
   .log {
     flex: 1;
     overflow-y: auto;
-    padding: 10px 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
+    padding: 4px 0;
   }
 
   .log-entry {
     display: flex;
-    flex-wrap: wrap;
-    gap: 4px 8px;
-    padding: 3px 0;
-    font-size: 11px;
-    border-bottom: 1px solid rgba(255,255,255,0.02);
+    align-items: flex-start;
+    gap: 6px;
+    padding: 3px 12px;
+    font-size: 10px;
+    transition: background 0.1s;
   }
 
-  .log-time { color: var(--fg-muted); flex-shrink: 0; font-size: 10px; }
-  .log-icon { flex-shrink: 0; width: 12px; text-align: center; }
-  .log-msg { flex: 1; word-break: break-word; }
+  .log-entry:hover { background: var(--bg-hover); }
 
-  .log-entry.ok .log-icon { color: var(--accent); }
+  .log-time {
+    color: var(--fg-dim);
+    flex-shrink: 0;
+    font-size: 9px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .log-icon {
+    flex-shrink: 0;
+    width: 10px;
+    text-align: center;
+    font-weight: 600;
+  }
+
+  .log-msg { flex: 1; word-break: break-word; color: var(--fg); }
+
+  .log-entry.ok .log-icon { color: var(--green); }
   .log-entry.warn .log-icon { color: var(--warn); }
   .log-entry.err .log-icon { color: var(--error); }
-  .log-entry.info .log-icon { color: #555; }
+  .log-entry.info .log-icon { color: var(--fg-dim); }
 
-  /* ── Actions Panel ────────────────────────────────── */
+  .log-entry .log-detail {
+    flex-basis: 100%;
+    font-size: 9px;
+    color: var(--fg-muted);
+    margin-top: 1px;
+    padding-left: 16px;
+    word-break: break-all;
+    max-height: 60px;
+    overflow-y: auto;
+  }
+
+  .log-entry .log-badge {
+    display: inline-block;
+    font-size: 7px;
+    padding: 0 3px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--fg-muted);
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+
+  /* ── Actions Panel ──────────────────────────────── */
   .actions {
     flex: 1;
     overflow-y: auto;
-    padding: 10px 14px;
+    padding: 10px 12px;
+  }
+
+  .action-section {
+    font-family: var(--serif);
+    font-size: 12px;
+    font-style: italic;
+    color: var(--fg-dim);
+    margin-top: 10px;
+    margin-bottom: 4px;
+  }
+
+  .action-section:first-child { margin-top: 0; }
+
+  .action-pills {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
     gap: 4px;
   }
 
-  .action-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 10px;
+  .action-pill {
+    padding: 4px 10px;
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: 12px;
     cursor: pointer;
-    transition: all 0.15s;
-    background: var(--bg-card);
-  }
-
-  .action-row:hover { border-color: var(--accent); background: var(--bg-hover); }
-  .action-row:active { transform: scale(0.99); }
-
-  .action-key {
-    font-size: 10px;
-    color: var(--accent);
-    font-weight: 700;
-    min-width: 80px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .action-desc {
-    font-size: 10px;
-    color: var(--fg-muted);
-    flex: 1;
-  }
-
-  .action-row.disabled { opacity: 0.3; pointer-events: none; }
-
-  .action-section {
+    font-family: var(--mono);
     font-size: 9px;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
     color: var(--fg-muted);
-    margin-top: 8px;
-    margin-bottom: 2px;
-    padding-left: 2px;
+    background: none;
+    transition: all 0.15s;
+    white-space: nowrap;
   }
 
-  /* ── Selection Panel ──────────────────────────────── */
+  .action-pill:hover {
+    border-color: var(--fg);
+    color: var(--fg);
+    background: var(--bg-hover);
+  }
+
+  .action-pill:active { transform: scale(0.97); }
+  .action-pill.disabled { opacity: 0.3; pointer-events: none; }
+
+  /* ── Selection Panel ────────────────────────────── */
   .sel-panel {
     flex: 1;
     overflow-y: auto;
-    padding: 10px 14px;
+    padding: 10px 12px;
   }
 
   .sel-empty {
     text-align: center;
-    color: var(--fg-muted);
-    padding: 40px 20px;
-    font-size: 11px;
+    color: var(--fg-dim);
+    padding: 30px 20px;
+    font-family: var(--serif);
+    font-size: 13px;
+    font-style: italic;
     line-height: 2;
   }
 
@@ -310,13 +449,13 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
   }
 
-  .sel-name { font-weight: 700; font-size: 11px; }
+  .sel-name { font-weight: 500; font-size: 10px; }
   .sel-type {
-    font-size: 9px;
-    padding: 1px 6px;
+    font-size: 8px;
+    padding: 1px 5px;
     border: 1px solid var(--border);
     border-radius: 2px;
     color: var(--fg-muted);
@@ -327,160 +466,112 @@
   .sel-props {
     display: grid;
     grid-template-columns: auto 1fr;
-    gap: 1px 10px;
-    font-size: 10px;
-    color: var(--fg-muted);
-  }
-
-  .sel-props .k { color: var(--accent); }
-
-  /* ── Connection Quality Dot ──────────────────────── */
-  .conn-quality {
-    display: inline-block;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    transition: background 0.3s;
-  }
-  .conn-quality.healthy { background: #4ade80; }
-  .conn-quality.degraded { background: #facc15; }
-  .conn-quality.reconnecting { background: #facc15; animation: quality-blink 1.2s ease-in-out infinite; }
-  .conn-quality.disconnected { background: #f87171; }
-
-  @keyframes quality-blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
-  }
-
-  /* ── Status Bar Detail Line ────────────────────────── */
-  .status-detail {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 4px 14px;
-    border-bottom: 1px solid var(--border);
-    background: var(--bg);
+    gap: 1px 8px;
     font-size: 9px;
     color: var(--fg-muted);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    flex-shrink: 0;
-  }
-  .status-detail .detail-item {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-  .status-detail .detail-val {
-    color: var(--accent);
-    font-variant-numeric: tabular-nums;
   }
 
-  /* ── Scrollbar ────────────────────────────────────── */
+  .sel-props .k { color: var(--fg); font-weight: 500; }
+
+  /* ── Scrollbar ──────────────────────────────────── */
   ::-webkit-scrollbar { width: 3px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #222; border-radius: 2px; }
-  ::-webkit-scrollbar-thumb:hover { background: #444; }
+  ::-webkit-scrollbar-thumb { background: #e0e0e0; border-radius: 2px; }
+  ::-webkit-scrollbar-thumb:hover { background: #ccc; }
 
-  /* ── Minimize ───────────────────────────────────────── */
-  .minimize-btn {
-    width: 22px;
-    height: 22px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--border);
-    border-radius: 2px;
-    background: none;
-    color: var(--fg-muted);
-    cursor: pointer;
-    font-family: var(--mono);
-    font-size: 12px;
-    flex-shrink: 0;
-    transition: all 0.15s;
-  }
-  .minimize-btn:hover { border-color: var(--accent); color: var(--fg); }
-
+  /* ── Minimize ───────────────────────────────────── */
+  body.minimized .stats-row,
   body.minimized .conn-card,
-  body.minimized .status-detail,
+  body.minimized .port-grid,
   body.minimized .tabs,
   body.minimized .panel { display: none !important; }
   body.minimized { height: auto; }
-  body.minimized .status-bar { border-bottom: none; }
+  body.minimized .top-bar { border-bottom: none; }
 
-  /* ── Log Enhancements ──────────────────────────────── */
-  .log-entry .log-detail {
-    flex-basis: 100%;
-    font-size: 9px;
-    color: var(--fg-muted);
-    margin-top: 1px;
-    padding-left: 20px;
-    word-break: break-all;
-    max-height: 60px;
-    overflow-y: auto;
-  }
-
-  .log-entry .log-badge {
-    display: inline-block;
-    font-size: 8px;
-    padding: 0 4px;
-    border: 1px solid var(--border);
-    border-radius: 2px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--fg-muted);
-    margin-left: 6px;
-    vertical-align: middle;
-  }
-
-  .log-counter {
-    padding: 6px 14px;
-    font-size: 9px;
-    color: var(--fg-muted);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    justify-content: space-between;
-    flex-shrink: 0;
-  }
+  /* ── Hidden helper for status-detail compatibility ── */
+  .status-detail { display: none; }
 </style>
 </head>
 <body>
 
-<!-- Status Bar -->
-<div class="status-bar">
-  <div class="status-indicator dead" id="statusDot"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.46-.06-.92-.1-1.36-.1z" fill="currentColor"/></svg></div>
-  <div class="status-text dead" id="statusText">SCANNING...</div>
-  <span class="conn-quality disconnected" id="connQuality" title="Connection quality"></span>
-  <div class="file-name" id="fileName"></div>
-  <button class="minimize-btn" id="minimizeBtn" onclick="toggleMinimize()" title="Minimize">_</button>
+<!-- Top Bar -->
+<div class="top-bar">
+  <div class="brand">
+    <svg class="brand-icon dead" id="statusDot" viewBox="0 0 14 14" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="7" cy="4" r="1.2" fill="#c0392b"/>
+      <circle cx="4.5" cy="5.5" r="1.2" fill="#c0392b"/>
+      <circle cx="9.5" cy="5.5" r="1.2" fill="#c0392b"/>
+      <circle cx="5.5" cy="3.2" r="1.2" fill="#d35649"/>
+      <circle cx="8.5" cy="3.2" r="1.2" fill="#d35649"/>
+      <circle cx="7" cy="6" r="1.6" fill="#a02018"/>
+      <line x1="7" y1="7.5" x2="7" y2="12.5" stroke="#6b8a6b" stroke-width="1.2" stroke-linecap="round"/>
+      <line x1="7" y1="10" x2="5" y2="8.5" stroke="#6b8a6b" stroke-width="0.8" stroke-linecap="round"/>
+      <line x1="7" y1="11" x2="9" y2="9.5" stroke="#6b8a6b" stroke-width="0.8" stroke-linecap="round"/>
+    </svg>
+    <span class="brand-name">memoire</span>
+    <span class="brand-status dead" id="statusText">offline</span>
+  </div>
+  <div class="top-right">
+    <div class="file-name" id="fileName"></div>
+    <span class="conn-quality disconnected" id="connQuality" title="Disconnected"></span>
+    <button class="minimize-btn" id="minimizeBtn" onclick="toggleMinimize()" title="Minimize">_</button>
+  </div>
 </div>
 
-<!-- Status Detail Bar -->
-<div class="status-detail" id="statusDetail">
-  <div class="detail-item">PORT <span class="detail-val" id="detailPort">--</span></div>
-  <div class="detail-item">CLIENTS <span class="detail-val" id="detailClients">0</span></div>
-  <div class="detail-item">PING <span class="detail-val" id="detailLatency">--</span></div>
-  <div class="detail-item">QUEUE <span class="detail-val" id="detailQueue">0</span></div>
+<!-- Stats Row -->
+<div class="stats-row" id="statsRow">
+  <div class="stat-card">
+    <div class="stat-label">Port</div>
+    <div class="stat-value" id="detailPort">--</div>
+    <div class="stat-sub">bridge</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Events</div>
+    <div class="stat-value" id="statEvents">0</div>
+    <div class="stat-sub">this session</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Uptime</div>
+    <div class="stat-value" id="logSession">0:00</div>
+    <div class="stat-sub">session</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Ping</div>
+    <div class="stat-value" id="detailLatency">--</div>
+    <div class="stat-sub" id="pingQuality">waiting</div>
+  </div>
 </div>
 
-<!-- Connection Card (dynamic) -->
-<div id="connCard"></div>
+<!-- Connection Card (offline/scanning only) -->
+<div class="conn-card" id="connCard"></div>
+
+<!-- Port Grid -->
+<div class="port-grid" id="portGrid">
+  <div class="port-grid-label">Ports</div>
+  <div class="port-cell" id="port-9223">9223</div>
+  <div class="port-cell" id="port-9224">9224</div>
+  <div class="port-cell" id="port-9225">9225</div>
+  <div class="port-cell" id="port-9226">9226</div>
+  <div class="port-cell" id="port-9227">9227</div>
+  <div class="port-cell" id="port-9228">9228</div>
+  <div class="port-cell" id="port-9229">9229</div>
+  <div class="port-cell" id="port-9230">9230</div>
+  <div class="port-cell" id="port-9231">9231</div>
+  <div class="port-cell" id="port-9232">9232</div>
+</div>
 
 <!-- Tabs -->
 <div class="tabs">
-  <button class="tab active" data-tab="activity" onclick="switchTab('activity')">LOG</button>
-  <button class="tab" data-tab="actions" onclick="switchTab('actions')">ACTIONS</button>
-  <button class="tab" data-tab="selection" onclick="switchTab('selection')">SELECTION</button>
+  <button class="tab active" data-tab="activity" onclick="switchTab('activity')">Log</button>
+  <button class="tab" data-tab="actions" onclick="switchTab('actions')">Actions</button>
+  <button class="tab" data-tab="selection" onclick="switchTab('selection')">Selection</button>
 </div>
 
 <!-- Activity Panel -->
 <div class="panel active" id="panel-activity">
   <div class="log-counter" id="logCounter">
-    <span id="logStats">0 EVENTS</span>
-    <span id="logSession">SESSION 00:00</span>
+    <span id="logStats">0 events</span>
+    <span id="logSessionLabel"></span>
   </div>
   <div class="log" id="logEl"></div>
 </div>
@@ -488,37 +579,24 @@
 <!-- Actions Panel -->
 <div class="panel" id="panel-actions">
   <div class="actions" id="actionsEl">
-    <div class="action-section">DESIGN SYSTEM</div>
-    <div class="action-row" onclick="act('pull-tokens')">
-      <span class="action-key">TOKENS</span>
-      <span class="action-desc">Extract design variables</span>
+    <div class="action-section">Design System</div>
+    <div class="action-pills">
+      <button class="action-pill" onclick="act('pull-tokens')">Tokens</button>
+      <button class="action-pill" onclick="act('pull-components')">Components</button>
+      <button class="action-pill" onclick="act('pull-styles')">Styles</button>
     </div>
-    <div class="action-row" onclick="act('pull-components')">
-      <span class="action-key">COMPONENTS</span>
-      <span class="action-desc">List all components</span>
+    <div class="action-section">Research</div>
+    <div class="action-pills">
+      <button class="action-pill" onclick="act('stickies')">Stickies</button>
     </div>
-    <div class="action-row" onclick="act('pull-styles')">
-      <span class="action-key">STYLES</span>
-      <span class="action-desc">Colors, text, effects</span>
+    <div class="action-section">Inspect</div>
+    <div class="action-pills">
+      <button class="action-pill" onclick="act('selection-info')">Selection</button>
+      <button class="action-pill" onclick="act('page-tree')">Page Tree</button>
     </div>
-    <div class="action-section">RESEARCH</div>
-    <div class="action-row" onclick="act('stickies')">
-      <span class="action-key">STICKIES</span>
-      <span class="action-desc">Read FigJam stickies</span>
-    </div>
-    <div class="action-section">INSPECT</div>
-    <div class="action-row" onclick="act('selection-info')">
-      <span class="action-key">INSPECT</span>
-      <span class="action-desc">Deep selection data</span>
-    </div>
-    <div class="action-row" onclick="act('page-tree')">
-      <span class="action-key">PAGE TREE</span>
-      <span class="action-desc">Extract IA page structure</span>
-    </div>
-    <div class="action-section">SYNC</div>
-    <div class="action-row" onclick="act('full-sync')">
-      <span class="action-key">FULL SYNC</span>
-      <span class="action-desc">Push tokens + components + styles</span>
+    <div class="action-section">Sync</div>
+    <div class="action-pills">
+      <button class="action-pill" onclick="act('full-sync')">Full Sync</button>
     </div>
   </div>
 </div>
@@ -528,6 +606,12 @@
   <div class="sel-panel" id="selPanel">
     <div class="sel-empty">Select something in Figma<br>to inspect it here</div>
   </div>
+</div>
+
+<!-- Hidden compat elements -->
+<div class="status-detail" id="statusDetail">
+  <span id="detailClients" style="display:none">0</span>
+  <span id="detailQueue" style="display:none">0</span>
 </div>
 
 <script>
@@ -595,7 +679,6 @@ function getAvgLatency() {
 }
 
 // ── Connection Quality Indicator ─────────────────────
-// States: healthy (green), degraded (yellow), reconnecting (yellow blink), disconnected (red)
 let connQualityState = 'disconnected';
 
 function updateConnectionQuality(state) {
@@ -618,6 +701,7 @@ function updateStatusBar() {
   const clientsEl = document.getElementById('detailClients');
   const latencyEl = document.getElementById('detailLatency');
   const queueEl = document.getElementById('detailQueue');
+  const pingQEl = document.getElementById('pingQuality');
 
   if (portEl) portEl.textContent = connPort > 0 ? ':' + connPort : '--';
 
@@ -638,8 +722,33 @@ function updateStatusBar() {
     }
   }
 
+  if (pingQEl) {
+    if (lastPingLatency > 0) {
+      pingQEl.textContent = lastPingLatency < 100 ? 'healthy' : lastPingLatency < HIGH_LATENCY_THRESHOLD ? 'ok' : 'slow';
+    } else {
+      pingQEl.textContent = status === 'live' ? 'measuring' : 'waiting';
+    }
+  }
+
   if (queueEl) {
     queueEl.textContent = String(commandQueue.length);
+  }
+
+  // Update port grid
+  updatePortGrid();
+
+  // Update stat events
+  const evtEl = document.getElementById('statEvents');
+  if (evtEl) evtEl.textContent = String(logCount.total);
+}
+
+function updatePortGrid() {
+  for (let p = PORT_START; p <= PORT_END; p++) {
+    const cell = document.getElementById('port-' + p);
+    if (!cell) continue;
+    cell.className = 'port-cell';
+    if (p === connPort) cell.classList.add('active');
+    else if (p === fcPort) cell.classList.add('fc-active');
   }
 }
 
@@ -649,7 +758,7 @@ const MAX_QUEUED_COMMANDS = 50;
 
 function queueCommand(msg) {
   if (commandQueue.length >= MAX_QUEUED_COMMANDS) {
-    commandQueue.shift(); // drop oldest
+    commandQueue.shift();
   }
   commandQueue.push(msg);
   log('info', 'Queued command (' + commandQueue.length + '/' + MAX_QUEUED_COMMANDS + '): ' + (msg.method || msg.type || 'unknown'));
@@ -675,7 +784,7 @@ function startMemoireHeartbeat() {
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
     memoireMissedPongs++;
     if (memoireMissedPongs >= MAX_MISSED) {
-      log('warn', 'Mémoire heartbeat timeout (' + MAX_MISSED + ' missed) — reconnecting');
+      log('warn', 'Heartbeat timeout (' + MAX_MISSED + ' missed) — reconnecting');
       updateConnectionQuality('disconnected');
       ws.close();
       return;
@@ -701,11 +810,8 @@ function startFcHeartbeat() {
 }
 
 // ── Connection (multi-protocol scanning) ────────────
-// Scans ports 9223-9232 for BOTH Mémoire CLI and figma-console MCP servers.
-// Detects protocol by first message: SERVER_HELLO = figma-console, else = Mémoire.
-
 function scan() {
-  if (status === 'live' && fcStatus === 'live') return; // both connected
+  if (status === 'live' && fcStatus === 'live') return;
   if (scanTimer) { clearTimeout(scanTimer); scanTimer = null; }
   if (status !== 'live') setStatus('scanning');
   currentScanPort = PORT_START;
@@ -713,14 +819,13 @@ function scan() {
 }
 
 function scheduleReconnect() {
-  if (scanTimer) return; // already scheduled
+  if (scanTimer) return;
   log('info', 'Reconnecting in ' + (reconnectDelay / 1000).toFixed(1) + 's...');
   updateConnectionQuality('reconnecting');
   scanTimer = setTimeout(() => {
     scanTimer = null;
     scan();
   }, reconnectDelay);
-  // Exponential backoff: 1s, 2s, 4s, 8s, 16s (cap at 16s)
   reconnectDelay = Math.min(reconnectDelay * 2, MAX_RECONNECT_DELAY);
 }
 
@@ -740,7 +845,6 @@ function tryNext() {
 
   const port = currentScanPort++;
 
-  // Skip ports we're already connected to
   if (port === connPort || port === fcPort) {
     tryNext();
     return;
@@ -752,7 +856,6 @@ function tryNext() {
     let identifyTimeout = null;
     let connectTimeout = null;
 
-    // Hard timeout: if nothing happens in 2s, skip this port
     connectTimeout = setTimeout(() => {
       if (!identified) {
         identified = true;
@@ -767,14 +870,10 @@ function tryNext() {
     }
 
     sock.onopen = () => {
-      // Wait for first message to determine protocol
-      // Mémoire sends "identify" message, figma-console sends "SERVER_HELLO"
-      // If no message within 800ms, this is NOT a known server — skip it
       identifyTimeout = setTimeout(() => {
         if (!identified) {
           identified = true;
           cleanup();
-          // No protocol message received — not a Mémoire or FC server, skip
           try { sock.close(); } catch {}
           tryNext();
         }
@@ -785,7 +884,6 @@ function tryNext() {
       let data;
       try { data = JSON.parse(e.data); } catch { return; }
 
-      // Any message from a connected server resets heartbeat counters
       if (sock === ws) {
         memoireMissedPongs = 0;
         if (memoirePingSentAt > 0) {
@@ -801,18 +899,15 @@ function tryNext() {
         if (data.type === 'SERVER_HELLO') {
           adoptAsFigmaConsole(sock, port, data);
         } else if (data.type === 'identify' || data.type === 'pong' || data.name) {
-          // Valid Mémoire server — sends "identify" on connection
           adoptAsMemoire(sock, port);
           handleMsg(data);
         } else {
-          // Unknown server, skip
           try { sock.close(); } catch {}
           tryNext();
         }
         return;
       }
 
-      // Route to correct handler
       if (sock === ws) {
         handleMsg(data);
       } else if (sock === fcWs) {
@@ -828,7 +923,7 @@ function tryNext() {
         clearInterval(memoireHeartbeat);
         setStatus('dead');
         renderConn();
-        log('warn', 'Disconnected from Mémoire');
+        log('warn', 'Disconnected from Memoire');
         scheduleReconnect();
       } else if (sock === fcWs) {
         fcWs = null;
@@ -839,7 +934,6 @@ function tryNext() {
         log('warn', 'Figma Console MCP disconnected');
         scheduleReconnect();
       } else if (!identified) {
-        // Connection closed during scan before identification
         identified = true;
         tryNext();
       }
@@ -860,7 +954,6 @@ function tryNext() {
 
 function adoptAsMemoire(sock, port) {
   if (status === 'live') {
-    // Already have a Mémoire connection, skip
     sock.close();
     tryNext();
     return;
@@ -874,9 +967,8 @@ function adoptAsMemoire(sock, port) {
   startMemoireHeartbeat();
   updateConnectionQuality('healthy');
   renderConn();
-  log('ok', 'Connected to Mémoire on port ' + port);
+  log('ok', 'Connected to Memoire on port ' + port);
 
-  // Replay any queued commands from while disconnected
   if (commandQueue.length > 0) {
     setTimeout(() => replayCommandQueue(), 200);
   }
@@ -889,7 +981,6 @@ function adoptAsMemoire(sock, port) {
     editor: fileInfo.editor || 'figma',
   }));
 
-  // Continue scanning for figma-console
   if (fcStatus !== 'live') tryNext();
 }
 
@@ -906,9 +997,8 @@ function adoptAsFigmaConsole(sock, port, hello) {
   resetBackoff();
   startFcHeartbeat();
   renderConn();
-  log('ok', 'Figma Console MCP on port ' + port + ' (auto-bridged)');
+  log('ok', 'Figma Console MCP on port ' + port);
 
-  // Send FILE_INFO handshake
   sock.send(JSON.stringify({
     type: 'FILE_INFO',
     data: {
@@ -921,7 +1011,6 @@ function adoptAsFigmaConsole(sock, port, hello) {
     }
   }));
 
-  // Continue scanning for Mémoire
   if (status !== 'live') tryNext();
 }
 
@@ -945,43 +1034,32 @@ function disconnect() {
 }
 
 // ── Figma Console MCP Protocol ──────────────────────
-// Forward commands directly to code.js using their native protocol.
-// code.js handles ALL figma-console command types natively.
-
-// Global state for figma-console data
 window.__figmaVariablesData = null;
 window.__figmaVariablesReady = false;
 window.__figmaPendingRequests = new Map();
 
 function handleFcMsg(msg) {
-  // Request from figma-console MCP: {id, method, params}
   if (msg.id && msg.method) {
     const fcId = msg.id;
     const method = msg.method;
     const params = msg.params || {};
 
-    // Track pending request for response routing
     fcPending.set(fcId, true);
 
-    // Forward directly to code.js using figma-console protocol:
-    // {type: METHOD, requestId: id, ...params}
     const pluginMsg = Object.assign({ type: method, requestId: fcId }, params);
     parent.postMessage({ pluginMessage: pluginMsg }, '*');
 
-    log('info', 'FC → ' + method, Object.keys(params).length ? params : null);
+    log('info', 'FC ' + method, Object.keys(params).length ? params : null);
     return;
   }
 
-  // Server identity (already handled in adoptAsFigmaConsole)
   if (msg.type === 'SERVER_HELLO') return;
 
-  // Ignore UI management from figma-console
   if (msg.type === 'RESIZE_UI' || msg.type === 'BOOT_LOAD_UI' || msg.type === 'RELOAD_UI' || msg.type === 'BOOT_FALLBACK') {
     return;
   }
 }
 
-// Broadcast Figma events to figma-console MCP
 function fcBroadcast(data) {
   if (fcWs && fcWs.readyState === WebSocket.OPEN) {
     fcWs.send(JSON.stringify(data));
@@ -994,17 +1072,17 @@ function setStatus(s) {
   status = s;
   const dot = document.getElementById('statusDot');
   const txt = document.getElementById('statusText');
-  dot.className = 'status-indicator ' + s;
-  txt.className = 'status-text ' + s;
+  dot.className = 'brand-icon ' + s;
+  txt.className = 'brand-status ' + s;
 
   if (s === 'live') {
-    txt.textContent = 'CONNECTED';
+    txt.textContent = 'connected';
     updateConnectionQuality('healthy');
   } else if (s === 'scanning') {
-    txt.textContent = 'SCANNING...';
+    txt.textContent = 'scanning';
     updateConnectionQuality('reconnecting');
   } else {
-    txt.textContent = 'OFFLINE';
+    txt.textContent = 'offline';
     updateConnectionQuality('disconnected');
   }
   updateStatusBar();
@@ -1014,43 +1092,22 @@ function setStatus(s) {
 
 function renderConn() {
   const el = document.getElementById('connCard');
-
   let html = '';
 
   if (status === 'live') {
-    const elapsed = connectedAt ? timeSince(connectedAt) : '';
-    html += '<div class="conn-card">' +
-      '<div class="label">MÉMOIRE BRIDGE</div>' +
-      '<div class="conn-detail">' +
-        '<span class="port">:' + connPort + '</span>' +
-        '<span class="meta">' + esc(connName || 'Mémoire Terminal') + '<br>' + elapsed + '</span>' +
-      '</div>' +
-    '</div>';
+    // Hide conn card when connected — stats row handles it
+    el.className = 'conn-card';
+    el.innerHTML = '';
   } else if (status === 'scanning') {
-    html += '<div class="conn-card offline">' +
-      '<div class="help-text">Scanning ports ' + PORT_START + '-' + PORT_END + '...</div>' +
-    '</div>';
+    el.className = 'conn-card visible';
+    el.innerHTML = '<div class="help-text">Scanning ports ' + PORT_START + '–' + PORT_END + '...</div>';
   } else {
-    html += '<div class="conn-card offline">' +
-      '<div class="help-text">' +
-        'No Mémoire instance found.<br><br>' +
-        'Run <code>memi connect</code> in your terminal.' +
-      '</div>' +
-      '<button class="retry-btn" onclick="scan()">RETRY</button>' +
-    '</div>';
+    el.className = 'conn-card visible';
+    el.innerHTML =
+      '<div class="help-text">No instance found.<br>Run <code>memi connect</code> in terminal.</div>' +
+      '<button class="retry-btn" onclick="scan()">Retry</button>';
   }
 
-  // Show figma-console bridge status (compact)
-  if (fcStatus === 'live') {
-    html += '<div class="conn-card" style="padding:6px 14px;border-bottom:1px solid var(--border)">' +
-      '<div class="conn-detail" style="font-size:10px">' +
-        '<span style="color:var(--fg-muted)">FIGMA CONSOLE</span>' +
-        '<span style="color:var(--accent)">:' + fcPort + ' AUTO</span>' +
-      '</div>' +
-    '</div>';
-  }
-
-  el.innerHTML = html;
   updateStatusBar();
 }
 
@@ -1073,7 +1130,7 @@ function handleMsg(msg) {
   if (msg.type === 'identify') {
     connName = msg.name || connName;
     renderConn();
-    log('ok', 'Identified: ' + (msg.name || 'Mémoire'));
+    log('ok', 'Identified: ' + (msg.name || 'Memoire'));
     return;
   }
 
@@ -1093,7 +1150,6 @@ function handleMsg(msg) {
     return;
   }
 
-  // Log any unrecognized message types for visibility
   log('info', 'MSG:' + msg.type, msg.data || null);
 }
 
@@ -1102,7 +1158,6 @@ function send(data) {
     ws.send(JSON.stringify(data));
     return true;
   }
-  // Queue commands for replay on reconnect
   if (data && data.type === 'command' || (data && data.method)) {
     queueCommand(data);
   }
@@ -1194,7 +1249,6 @@ function log(level, msg, detail) {
   const el = document.getElementById('logEl');
   const icons = { ok: '+', warn: '!', err: 'x', info: '.' };
 
-  // Check if user is near bottom before appending (auto-scroll only if pinned)
   const wasAtBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
 
   const entry = document.createElement('div');
@@ -1213,14 +1267,12 @@ function log(level, msg, detail) {
   entry.innerHTML = html;
   el.appendChild(entry);
 
-  // Auto-scroll to bottom if user was already at bottom
   if (wasAtBottom) {
     requestAnimationFrame(() => { el.scrollTop = el.scrollHeight; });
   }
 
   while (el.children.length > 500) el.removeChild(el.firstChild);
 
-  // Update counters
   logCount.total++;
   if (logCount[level] !== undefined) logCount[level]++;
   updateLogStats();
@@ -1229,8 +1281,10 @@ function log(level, msg, detail) {
 function updateLogStats() {
   const stats = document.getElementById('logStats');
   if (stats) {
-    stats.textContent = logCount.total + ' EVENTS  ' + logCount.ok + '+ ' + logCount.warn + '! ' + logCount.err + 'x';
+    stats.textContent = logCount.total + ' events  ' + logCount.ok + '+ ' + logCount.warn + '! ' + logCount.err + 'x';
   }
+  const evtEl = document.getElementById('statEvents');
+  if (evtEl) evtEl.textContent = String(logCount.total);
 }
 
 function updateSessionTimer() {
@@ -1239,7 +1293,7 @@ function updateSessionTimer() {
     const s = Math.floor((Date.now() - sessionStart) / 1000);
     const m = Math.floor(s / 60);
     const sec = s % 60;
-    el.textContent = 'SESSION ' + String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+    el.textContent = m + ':' + String(sec).padStart(2, '0');
   }
 }
 
@@ -1279,7 +1333,6 @@ onmessage = (event) => {
       break;
     }
 
-    // ── Figma-console variables data (cached for MCP) ────
     case 'VARIABLES_DATA': {
       window.__figmaVariablesData = msg.data;
       window.__figmaVariablesReady = true;
@@ -1287,19 +1340,17 @@ onmessage = (event) => {
       break;
     }
 
-    // ── Console capture forwarding to figma-console ──────
     case 'CONSOLE_CAPTURE': {
       fcBroadcast({ type: 'CONSOLE_CAPTURE', level: msg.level, message: msg.message, args: msg.args, timestamp: msg.timestamp });
       break;
     }
 
-    // ── Figma-console component data (special routing) ───
     case 'COMPONENT_DATA': {
       const cdRid = msg.requestId;
       if (cdRid && fcPending.has(cdRid)) {
         fcPending.delete(cdRid);
         fcBroadcast({ id: cdRid, result: msg.data });
-        log('ok', 'FC → component data');
+        log('ok', 'FC component data');
       }
       break;
     }
@@ -1322,7 +1373,6 @@ onmessage = (event) => {
         const names = nodes.map(n => n.name).join(', ');
         log('info', 'Selection: ' + nodes.length + ' node' + (nodes.length > 1 ? 's' : '') + ' — ' + names);
       }
-      // Broadcast to figma-console
       fcBroadcast({
         type: 'SELECTION_CHANGE',
         data: {
@@ -1334,9 +1384,8 @@ onmessage = (event) => {
     }
 
     case 'page-changed':
-      log('info', 'Page → ' + msg.data.page, msg.data);
+      log('info', 'Page > ' + msg.data.page, msg.data);
       send({ type: 'page-changed', data: msg.data });
-      // Broadcast to figma-console
       fcBroadcast({
         type: 'PAGE_CHANGE',
         data: {
@@ -1344,7 +1393,6 @@ onmessage = (event) => {
           pageId: msg.data.pageId || '',
         }
       });
-      // Update FILE_INFO for figma-console
       fcBroadcast({
         type: 'FILE_INFO',
         data: {
@@ -1362,7 +1410,6 @@ onmessage = (event) => {
       const changeCount = msg.data.changes || 0;
       log('info', 'Document changed — ' + changeCount + ' change' + (changeCount !== 1 ? 's' : ''));
       send({ type: 'document-changed', data: msg.data });
-      // Broadcast to figma-console
       fcBroadcast({
         type: 'DOCUMENT_CHANGE',
         data: {
@@ -1379,7 +1426,6 @@ onmessage = (event) => {
       const resultSize = msg.result ? JSON.stringify(msg.result).length : 0;
       const sizeLabel = resultSize > 1024 ? (resultSize / 1024).toFixed(1) + 'KB' : resultSize + 'B';
 
-      // Route figma-console responses back
       if (id && id.startsWith('fc:')) {
         const origId = fcPending.get(id);
         fcPending.delete(id);
@@ -1390,17 +1436,16 @@ onmessage = (event) => {
             log('err', 'FC error: ' + msg.error);
           } else {
             resp.result = msg.result;
-            log('ok', 'FC → response (' + sizeLabel + ')');
+            log('ok', 'FC response (' + sizeLabel + ')');
           }
           fcBroadcast(resp);
         }
         return;
       }
 
-      // Mémoire terminal responses
       if (id && !id.includes(':')) {
         if (send({ type: 'response', id, result: msg.result, error: msg.error })) {
-          log('ok', 'Response → ' + id + ' (' + sizeLabel + ')');
+          log('ok', 'Response > ' + id + ' (' + sizeLabel + ')');
         }
         if (msg.error) log('err', 'Error in ' + id, msg.error);
         return;
@@ -1430,9 +1475,6 @@ onmessage = (event) => {
     }
 
     default: {
-      // ── Figma-console _RESULT routing ─────────────────
-      // code.js sends {type: 'METHOD_RESULT', requestId, success, ...data}
-      // We route these back to the figma-console WebSocket as {id, result/error}
       const msgType = msg.type || '';
       if (msgType.endsWith('_RESULT') && msg.requestId && fcPending.has(msg.requestId)) {
         fcPending.delete(msg.requestId);
@@ -1441,7 +1483,6 @@ onmessage = (event) => {
           resp.error = msg.error || 'Unknown error';
           log('err', 'FC: ' + msgType.replace('_RESULT', ''), msg.error);
         } else {
-          // Build result object from all fields except meta fields
           const result = {};
           for (const key in msg) {
             if (key !== 'type' && key !== 'requestId' && key !== 'success') {
@@ -1449,11 +1490,10 @@ onmessage = (event) => {
             }
           }
           resp.result = result;
-          log('ok', 'FC ← ' + msgType.replace('_RESULT', ''));
+          log('ok', 'FC < ' + msgType.replace('_RESULT', ''));
         }
         fcBroadcast(resp);
       }
-      // Also forward figma-console events (SELECTION_CHANGE, PAGE_CHANGE, etc.)
       else if (msgType === 'SELECTION_CHANGE' || msgType === 'PAGE_CHANGE' || msgType === 'DOCUMENT_CHANGE') {
         fcBroadcast(msg);
       }
@@ -1485,12 +1525,10 @@ function timeSince(date) {
 
 parent.postMessage({ pluginMessage: { type: 'ping' } }, '*');
 renderConn();
-log('info', 'Mémoire starting...');
+log('info', 'Memoire starting...');
 
-// Session timer
 sessionTimer = setInterval(updateSessionTimer, 1000);
 
-// Start scanning for Mémoire instance
 setTimeout(scan, 300);
 </script>
 </body>
