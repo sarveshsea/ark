@@ -1,0 +1,16 @@
+{
+  "name": "figma-web-capture",
+  "version": "1.0.0",
+  "description": "Figma web capture workflow - import live webpages or DOM elements into editable Figma layers with the public html-to-design capture.js bookmarklet",
+  "category": "connect",
+  "tags": ["figma", "html-to-design", "bookmarklet", "web-capture", "editable-layers"],
+  "skills": [{
+    "file": "figma-web-capture.md",
+    "name": "Figma Web Capture",
+    "activateOn": "figma-canvas-operation",
+    "freedomLevel": "high"
+  }],
+  "dependencies": [],
+  "createdAt": "2026-03-27T00:00:00.000Z",
+  "updatedAt": "2026-03-27T00:00:00.000Z"
+}
