@@ -55,6 +55,7 @@ This changelog tracks Mémoire itself: every version, commit, and architectural 
 | `324de7f` | Add codex ops note |
 | `722496d` | Add JSON output to spec list command |
 | `a223ac3` | Add JSON output to IA commands |
+| `eef0a91` | Add JSON output to note mutation commands |
 
 ### Key Design Decisions
 - **Notes Become a Real Extension Surface** — Mémoire now treats Notes as installable skill packs, including workspace `SKILL.md` bundles, built-in notes, and compatibility fixes for activation and copy behavior.
@@ -78,6 +79,7 @@ This changelog tracks Mémoire itself: every version, commit, and architectural 
 - Improved project detection for Tailwind and shadcn setups and removed noisy logger transport warnings
 - Sped up local TypeScript builds with a dedicated build config and restored the working fast-build script
 - Added JSON output to `spec list` and IA `list`/`show`/`validate` so agents can inspect architecture state without terminal scraping
+- Added JSON output to `notes install`, `notes create`, and `notes remove` so downloadable note workflows can be automated end to end
 
 ## v0.2.0 — 2026-03-26
 
