@@ -13,6 +13,27 @@ interface DaemonStatus {
   startedAt: string;
 }
 
+interface DaemonStatusPayload {
+  action: "status";
+  status: "running" | "stopped" | "stale-cleaned";
+  reason?: "missing-status-file" | "stale-process";
+  daemon: {
+    pid: number;
+    port: number;
+    figmaPort: number;
+    dashboardPort: number;
+    startedAt: string;
+    uptimeSeconds: number | null;
+    uptimeHuman: string | null;
+    alive: boolean;
+    figmaConnected: boolean;
+    previewUrl: string;
+  } | null;
+  cleanup: {
+    performed: boolean;
+  };
+}
+
 /** Resolve the .memoire directory for PID/status files */
 function memoireDir(engine: MemoireEngine): string {
   return join(engine.config.projectRoot, ".memoire");
@@ -223,17 +244,46 @@ export function registerDaemonCommand(program: Command, engine: MemoireEngine): 
   daemon
     .command("status")
     .description("Show the current daemon status")
-    .action(async () => {
+    .option("--json", "Output daemon status as JSON")
+    .action(async (opts: { json?: boolean }) => {
       const status = await readStatus(engine);
+      const json = Boolean(opts.json);
 
       if (!status) {
+        if (json) {
+          console.log(JSON.stringify({
+            action: "status",
+            status: "stopped",
+            reason: "missing-status-file",
+            daemon: null,
+            cleanup: { performed: false },
+          } satisfies DaemonStatusPayload, null, 2));
+          return;
+        }
+
         console.log("\n  Memoire daemon: stopped (no status file)\n");
         return;
       }
 
       const alive = isProcessAlive(status.pid);
+      const figmaConnected = engine.figma?.wsServer?.connectedClients?.length > 0;
+      const uptimeSeconds = alive
+        ? Math.max(0, (Date.now() - new Date(status.startedAt).getTime()) / 1000)
+        : null;
 
       if (!alive) {
+        if (json) {
+          await cleanupFiles(engine);
+          console.log(JSON.stringify({
+            action: "status",
+            status: "stale-cleaned",
+            reason: "stale-process",
+            daemon: serializeDaemonStatus(status, false, false, null),
+            cleanup: { performed: true },
+          } satisfies DaemonStatusPayload, null, 2));
+          return;
+        }
+
         console.log(`\n  Memoire daemon: stopped (stale — PID ${status.pid} is not running)`);
         console.log("  Cleaning up stale files...");
         await cleanupFiles(engine);
@@ -241,13 +291,21 @@ export function registerDaemonCommand(program: Command, engine: MemoireEngine): 
         return;
       }
 
-      const uptimeSeconds = (Date.now() - new Date(status.startedAt).getTime()) / 1000;
-      const figmaConnected = engine.figma?.wsServer?.connectedClients?.length > 0;
+      if (json) {
+        console.log(JSON.stringify({
+          action: "status",
+          status: "running",
+          daemon: serializeDaemonStatus(status, true, figmaConnected, uptimeSeconds),
+          cleanup: { performed: false },
+        } satisfies DaemonStatusPayload, null, 2));
+        return;
+      }
 
+      const runningUptimeSeconds = uptimeSeconds ?? 0;
       console.log(`
   Memoire daemon: running
     PID:        ${status.pid}
-    Uptime:     ${formatUptime(uptimeSeconds)}
+    Uptime:     ${formatUptime(runningUptimeSeconds)}
     Started:    ${status.startedAt}
     Preview:    http://localhost:${status.port}
     Figma:      port ${status.figmaPort}
@@ -291,4 +349,24 @@ export function registerDaemonCommand(program: Command, engine: MemoireEngine): 
         from: "user",
       });
     });
+}
+
+function serializeDaemonStatus(
+  status: DaemonStatus,
+  alive: boolean,
+  figmaConnected: boolean,
+  uptimeSeconds: number | null,
+): NonNullable<DaemonStatusPayload["daemon"]> {
+  return {
+    pid: status.pid,
+    port: status.port,
+    figmaPort: status.figmaPort,
+    dashboardPort: status.dashboardPort,
+    startedAt: status.startedAt,
+    uptimeSeconds,
+    uptimeHuman: uptimeSeconds === null ? null : formatUptime(uptimeSeconds),
+    alive,
+    figmaConnected,
+    previewUrl: `http://localhost:${status.port}`,
+  };
 }
