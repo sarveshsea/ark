@@ -5,7 +5,7 @@
  * the full spec-to-code pipeline.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from "vitest";
 import { mkdir, rm, readFile, readdir, stat } from "fs/promises";
 import { join } from "path";
 import { tmpdir } from "os";
@@ -17,6 +17,12 @@ let testDir: string;
 let engine: MemoireEngine;
 let events: MemoireEvent[];
 
+// pino-pretty transports spawn workers that add process "exit" listeners —
+// one per MemoireEngine logger.  Five tests × several loggers → warning.
+const originalMax = process.getMaxListeners();
+beforeAll(() => process.setMaxListeners(50));
+afterAll(() => process.setMaxListeners(originalMax));
+
 beforeEach(async () => {
   testDir = join(tmpdir(), `memoire-e2e-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   await mkdir(testDir, { recursive: true });
@@ -27,6 +33,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
+  engine.removeAllListeners();
   await rm(testDir, { recursive: true, force: true });
 });
 
