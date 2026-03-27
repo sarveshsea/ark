@@ -71,6 +71,7 @@ This changelog tracks Mémoire itself: every version, commit, and architectural 
 | `813e481` | Add widget job state and sync summaries |
 | `4a40053` | Sync changelog for widget job state |
 | `5d13713` | Rewrite canvas agent box lifecycle |
+| `d64527d` | Add preview control-plane endpoints and agent visibility |
 
 ### Key Design Decisions
 - **Notes Become a Real Extension Surface** — Mémoire now treats Notes as installable skill packs, including workspace `SKILL.md` bundles, built-in notes, and compatibility fixes for activation and copy behavior.
@@ -90,6 +91,7 @@ This changelog tracks Mémoire itself: every version, commit, and architectural 
 - **Operator Console Optimizes for Triage** — The plugin panel now treats jobs and selected nodes as operational surfaces, with presenter-driven summaries, node quick actions, and richer selection diagnostics above raw logs.
 - **Jobs Become Persistent Widget State** — The plugin main thread now owns a real job store, bootstrap can restore existing job state, reconnect downgrades active work explicitly, and sync/healer summaries persist in the operator console instead of vanishing into transient logs.
 - **Canvas Agent Widgets Gain Stable Identity** — On-canvas agent boxes are now keyed by `{runId, taskId, role}`, seeded per plan, and updated through real idle/busy/done/error lifecycle transitions instead of overwriting a single role-based box.
+- **Preview Gains Widget-Grade State** — The preview API now keeps a live cache of bridge, selection, job, sync, healer, and agent status so dashboards can query the same operational state the Figma widget sees.
 
 ### Changes
 - Added the Notes ecosystem release, including audit fixes, activation cleanup, recursive-copy handling, and dead-code removal
@@ -121,6 +123,8 @@ This changelog tracks Mémoire itself: every version, commit, and architectural 
 - Added persistent widget job state, reconnect-safe job degradation, bootstrap job restoration, and durable sync/healer summaries with dedicated regression coverage
 - Synced changelog surfaces for the widget job state push
 - Rewrote the canvas agent widget lifecycle with stable run/task identity, deterministic ordering, richer box content, and orchestration wiring backed by helper tests
+- Added widget-aware preview endpoints for Figma status, jobs, selection, and agents, backed by a dedicated preview state cache and regression coverage
+- Upgraded the preview gallery footer into a live control summary and published agent-status updates beyond the canvas so preview and the Control Plane share the same orchestration view
 
 ## v0.2.0 — 2026-03-26
 
