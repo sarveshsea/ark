@@ -1,68 +1,53 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mémoire Control Plane</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
-  <script>(function polyfill() {
-  const relList = document.createElement("link").relList;
-  if (relList && relList.supports && relList.supports("modulepreload")) {
-    return;
-  }
-  for (const link of document.querySelectorAll('link[rel="modulepreload"]')) {
-    processPreload(link);
-  }
-  new MutationObserver((mutations) => {
-    for (const mutation of mutations) {
-      if (mutation.type !== "childList") {
-        continue;
-      }
-      for (const node of mutation.addedNodes) {
-        if (node.tagName === "LINK" && node.rel === "modulepreload")
-          processPreload(node);
-      }
-    }
-  }).observe(document, { childList: true, subtree: true });
-  function getFetchOpts(link) {
-    const fetchOpts = {};
-    if (link.integrity) fetchOpts.integrity = link.integrity;
-    if (link.referrerPolicy) fetchOpts.referrerPolicy = link.referrerPolicy;
-    if (link.crossOrigin === "use-credentials")
-      fetchOpts.credentials = "include";
-    else if (link.crossOrigin === "anonymous") fetchOpts.credentials = "omit";
-    else fetchOpts.credentials = "same-origin";
-    return fetchOpts;
-  }
-  function processPreload(link) {
-    if (link.ep)
-      return;
-    link.ep = true;
-    const fetchOpts = getFetchOpts(link);
-    fetch(link.href, fetchOpts);
-  }
-})();
-const WIDGET_V2_CHANNEL = "memoire.widget.v2";
-function isWidgetV2Envelope(value) {
-  return Boolean(
-    value && typeof value === "object" && "channel" in value && value.channel === WIDGET_V2_CHANNEL && "type" in value
-  );
+import {
+  WIDGET_V2_CHANNEL,
+  createRunId,
+  isWidgetV2Envelope,
+  type WidgetCommandName,
+  type WidgetConnectionState,
+  type WidgetJob,
+  type WidgetLogEntry,
+  type WidgetSelectionNodeSnapshot,
+  type WidgetSelectionSnapshot,
+  type WidgetUiEnvelope,
+  type WidgetMainEnvelope,
+} from "../shared/contracts.js";
+
+interface UiState {
+  activeTab: "jobs" | "selection" | "system";
+  connection: WidgetConnectionState;
+  jobs: WidgetJob[];
+  selection: WidgetSelectionSnapshot;
+  logs: WidgetLogEntry[];
+  changeCount: number;
+  bufferedChanges: number;
+  lastPageUpdate: number | null;
+  pageTree: unknown | null;
+  lastCapture: { nodeId: string; dataUrl: string; format: string } | null;
+  bridge: {
+    ws: WebSocket | null;
+    port: number | null;
+    portsTried: number[];
+    stage: "offline" | "scanning" | "connected" | "reconnecting";
+    name: string;
+    reconnectDelayMs: number;
+    latencyMs: number | null;
+    lastPingSentAt: number;
+    scanTimer: number | null;
+  };
 }
-function createRunId(prefix = "run") {
-  return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-}
+
 const PORT_START = 9223;
 const PORT_END = 9232;
 const LOG_LIMIT = 80;
 const MAX_JOBS = 24;
+
 const appRoot = document.getElementById("app");
 if (!appRoot) {
   throw new Error("Plugin root element not found");
 }
-const app = appRoot;
-const emptyConnection = {
+const app = appRoot as HTMLDivElement;
+
+const emptyConnection: WidgetConnectionState = {
   stage: "offline",
   port: null,
   name: "Mémoire Control Plane",
@@ -73,16 +58,18 @@ const emptyConnection = {
   pageId: null,
   editorType: "",
   connectedAt: null,
-  reconnectDelayMs: null
+  reconnectDelayMs: null,
 };
-const emptySelection = {
+
+const emptySelection: WidgetSelectionSnapshot = {
   count: 0,
   pageName: "",
   pageId: null,
   nodes: [],
-  updatedAt: 0
+  updatedAt: 0,
 };
-const state = {
+
+const state: UiState = {
   activeTab: "jobs",
   connection: emptyConnection,
   jobs: [],
@@ -99,12 +86,13 @@ const state = {
     portsTried: [],
     stage: "offline",
     name: "",
-    reconnectDelayMs: 1e3,
+    reconnectDelayMs: 1000,
     latencyMs: null,
     lastPingSentAt: 0,
-    scanTimer: null
-  }
+    scanTimer: null,
+  },
 };
+
 render();
 bindPluginMessages();
 sendToMain({ channel: WIDGET_V2_CHANNEL, source: "ui", type: "ping" });
@@ -115,9 +103,10 @@ window.setInterval(() => {
     state.bridge.lastPingSentAt = Date.now();
     state.bridge.ws.send(JSON.stringify({ type: "ping" }));
   }
-}, 1e4);
-function bindPluginMessages() {
-  window.onmessage = (event) => {
+}, 10000);
+
+function bindPluginMessages(): void {
+  window.onmessage = (event: MessageEvent<{ pluginMessage?: WidgetMainEnvelope }>) => {
     const message = event.data?.pluginMessage;
     if (!message || !isWidgetV2Envelope(message)) {
       return;
@@ -125,6 +114,7 @@ function bindPluginMessages() {
     if (message.source !== "main") {
       return;
     }
+
     switch (message.type) {
       case "bootstrap":
         state.connection = message.connection;
@@ -132,7 +122,7 @@ function bindPluginMessages() {
         state.jobs = message.initialJobs;
         addLog("success", "Plugin bootstrap complete", {
           file: message.connection.fileName,
-          page: message.connection.pageName
+          page: message.connection.pageName,
         });
         render();
         break;
@@ -153,12 +143,12 @@ function bindPluginMessages() {
         state.connection = {
           ...state.connection,
           pageName: message.pageName,
-          pageId: message.pageId
+          pageId: message.pageId,
         };
         state.lastPageUpdate = message.updatedAt;
         forwardToBridge({
           type: "page-changed",
-          data: { page: message.pageName, pageId: message.pageId }
+          data: { page: message.pageName, pageId: message.pageId },
         });
         render();
         break;
@@ -167,7 +157,7 @@ function bindPluginMessages() {
         state.bufferedChanges = message.buffered;
         forwardToBridge({
           type: "document-changed",
-          data: { changes: message.count, buffered: message.buffered, updatedAt: message.updatedAt }
+          data: { changes: message.count, buffered: message.buffered, updatedAt: message.updatedAt },
         });
         render();
         break;
@@ -183,10 +173,13 @@ function bindPluginMessages() {
         addLog(message.entry.level, message.entry.message, message.entry.detail);
         render();
         break;
+      default:
+        break;
     }
   };
 }
-function scanBridge() {
+
+function scanBridge(): void {
   if (state.bridge.stage === "scanning") {
     return;
   }
@@ -195,37 +188,45 @@ function scanBridge() {
   render();
   tryNextPort(PORT_START);
 }
-function tryNextPort(port) {
+
+function tryNextPort(port: number): void {
   if (port > PORT_END) {
     setBridgeStage("offline");
     scheduleReconnect();
     return;
   }
+
   state.bridge.portsTried.push(port);
   const ws = new WebSocket(`ws://localhost:${port}`);
   let settled = false;
+
   const timeout = window.setTimeout(() => {
     if (settled) return;
     settled = true;
     try {
       ws.close();
     } catch {
+      // ignore
     }
     tryNextPort(port + 1);
   }, 1200);
+
   ws.onopen = () => {
     render();
   };
+
   ws.onmessage = (event) => {
-    let payload;
+    let payload: any;
     try {
-      payload = JSON.parse(event.data);
+      payload = JSON.parse(event.data as string);
     } catch {
       return;
     }
+
     if (payload.type === "pong" && state.bridge.lastPingSentAt > 0) {
       state.bridge.latencyMs = Date.now() - state.bridge.lastPingSentAt;
     }
+
     if (!settled) {
       if (payload.type === "identify" || payload.type === "pong" || payload.name) {
         settled = true;
@@ -234,14 +235,17 @@ function tryNextPort(port) {
         return;
       }
     }
+
     handleBridgeMessage(payload);
   };
+
   ws.onerror = () => {
     if (settled) return;
     settled = true;
     window.clearTimeout(timeout);
     tryNextPort(port + 1);
   };
+
   ws.onclose = () => {
     if (!settled) {
       settled = true;
@@ -259,22 +263,24 @@ function tryNextPort(port) {
     }
   };
 }
-function adoptBridge(ws, port, payload) {
+
+function adoptBridge(ws: WebSocket, port: number, payload: { name?: string }): void {
   state.bridge.ws = ws;
   state.bridge.port = port;
   state.bridge.name = payload.name || "Mémoire";
-  state.bridge.reconnectDelayMs = 1e3;
+  state.bridge.reconnectDelayMs = 1000;
   setBridgeStage("connected");
   addLog("success", `Bridge connected on :${port}`);
   forwardToBridge({
     type: "bridge-hello",
     file: state.connection.fileName || "unknown",
     fileKey: state.connection.fileKey || "",
-    editor: state.connection.editorType || "figma"
+    editor: state.connection.editorType || "figma",
   });
   render();
 }
-function scheduleReconnect() {
+
+function scheduleReconnect(): void {
   if (state.bridge.scanTimer) {
     return;
   }
@@ -283,9 +289,10 @@ function scheduleReconnect() {
     state.bridge.scanTimer = null;
     scanBridge();
   }, delay);
-  state.bridge.reconnectDelayMs = Math.min(delay * 2, 16e3);
+  state.bridge.reconnectDelayMs = Math.min(delay * 2, 16000);
 }
-function setBridgeStage(stage) {
+
+function setBridgeStage(stage: UiState["bridge"]["stage"]): void {
   state.bridge.stage = stage;
   state.connection = {
     ...state.connection,
@@ -293,70 +300,89 @@ function setBridgeStage(stage) {
     port: state.bridge.port,
     name: state.bridge.name || state.connection.name,
     latencyMs: state.bridge.latencyMs,
-    reconnectDelayMs: stage === "reconnecting" ? state.bridge.reconnectDelayMs : null
+    reconnectDelayMs: stage === "reconnecting" ? state.bridge.reconnectDelayMs : null,
   };
 }
-function forwardToBridge(payload) {
+
+function forwardToBridge(payload: Record<string, unknown>): boolean {
   if (!state.bridge.ws || state.bridge.ws.readyState !== WebSocket.OPEN) {
     return false;
   }
   state.bridge.ws.send(JSON.stringify(payload));
   return true;
 }
-function handleBridgeMessage(payload) {
+
+function handleBridgeMessage(payload: any): void {
   switch (payload.type) {
     case "identify":
       state.bridge.name = payload.name || state.bridge.name;
       break;
     case "event": {
-      const level = payload.level === "success" ? "success" : payload.level === "error" ? "error" : payload.level === "warn" ? "warn" : "info";
+      const level =
+        payload.level === "success"
+          ? "success"
+          : payload.level === "error"
+            ? "error"
+            : payload.level === "warn"
+              ? "warn"
+              : "info";
       addLog(level, payload.message || "Bridge event", payload.data || null);
       break;
     }
     case "error":
       addLog("error", payload.message || "Bridge error", payload.details || null);
       break;
+    default:
+      break;
   }
 }
-function handleCommandResult(message) {
+
+function handleCommandResult(message: Extract<WidgetMainEnvelope, { type: "command-result" }>): void {
   if (message.error) {
     addLog("error", `${message.command} failed`, message.error);
     return;
   }
+
   if (message.command === "getPageTree") {
     state.pageTree = message.result || null;
   }
+
   if (message.command === "captureScreenshot") {
-    const image = message.result?.image;
+    const image = (message.result as { image?: { base64?: string; format?: string; node?: { id: string } } })?.image;
     if (image?.base64) {
       const mime = String(image.format || "PNG").toLowerCase() === "svg" ? "image/svg+xml" : "image/png";
       state.lastCapture = {
         nodeId: image.node?.id || "",
         format: String(image.format || "PNG"),
-        dataUrl: `data:${mime};base64,${image.base64}`
+        dataUrl: `data:${mime};base64,${image.base64}`,
       };
     }
   }
+
   if (message.command === "getVariables") {
-    const collections = (message.result?.collections || []).length;
+    const collections = ((message.result as { collections?: unknown[] })?.collections || []).length;
     forwardToBridge({ type: "sync-data", part: "tokens", result: message.result });
     addLog("success", `Synced tokens`, { collections });
   }
+
   if (message.command === "getComponents") {
     const count = Array.isArray(message.result) ? message.result.length : 0;
     forwardToBridge({ type: "sync-data", part: "components", result: message.result });
     addLog("success", `Synced components`, { count });
   }
+
   if (message.command === "getStyles") {
     const count = Array.isArray(message.result) ? message.result.length : 0;
     forwardToBridge({ type: "sync-data", part: "styles", result: message.result });
     addLog("success", `Synced styles`, { count });
   }
+
   if (message.command === "getChanges") {
     addLog("info", "Read buffered changes", { count: Array.isArray(message.result) ? message.result.length : 0 });
   }
 }
-function requestCommand(command, params = {}, label = command, kind = "system") {
+
+function requestCommand(command: WidgetCommandName, params: Record<string, unknown> = {}, label: string = command, kind: WidgetJob["kind"] = "system"): void {
   const requestId = createRunId("cmd");
   sendToMain({
     channel: WIDGET_V2_CHANNEL,
@@ -365,13 +391,15 @@ function requestCommand(command, params = {}, label = command, kind = "system") 
     requestId,
     command,
     params,
-    action: { kind, label }
+    action: { kind, label },
   });
 }
-function sendToMain(message) {
+
+function sendToMain(message: WidgetUiEnvelope): void {
   parent.postMessage({ pluginMessage: message }, "*");
 }
-function upsertJob(job) {
+
+function upsertJob(job: WidgetJob): void {
   const existing = state.jobs.findIndex((candidate) => candidate.id === job.id);
   if (existing >= 0) {
     state.jobs[existing] = job;
@@ -382,19 +410,21 @@ function upsertJob(job) {
     }
   }
 }
-function addLog(level, message, detail) {
+
+function addLog(level: WidgetLogEntry["level"], message: string, detail?: unknown): void {
   state.logs.unshift({
     id: createRunId("log"),
     level,
     message,
     detail,
-    timestamp: Date.now()
+    timestamp: Date.now(),
   });
   if (state.logs.length > LOG_LIMIT) {
     state.logs = state.logs.slice(0, LOG_LIMIT);
   }
 }
-function render() {
+
+function render(): void {
   app.innerHTML = `
     <div class="shell">
       <div class="topbar">
@@ -436,7 +466,7 @@ function render() {
                 <div class="panel-title">Operator Console</div>
                 <div class="panel-subtitle">Jobs first. Selection and system on demand.</div>
               </div>
-              <div class="muted mono">${escapeHtml((/* @__PURE__ */ new Date()).toLocaleTimeString())}</div>
+              <div class="muted mono">${escapeHtml(new Date().toLocaleTimeString())}</div>
             </div>
             <div class="tabstrip">
               <button class="tab ${state.activeTab === "jobs" ? "active" : ""}" data-tab="jobs">Jobs</button>
@@ -468,17 +498,20 @@ function render() {
       </div>
     </div>
   `;
-  app.querySelectorAll("[data-tab]").forEach((button) => {
+
+  app.querySelectorAll<HTMLButtonElement>("[data-tab]").forEach((button) => {
     button.onclick = () => {
-      state.activeTab = button.dataset.tab;
+      state.activeTab = button.dataset.tab as UiState["activeTab"];
       render();
     };
   });
-  app.querySelectorAll("[data-action]").forEach((button) => {
+
+  app.querySelectorAll<HTMLButtonElement>("[data-action]").forEach((button) => {
     button.onclick = () => handleAction(button.dataset.action || "");
   });
 }
-function handleAction(action) {
+
+function handleAction(action: string): void {
   switch (action) {
     case "sync":
       requestCommand("getVariables", {}, "Sync tokens", "sync");
@@ -509,6 +542,7 @@ function handleAction(action) {
         try {
           state.bridge.ws.close();
         } catch {
+          // ignore
         }
       }
       state.bridge.ws = null;
@@ -516,13 +550,18 @@ function handleAction(action) {
       state.bridge.scanTimer = null;
       scanBridge();
       break;
+    default:
+      break;
   }
 }
-function renderJobs() {
+
+function renderJobs(): string {
   if (!state.jobs.length) {
     return emptyCard("No tracked jobs yet", "Run sync, inspect selection, or capture a node to populate the operator timeline.");
   }
-  return state.jobs.map((job) => `
+
+  return state.jobs
+    .map((job) => `
       <article class="job-card ${job.status}">
         <div class="card-topline">
           <strong class="card-title">${escapeHtml(job.label)}</strong>
@@ -534,10 +573,12 @@ function renderJobs() {
           ${job.error ? `<div class="mono">${escapeHtml(job.error)}</div>` : ""}
         </div>
       </article>
-    `).join("");
+    `)
+    .join("");
 }
-function renderSelection() {
-  const cards = [];
+
+function renderSelection(): string {
+  const cards: string[] = [];
   cards.push(`
     <article class="selection-card">
       <div class="card-topline">
@@ -556,6 +597,7 @@ function renderSelection() {
       </div>
     </article>
   `);
+
   if (state.lastCapture) {
     cards.push(`
       <article class="selection-card">
@@ -569,23 +611,31 @@ function renderSelection() {
       </article>
     `);
   }
+
   if (!state.selection.nodes.length) {
     cards.push(emptyCard("Nothing selected", "Select a node in Figma to inspect layout, component metadata, styles, and IDs."));
     return cards.join("");
   }
+
   for (const node of state.selection.nodes) {
     cards.push(renderSelectionNode(node));
   }
+
   return cards.join("");
 }
-function renderSelectionNode(node) {
+
+function renderSelectionNode(node: WidgetSelectionNodeSnapshot): string {
   const chips = [
     node.type,
     node.component?.isVariant ? "variant" : "",
-    node.layout?.layoutMode && node.layout.layoutMode !== "NONE" ? node.layout.layoutMode.toLowerCase() : ""
+    node.layout?.layoutMode && node.layout.layoutMode !== "NONE" ? node.layout.layoutMode.toLowerCase() : "",
   ].filter(Boolean);
+
   const fillHex = node.fills?.[0]?.color ? rgbToHex(node.fills[0].color) : null;
-  const variantPairs = node.component?.variantProperties ? Object.entries(node.component.variantProperties).map(([key, value]) => `${key}: ${value}`) : [];
+  const variantPairs = node.component?.variantProperties
+    ? Object.entries(node.component.variantProperties).map(([key, value]) => `${key}: ${value}`)
+    : [];
+
   return `
     <article class="selection-card">
       <div class="card-topline">
@@ -604,8 +654,10 @@ function renderSelectionNode(node) {
     </article>
   `;
 }
-function renderSystem() {
-  const cards = [];
+
+function renderSystem(): string {
+  const cards: string[] = [];
+
   cards.push(`
     <article class="system-card">
       <div class="card-topline">
@@ -621,6 +673,7 @@ function renderSystem() {
       </div>
     </article>
   `);
+
   cards.push(`
     <article class="system-card">
       <div class="card-topline">
@@ -634,6 +687,7 @@ function renderSystem() {
       </div>
     </article>
   `);
+
   if (state.pageTree) {
     cards.push(`
       <article class="system-card">
@@ -647,13 +701,16 @@ function renderSystem() {
   } else {
     cards.push(emptyCard("Page tree not loaded", "Use Inspect Page Tree to load a structural snapshot into the control plane."));
   }
+
   return cards.join("");
 }
-function renderLogs() {
+
+function renderLogs(): string {
   if (!state.logs.length) {
     return emptyCard("No activity yet", "Bridge and plugin events will appear here as jobs run and connection state changes.");
   }
-  return state.logs.map((entry) => `
+  return state.logs
+    .map((entry) => `
       <article class="log-card ${entry.level}">
         <div class="card-topline">
           <strong class="card-title">${escapeHtml(entry.message)}</strong>
@@ -664,9 +721,11 @@ function renderLogs() {
           ${entry.detail ? `<pre class="mono muted">${escapeHtml(JSON.stringify(entry.detail, null, 2))}</pre>` : ""}
         </div>
       </article>
-    `).join("");
+    `)
+    .join("");
 }
-function metric(label, value) {
+
+function metric(label: string, value: string): string {
   return `
     <div class="metric-card">
       <div class="metric-label">${escapeHtml(label)}</div>
@@ -674,7 +733,8 @@ function metric(label, value) {
     </div>
   `;
 }
-function emptyCard(title, copy) {
+
+function emptyCard(title: string, copy: string): string {
   return `
     <article class="empty-card">
       <div class="stack">
@@ -684,7 +744,8 @@ function emptyCard(title, copy) {
     </article>
   `;
 }
-function connectionLabel() {
+
+function connectionLabel(): string {
   if (state.connection.stage === "connected") {
     return "Connected";
   }
@@ -696,458 +757,22 @@ function connectionLabel() {
   }
   return "Offline";
 }
-function formatBounds(node) {
-  const parts = [node.x, node.y, node.width, node.height].map((value) => value === void 0 ? "?" : Math.round(value).toString());
+
+function formatBounds(node: WidgetSelectionNodeSnapshot): string {
+  const parts = [node.x, node.y, node.width, node.height].map((value) => value === undefined ? "?" : Math.round(value).toString());
   return `${parts[0]}, ${parts[1]} / ${parts[2]} × ${parts[3]}`;
 }
-function rgbToHex(color) {
+
+function rgbToHex(color: { r: number; g: number; b: number; a?: number }): string {
   const values = [color.r, color.g, color.b].map((value) => Math.round(value * 255).toString(16).padStart(2, "0"));
   return `#${values.join("")}`;
 }
-function escapeHtml(value) {
-  return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
-}
-</script>
-  <style>
-:root {
-  --bg: #f7f3eb;
-  --bg-panel: rgba(255, 255, 255, 0.78);
-  --bg-panel-strong: rgba(255, 255, 255, 0.92);
-  --bg-soft: rgba(17, 17, 17, 0.035);
-  --fg: #141414;
-  --fg-muted: #686057;
-  --fg-dim: #9b938b;
-  --border: rgba(17, 17, 17, 0.08);
-  --border-strong: rgba(17, 17, 17, 0.15);
-  --shadow: 0 16px 42px rgba(17, 17, 17, 0.08);
-  --mono: "JetBrains Mono", "SF Mono", monospace;
-  --serif: "Cormorant Garamond", Georgia, serif;
-  --green: #257b4b;
-  --green-soft: rgba(37, 123, 75, 0.12);
-  --yellow: #9b6d10;
-  --yellow-soft: rgba(155, 109, 16, 0.12);
-  --red: #a63d31;
-  --red-soft: rgba(166, 61, 49, 0.12);
-  --blue: #2f5eb8;
-  --blue-soft: rgba(47, 94, 184, 0.12);
-  --radius: 4px;
-}
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 }
-
-html,
-body {
-  margin: 0;
-  min-height: 100%;
-}
-
-body {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--fg);
-  background:
-    radial-gradient(circle at top right, rgba(47, 94, 184, 0.08), transparent 22rem),
-    radial-gradient(circle at bottom left, rgba(37, 123, 75, 0.08), transparent 24rem),
-    var(--bg);
-  -webkit-font-smoothing: antialiased;
-}
-
-button {
-  font: inherit;
-}
-
-#app {
-  display: flex;
-  min-height: 100vh;
-}
-
-.shell {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-}
-
-.topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--border);
-  background: rgba(247, 243, 235, 0.92);
-  backdrop-filter: blur(14px);
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.brand-wrap {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.brand-mark {
-  width: 16px;
-  height: 16px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #bd4128, #d58a24);
-  box-shadow: 0 0 0 4px rgba(189, 65, 40, 0.12);
-}
-
-.brand-copy {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.brand-name {
-  font-family: var(--serif);
-  font-size: 18px;
-  letter-spacing: 1.8px;
-  font-style: italic;
-  line-height: 1;
-}
-
-.brand-sub {
-  color: var(--fg-muted);
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 1.1px;
-}
-
-.status-cluster {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.status-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 10px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--bg-panel);
-  color: var(--fg-muted);
-}
-
-.status-pill::before {
-  content: "";
-  width: 7px;
-  height: 7px;
-  border-radius: 999px;
-  background: currentColor;
-  opacity: 0.8;
-}
-
-.status-pill.connected {
-  color: var(--green);
-  background: var(--green-soft);
-  border-color: rgba(37, 123, 75, 0.18);
-}
-
-.status-pill.scanning,
-.status-pill.reconnecting {
-  color: var(--yellow);
-  background: var(--yellow-soft);
-  border-color: rgba(155, 109, 16, 0.18);
-}
-
-.status-pill.offline {
-  color: var(--red);
-  background: var(--red-soft);
-  border-color: rgba(166, 61, 49, 0.18);
-}
-
-.content {
-  display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr);
-  gap: 14px;
-  padding: 14px;
-}
-
-.main-column,
-.side-column {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.panel {
-  background: var(--bg-panel);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  overflow: hidden;
-}
-
-.panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--border);
-}
-
-.panel-title {
-  font-family: var(--serif);
-  font-size: 18px;
-  line-height: 1;
-  letter-spacing: 0.5px;
-}
-
-.panel-subtitle {
-  color: var(--fg-muted);
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.metrics {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-  padding: 12px 14px 0;
-}
-
-.metric-card {
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.48);
-}
-
-.metric-label {
-  color: var(--fg-dim);
-  font-size: 9px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.metric-value {
-  margin-top: 6px;
-  font-size: 18px;
-}
-
-.toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding: 14px;
-}
-
-.tool-btn {
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.64);
-  color: var(--fg);
-  padding: 7px 12px;
-  cursor: pointer;
-  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
-}
-
-.tool-btn:hover {
-  transform: translateY(-1px);
-  border-color: var(--border-strong);
-  background: var(--bg-panel-strong);
-}
-
-.tabstrip {
-  display: flex;
-  gap: 2px;
-  padding: 0 14px;
-}
-
-.tab {
-  flex: 1;
-  padding: 10px 12px;
-  border: 1px solid transparent;
-  border-bottom: none;
-  border-top-left-radius: var(--radius);
-  border-top-right-radius: var(--radius);
-  background: transparent;
-  color: var(--fg-dim);
-  cursor: pointer;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  font-size: 10px;
-}
-
-.tab.active {
-  border-color: var(--border);
-  background: var(--bg-panel-strong);
-  color: var(--fg);
-}
-
-.tab-panel {
-  display: none;
-  border-top: 1px solid var(--border);
-  min-height: 360px;
-}
-
-.tab-panel.active {
-  display: block;
-}
-
-.jobs-list,
-.selection-list,
-.system-list,
-.log-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 14px;
-}
-
-.job-card,
-.selection-card,
-.system-card,
-.log-card,
-.empty-card {
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: rgba(255, 255, 255, 0.62);
-  padding: 12px;
-}
-
-.job-card.running {
-  border-color: rgba(155, 109, 16, 0.24);
-  background: rgba(155, 109, 16, 0.07);
-}
-
-.job-card.completed {
-  border-color: rgba(37, 123, 75, 0.22);
-  background: rgba(37, 123, 75, 0.07);
-}
-
-.job-card.failed {
-  border-color: rgba(166, 61, 49, 0.22);
-  background: rgba(166, 61, 49, 0.07);
-}
-
-.card-topline {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 8px;
-}
-
-.card-title {
-  font-size: 12px;
-}
-
-.muted {
-  color: var(--fg-muted);
-}
-
-.dim {
-  color: var(--fg-dim);
-}
-
-.mono {
-  font-family: var(--mono);
-}
-
-.stack {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.kv-grid {
-  display: grid;
-  grid-template-columns: max-content 1fr;
-  gap: 4px 10px;
-  align-items: start;
-}
-
-.kv-key {
-  color: var(--fg-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  font-size: 9px;
-}
-
-.selection-preview {
-  width: 100%;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.88);
-  overflow: hidden;
-}
-
-.selection-preview img {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.chip {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 8px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.72);
-  font-size: 10px;
-}
-
-.log-card.success {
-  border-color: rgba(37, 123, 75, 0.18);
-}
-
-.log-card.warn {
-  border-color: rgba(155, 109, 16, 0.18);
-}
-
-.log-card.error {
-  border-color: rgba(166, 61, 49, 0.18);
-}
-
-.split-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.inline-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.inline-actions .tool-btn {
-  padding: 6px 10px;
-  font-size: 10px;
-}
-
-@media (max-width: 960px) {
-  .content {
-    grid-template-columns: 1fr;
-  }
-
-  .metrics {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-</style>
-</head>
-<body>
-  <div id="app"></div>
-</body>
-</html>

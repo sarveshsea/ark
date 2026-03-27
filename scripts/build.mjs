@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import { access, readdir, rm } from "node:fs/promises";
 import { dirname, resolve, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { buildPluginBundle } from "./build-plugin.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const distDir = resolve(root, "dist");
@@ -29,7 +30,13 @@ const exitCode = await new Promise((resolveExit, reject) => {
   child.on("exit", (code) => resolveExit(code ?? 1));
 });
 
-process.exit(exitCode);
+if (exitCode !== 0) {
+  process.exit(exitCode);
+}
+
+await buildPluginBundle({ rootDir: root, outDir: resolve(root, "plugin") });
+
+process.exit(0);
 
 async function pathExists(path) {
   try {

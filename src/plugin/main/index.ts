@@ -1,0 +1,756 @@
+declare const figma: any;
+declare const __html__: string;
+
+import {
+  WIDGET_V2_CHANNEL,
+  createRunId,
+  type WidgetConnectionState,
+  type WidgetJob,
+  type WidgetJobStatus,
+  type WidgetLogEntry,
+  type WidgetSelectionComponent,
+  type WidgetSelectionLayout,
+  type WidgetSelectionNodeSnapshot,
+  type WidgetSelectionSnapshot,
+  type WidgetUiEnvelope,
+  type WidgetCommandName,
+} from "../shared/contracts.js";
+
+interface PluginState {
+  sessionId: string;
+  selectionListenerActive: boolean;
+  lastSelectionUpdate: number;
+  selectionThrottleMs: number;
+  changeBuffer: Array<{ type: string; id: string; origin: string | null; sessionId: string; timestamp: number }>;
+  maxChangeBuffer: number;
+  connection: WidgetConnectionState;
+}
+
+const BLOCKED_PATTERNS = [/figma\.closePlugin/i, /figma\.root\.remove/i, /while\s*\(\s*true\s*\)/i, /for\s*\(\s*;\s*;\s*\)/i];
+const BLOCKED_KEYWORDS = ["closeplugin", "removepage", "__proto__", "constructor", "prototype", "__defineGetter__", "__defineSetter__"];
+const BLOCKED_GLOBALS = [/\bFunction\s*\(/, /\bimport\s*\(/, /\brequire\s*\(/, /\bglobalThis\b/, /\bself\b/, /\bwindow\b/];
+
+const state: PluginState = {
+  sessionId: createRunId("widget"),
+  selectionListenerActive: true,
+  lastSelectionUpdate: 0,
+  selectionThrottleMs: 180,
+  changeBuffer: [],
+  maxChangeBuffer: 300,
+  connection: {
+    stage: "offline",
+    port: null,
+    name: "Mémoire Control Plane",
+    latencyMs: null,
+    fileName: "",
+    fileKey: null,
+    pageName: "",
+    pageId: null,
+    editorType: "",
+    connectedAt: null,
+    reconnectDelayMs: null,
+  },
+};
+
+figma.showUI(__html__, {
+  width: 480,
+  height: 760,
+  title: "Mémoire Control Plane",
+  themeColors: true,
+});
+
+void bootstrap();
+
+async function bootstrap(): Promise<void> {
+  await figma.loadAllPagesAsync();
+  refreshConnectionState();
+  post({
+    channel: WIDGET_V2_CHANNEL,
+    source: "main",
+    type: "bootstrap",
+    connection: state.connection,
+    selection: createSelectionSnapshot(),
+    initialJobs: [],
+  });
+
+  figma.on("selectionchange", () => {
+    if (!state.selectionListenerActive) return;
+    const now = Date.now();
+    if (now - state.lastSelectionUpdate < state.selectionThrottleMs) return;
+    state.lastSelectionUpdate = now;
+    post({
+      channel: WIDGET_V2_CHANNEL,
+      source: "main",
+      type: "selection",
+      selection: createSelectionSnapshot(),
+    });
+  });
+
+  figma.on("currentpagechange", () => {
+    refreshConnectionState();
+    post({
+      channel: WIDGET_V2_CHANNEL,
+      source: "main",
+      type: "page",
+      pageName: figma.currentPage.name,
+      pageId: figma.currentPage.id,
+      updatedAt: Date.now(),
+    });
+    post({
+      channel: WIDGET_V2_CHANNEL,
+      source: "main",
+      type: "connection",
+      connection: state.connection,
+    });
+  });
+
+  figma.on("documentchange", (event: { documentChanges: Array<{ type: string; id: string; origin?: string }> }) => {
+    const now = Date.now();
+    for (const change of event.documentChanges || []) {
+      state.changeBuffer.push({
+        type: change.type,
+        id: change.id,
+        origin: change.origin ?? null,
+        sessionId: state.sessionId,
+        timestamp: now,
+      });
+    }
+    if (state.changeBuffer.length > state.maxChangeBuffer) {
+      state.changeBuffer = state.changeBuffer.slice(-state.maxChangeBuffer);
+    }
+    post({
+      channel: WIDGET_V2_CHANNEL,
+      source: "main",
+      type: "changes",
+      count: event.documentChanges?.length ?? 0,
+      buffered: state.changeBuffer.length,
+      updatedAt: now,
+    });
+  });
+}
+
+figma.ui.onmessage = async (message: WidgetUiEnvelope) => {
+  if (!message || message.channel !== WIDGET_V2_CHANNEL) {
+    return;
+  }
+
+  if (message.type === "ping") {
+    refreshConnectionState();
+    post({
+      channel: WIDGET_V2_CHANNEL,
+      source: "main",
+      type: "pong",
+      connection: state.connection,
+    });
+    return;
+  }
+
+  if (message.type !== "run-command") {
+    return;
+  }
+
+  const job = message.action ? startJob(message.requestId, message.command, message.action.kind, message.action.label) : null;
+
+  try {
+    const result = await handleCommand(message.command, message.params ?? {});
+    if (job) {
+      finishJob(job, "completed", summarizeCommandResult(message.command, result));
+    }
+    post({
+      channel: WIDGET_V2_CHANNEL,
+      source: "main",
+      type: "command-result",
+      requestId: message.requestId,
+      command: message.command,
+      result,
+    });
+  } catch (error) {
+    const messageText = error instanceof Error ? error.message : String(error);
+    if (job) {
+      finishJob(job, "failed", undefined, messageText);
+    }
+    post({
+      channel: WIDGET_V2_CHANNEL,
+      source: "main",
+      type: "command-result",
+      requestId: message.requestId,
+      command: message.command,
+      error: messageText,
+    });
+  }
+};
+
+function refreshConnectionState(): void {
+  state.connection = {
+    ...state.connection,
+    stage: "connected",
+    fileName: figma.root.name || "",
+    fileKey: figma.fileKey || null,
+    pageName: figma.currentPage?.name || "",
+    pageId: figma.currentPage?.id || null,
+    editorType: figma.editorType || "figma",
+    connectedAt: state.connection.connectedAt ?? Date.now(),
+  };
+}
+
+function post(message: unknown): void {
+  figma.ui.postMessage(message);
+}
+
+function startJob(id: string, command: WidgetCommandName, kind: WidgetJob["kind"], label: string): WidgetJob {
+  const now = Date.now();
+  const job: WidgetJob = {
+    id,
+    runId: state.sessionId,
+    kind,
+    label,
+    command,
+    status: "running",
+    startedAt: now,
+    updatedAt: now,
+    progressText: "Running",
+  };
+  post({
+    channel: WIDGET_V2_CHANNEL,
+    source: "main",
+    type: "job",
+    job,
+  });
+  return job;
+}
+
+function finishJob(job: WidgetJob, status: WidgetJobStatus, summary?: string, error?: string): void {
+  const next: WidgetJob = {
+    ...job,
+    status,
+    updatedAt: Date.now(),
+    finishedAt: Date.now(),
+    progressText: status === "completed" ? "Done" : "Failed",
+    summary,
+    error,
+  };
+  post({
+    channel: WIDGET_V2_CHANNEL,
+    source: "main",
+    type: "job",
+    job: next,
+  });
+}
+
+async function handleCommand(command: WidgetCommandName, params: Record<string, unknown>): Promise<unknown> {
+  switch (command) {
+    case "execute":
+      return executeCode(String(params.code ?? ""));
+    case "getSelection":
+      return createSelectionSnapshot();
+    case "getFileData":
+      return getFileData(Number(params.depth ?? 3));
+    case "getVariables":
+      return getVariables();
+    case "getComponents":
+      return getComponents();
+    case "getStyles":
+      return getStyles();
+    case "getStickies":
+      return getStickies();
+    case "getChanges": {
+      const changes = [...state.changeBuffer];
+      state.changeBuffer = [];
+      return changes;
+    }
+    case "getComponentImage":
+      return getComponentImage(String(params.nodeId ?? ""), String(params.format ?? "png"));
+    case "createNode":
+      return createNode(params);
+    case "updateNode":
+      return updateNode(params);
+    case "deleteNode":
+      return deleteNode(String(params.nodeId ?? ""));
+    case "setSelection":
+      return setSelection(Array.isArray(params.nodeIds) ? params.nodeIds.map(String) : []);
+    case "navigateTo":
+      return navigateTo(String(params.nodeId ?? ""));
+    case "getPageList":
+      return figma.root.children.map((page: any) => ({ id: page.id, name: page.name }));
+    case "getPageTree":
+      return getPageTree(Number(params.depth ?? 2));
+    case "captureScreenshot":
+      return captureScreenshot(params);
+    default:
+      throw new Error(`Unknown command: ${command}`);
+  }
+}
+
+function summarizeCommandResult(command: WidgetCommandName, result: unknown): string {
+  if (command === "getSelection" && result && typeof result === "object" && "count" in (result as Record<string, unknown>)) {
+    return `${String((result as Record<string, unknown>).count)} selected`;
+  }
+  if (command === "getChanges" && Array.isArray(result)) {
+    return `${result.length} changes`;
+  }
+  if (command === "getVariables" && result && typeof result === "object" && "collections" in (result as Record<string, unknown>)) {
+    return `${((result as { collections?: unknown[] }).collections || []).length} collections`;
+  }
+  if (command === "getComponents" && Array.isArray(result)) {
+    return `${result.length} components`;
+  }
+  if (command === "getStyles" && Array.isArray(result)) {
+    return `${result.length} styles`;
+  }
+  return command;
+}
+
+function createSelectionSnapshot(): WidgetSelectionSnapshot {
+  refreshConnectionState();
+  return {
+    count: figma.currentPage.selection.length,
+    pageName: figma.currentPage.name,
+    pageId: figma.currentPage.id,
+    nodes: figma.currentPage.selection.map((node: any) => serializeSelectionNode(node)),
+    updatedAt: Date.now(),
+  };
+}
+
+function serializeSelectionNode(node: any): WidgetSelectionNodeSnapshot {
+  const snapshot: WidgetSelectionNodeSnapshot = {
+    id: node.id,
+    name: node.name,
+    type: node.type,
+    visible: node.visible !== false,
+    pageName: figma.currentPage.name,
+  };
+
+  if ("x" in node) snapshot.x = node.x;
+  if ("y" in node) snapshot.y = node.y;
+  if ("width" in node) snapshot.width = node.width;
+  if ("height" in node) snapshot.height = node.height;
+  if ("characters" in node) snapshot.characters = node.characters;
+  if ("opacity" in node) snapshot.opacity = node.opacity;
+  if ("rotation" in node) snapshot.rotation = node.rotation;
+  if ("cornerRadius" in node) snapshot.cornerRadius = node.cornerRadius;
+  if ("children" in node && Array.isArray(node.children)) snapshot.childCount = node.children.length;
+  if ("fillStyleId" in node) snapshot.fillStyleId = node.fillStyleId || null;
+  if ("strokeStyleId" in node) snapshot.strokeStyleId = node.strokeStyleId || null;
+  if ("textStyleId" in node) snapshot.textStyleId = node.textStyleId || null;
+  if ("boundVariables" in node) snapshot.boundVariables = node.boundVariables || {};
+
+  if ("fills" in node && Array.isArray(node.fills)) {
+    snapshot.fills = node.fills.map((fill: any) => ({
+      type: fill.type,
+      color: fill.color
+        ? {
+            r: fill.color.r,
+            g: fill.color.g,
+            b: fill.color.b,
+            a: fill.opacity !== undefined ? fill.opacity : 1,
+          }
+        : null,
+    }));
+  }
+
+  snapshot.layout = readLayout(node);
+  snapshot.component = readComponent(node);
+  return snapshot;
+}
+
+function readLayout(node: any): WidgetSelectionLayout {
+  return {
+    layoutMode: "layoutMode" in node ? node.layoutMode || null : null,
+    itemSpacing: "itemSpacing" in node ? node.itemSpacing ?? null : null,
+    paddingLeft: "paddingLeft" in node ? node.paddingLeft ?? null : null,
+    paddingRight: "paddingRight" in node ? node.paddingRight ?? null : null,
+    paddingTop: "paddingTop" in node ? node.paddingTop ?? null : null,
+    paddingBottom: "paddingBottom" in node ? node.paddingBottom ?? null : null,
+  };
+}
+
+function readComponent(node: any): WidgetSelectionComponent | undefined {
+  const isVariant = node.type === "COMPONENT" && node.parent?.type === "COMPONENT_SET";
+  const variantProperties = typeof node.variantProperties === "object" && node.variantProperties
+    ? Object.fromEntries(
+        Object.entries(node.variantProperties).map(([key, value]) => [key, String((value as { value?: unknown })?.value ?? value)]),
+      )
+    : {};
+
+  const componentProperties = "componentPropertyDefinitions" in node && node.componentPropertyDefinitions
+    ? node.componentPropertyDefinitions
+    : {};
+
+  if (!("key" in node) && !("description" in node) && !Object.keys(componentProperties).length && !Object.keys(variantProperties).length) {
+    return undefined;
+  }
+
+  return {
+    key: "key" in node ? node.key || null : null,
+    description: "description" in node ? node.description || null : null,
+    isVariant,
+    variantProperties,
+    componentProperties,
+  };
+}
+
+function serializeVariable(variable: any) {
+  return {
+    id: variable.id,
+    name: variable.name,
+    key: variable.key,
+    resolvedType: variable.resolvedType,
+    valuesByMode: variable.valuesByMode,
+    variableCollectionId: variable.variableCollectionId,
+    scopes: variable.scopes,
+    codeSyntax: variable.codeSyntax || {},
+    description: variable.description,
+    hiddenFromPublishing: variable.hiddenFromPublishing,
+  };
+}
+
+function serializeCollection(collection: any) {
+  return {
+    id: collection.id,
+    name: collection.name,
+    key: collection.key,
+    modes: collection.modes,
+    defaultModeId: collection.defaultModeId,
+    variableIds: collection.variableIds,
+  };
+}
+
+function isCodeSafe(code: string): { safe: boolean; reason: string | null } {
+  for (const pattern of BLOCKED_PATTERNS) {
+    if (pattern.test(code)) {
+      return { safe: false, reason: `Matches restricted pattern: ${String(pattern)}` };
+    }
+  }
+  const normalized = code.toLowerCase().replace(/[\s'"`+\[\]]/g, "");
+  for (const keyword of BLOCKED_KEYWORDS) {
+    if (normalized.includes(keyword)) {
+      return { safe: false, reason: `Contains blocked keyword: ${keyword}` };
+    }
+  }
+  for (const pattern of BLOCKED_GLOBALS) {
+    if (pattern.test(code)) {
+      return { safe: false, reason: `Blocked global access: ${String(pattern)}` };
+    }
+  }
+  return { safe: true, reason: null };
+}
+
+async function executeCode(code: string): Promise<unknown> {
+  if (typeof code !== "string" || code.trim().length === 0) {
+    throw new Error("Code must be a non-empty string");
+  }
+  if (code.length > 50_000) {
+    throw new Error("Code exceeds maximum length (50KB)");
+  }
+  const check = isCodeSafe(code);
+  if (!check.safe) {
+    throw new Error(`Blocked: ${check.reason}`);
+  }
+  const fn = new Function("figma", `"use strict"; return (async () => { ${code} })()`);
+  return await fn(figma);
+}
+
+function getPageTree(maxDepth: number): unknown {
+  function walkChildren(node: any, depth: number): Record<string, unknown> | null {
+    if (depth > maxDepth) return null;
+    const data: Record<string, unknown> = { id: node.id, name: node.name, type: node.type, visible: node.visible !== false };
+    if ("children" in node && node.children) {
+      data.children = node.children.map((child: any) => walkChildren(child, depth + 1)).filter(Boolean);
+    }
+    return data;
+  }
+
+  return {
+    fileKey: figma.fileKey,
+    fileName: figma.root.name,
+    pages: figma.root.children.map((page: any) => ({
+      id: page.id,
+      name: page.name,
+      children: page.children.map((child: any) => walkChildren(child, 1)).filter(Boolean),
+    })),
+  };
+}
+
+function getFileData(maxDepth: number): unknown {
+  function walk(node: any, depth: number): Record<string, unknown> {
+    if (depth > maxDepth) {
+      return { id: node.id, name: node.name, type: node.type };
+    }
+    const data: Record<string, unknown> = {
+      id: node.id,
+      name: node.name,
+      type: node.type,
+      visible: node.visible !== false,
+    };
+    if ("children" in node && node.children) {
+      data.children = node.children.map((child: any) => walk(child, depth + 1));
+    }
+    return data;
+  }
+
+  return walk(figma.currentPage, 0);
+}
+
+async function getVariables(): Promise<unknown> {
+  if (!figma.variables || figma.editorType === "figjam" || figma.editorType === "slides") {
+    return { collections: [] };
+  }
+
+  const collections = await figma.variables.getLocalVariableCollectionsAsync();
+  const result = [];
+
+  for (const collection of collections) {
+    const variables = [];
+    for (const variableId of collection.variableIds) {
+      const variable = await figma.variables.getVariableByIdAsync(variableId);
+      if (!variable) continue;
+      variables.push(serializeVariable(variable));
+    }
+    result.push({
+      id: collection.id,
+      name: collection.name,
+      modes: collection.modes,
+      variables,
+    });
+  }
+
+  return { collections: result };
+}
+
+function getComponents(): unknown[] {
+  const components = figma.currentPage.findAll((node: any) => node.type === "COMPONENT" || node.type === "COMPONENT_SET");
+  return components.map((component: any) => ({
+    id: component.id,
+    name: component.name,
+    type: component.type,
+    description: component.description || "",
+    key: component.type === "COMPONENT" ? component.key : undefined,
+    variants: component.type === "COMPONENT_SET" && component.children
+      ? component.children.map((variant: any) => ({ id: variant.id, name: variant.name, key: variant.key }))
+      : [],
+    componentProperties: "componentPropertyDefinitions" in component ? component.componentPropertyDefinitions : {},
+  }));
+}
+
+function getStyles(): unknown[] {
+  const styles = [];
+  for (const style of figma.getLocalPaintStyles()) {
+    styles.push({
+      id: style.id,
+      name: style.name,
+      type: style.type,
+      styleType: "FILL",
+      description: style.description,
+      value: style.paints,
+    });
+  }
+  for (const style of figma.getLocalTextStyles()) {
+    styles.push({
+      id: style.id,
+      name: style.name,
+      type: style.type,
+      styleType: "TEXT",
+      description: style.description,
+      value: {
+        fontName: style.fontName,
+        fontSize: style.fontSize,
+        lineHeight: style.lineHeight,
+        letterSpacing: style.letterSpacing,
+      },
+    });
+  }
+  for (const style of figma.getLocalEffectStyles()) {
+    styles.push({
+      id: style.id,
+      name: style.name,
+      type: style.type,
+      styleType: "EFFECT",
+      description: style.description,
+      value: style.effects,
+    });
+  }
+  return styles;
+}
+
+function getStickies(): unknown[] {
+  return figma.currentPage.findAll((node: any) => node.type === "STICKY").map((sticky: any) => ({
+    id: sticky.id,
+    text: sticky.text ? sticky.text.characters : "",
+    authorName: sticky.authorName || null,
+    fills: sticky.fills,
+    x: sticky.x,
+    y: sticky.y,
+    width: sticky.width,
+    height: sticky.height,
+  }));
+}
+
+async function getComponentImage(nodeId: string, format: string): Promise<unknown> {
+  const node = await figma.getNodeByIdAsync(nodeId);
+  if (!node) {
+    throw new Error(`Node not found: ${nodeId}`);
+  }
+  const bytes = await node.exportAsync({
+    format: String(format || "PNG").toUpperCase(),
+    constraint: { type: "SCALE", value: 2 },
+  });
+  return {
+    base64: figma.base64Encode(bytes),
+    format: format || "png",
+  };
+}
+
+async function createNode(params: Record<string, unknown>): Promise<unknown> {
+  const { type, name, x, y, width, height, parentId } = params;
+  let node: any;
+
+  switch (type) {
+    case "FRAME":
+      node = figma.createFrame();
+      break;
+    case "RECTANGLE":
+      node = figma.createRectangle();
+      break;
+    case "TEXT":
+      node = figma.createText();
+      await figma.loadFontAsync({ family: "Inter", style: "Regular" });
+      node.characters = String(params.text || "");
+      break;
+    case "ELLIPSE":
+      node = figma.createEllipse();
+      break;
+    case "LINE":
+      node = figma.createLine();
+      break;
+    default:
+      throw new Error(`Unsupported node type: ${String(type)}`);
+  }
+
+  if (name) node.name = String(name);
+  if (x !== undefined) node.x = Number(x);
+  if (y !== undefined) node.y = Number(y);
+  if (width && height && "resize" in node) node.resize(Number(width), Number(height));
+
+  if (parentId) {
+    const parent = await figma.getNodeByIdAsync(String(parentId));
+    if (parent && "appendChild" in parent) {
+      parent.appendChild(node);
+    }
+  }
+
+  return serializeSelectionNode(node);
+}
+
+async function updateNode(params: Record<string, unknown>): Promise<unknown> {
+  const node = await figma.getNodeByIdAsync(String(params.nodeId || ""));
+  if (!node) {
+    throw new Error(`Node not found: ${String(params.nodeId)}`);
+  }
+  const properties = (params.properties || {}) as Record<string, unknown>;
+  for (const [key, value] of Object.entries(properties)) {
+    switch (key) {
+      case "name":
+        node.name = value;
+        break;
+      case "x":
+        node.x = value;
+        break;
+      case "y":
+        node.y = value;
+        break;
+      case "width":
+        if ("resize" in node) node.resize(Number(value), node.height);
+        break;
+      case "height":
+        if ("resize" in node) node.resize(node.width, Number(value));
+        break;
+      case "visible":
+        node.visible = value;
+        break;
+      case "opacity":
+        node.opacity = value;
+        break;
+      case "rotation":
+        node.rotation = value;
+        break;
+      case "characters":
+        if (node.type === "TEXT") {
+          await loadTextNodeFonts(node);
+          node.characters = String(value);
+        }
+        break;
+      case "fills":
+        if ("fills" in node) node.fills = value;
+        break;
+      default:
+        break;
+    }
+  }
+  return serializeSelectionNode(node);
+}
+
+async function loadTextNodeFonts(node: any): Promise<void> {
+  if (!node || node.type !== "TEXT") return;
+  const characters = node.characters || "";
+  if (!characters.length) {
+    await figma.loadFontAsync(node.fontName);
+    return;
+  }
+  const fonts = node.getRangeAllFontNames(0, characters.length);
+  await Promise.all(fonts.map((font: any) => figma.loadFontAsync(font)));
+}
+
+async function deleteNode(nodeId: string): Promise<unknown> {
+  const node = await figma.getNodeByIdAsync(nodeId);
+  if (!node) {
+    throw new Error(`Node not found: ${nodeId}`);
+  }
+  node.remove();
+  return { deleted: nodeId };
+}
+
+function setSelection(nodeIds: string[]): unknown {
+  const nodes = [];
+  for (const id of nodeIds) {
+    const node = figma.getNodeById(id);
+    if (node && "parent" in node) nodes.push(node);
+  }
+  figma.currentPage.selection = nodes;
+  return { selected: nodes.length };
+}
+
+async function navigateTo(nodeId: string): Promise<unknown> {
+  const node = await figma.getNodeByIdAsync(nodeId);
+  if (!node) {
+    throw new Error(`Node not found: ${nodeId}`);
+  }
+  figma.viewport.scrollAndZoomIntoView([node]);
+  return { navigated: nodeId };
+}
+
+async function captureScreenshot(params: Record<string, unknown>): Promise<unknown> {
+  const node = params.nodeId ? await figma.getNodeByIdAsync(String(params.nodeId)) : figma.currentPage;
+  if (!node) {
+    throw new Error(`Node not found: ${String(params.nodeId)}`);
+  }
+  const format = String(params.format || "PNG").toUpperCase();
+  const scale = Number(params.scale || 2);
+  const bytes = await node.exportAsync({
+    format,
+    constraint: { type: "SCALE", value: scale },
+  });
+  return {
+    image: {
+      base64: figma.base64Encode(bytes),
+      format,
+      scale,
+      byteLength: bytes.length,
+      node: {
+        id: node.id,
+        name: node.name,
+        type: node.type,
+      },
+      bounds: "absoluteBoundingBox" in node ? node.absoluteBoundingBox : null,
+    },
+  };
+}

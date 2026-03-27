@@ -5,5 +5,6 @@
     "tsBuildInfoFile": "./tsconfig.build.tsbuildinfo",
     "declarationMap": false,
     "sourceMap": false
-  }
+  },
+  "exclude": ["node_modules", "dist", "preview", "src/**/__tests__", "src/plugin/**/*"]
 }

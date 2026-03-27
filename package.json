@@ -17,12 +17,13 @@
   },
   "scripts": {
     "build": "node scripts/build.mjs",
+    "build:plugin": "node scripts/build-plugin.mjs",
     "dev": "tsx watch src/index.ts",
     "start": "tsx src/index.ts",
     "preview": "vite --config preview/vite.config.ts",
     "test": "vitest run",
-    "lint": "tsc --noEmit",
-    "typecheck": "tsc --noEmit --strict",
+    "lint": "tsc --noEmit && tsc -p tsconfig.plugin.json --noEmit",
+    "typecheck": "tsc --noEmit --strict && tsc -p tsconfig.plugin.json --noEmit",
     "prepublishOnly": "npm run typecheck && npm run test && npm run build",
     "prepare": "npm run build",
     "postinstall": "node scripts/postinstall.mjs"
