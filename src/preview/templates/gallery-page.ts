@@ -2634,8 +2634,21 @@ body {
 
 <!-- ── Figma Connection Status Bar ──────────── -->
 <div id="figma-bar" class="figma-bar">
-  <span id="figma-dot" class="figma-dot"></span>
-  <span id="figma-status">Figma: checking...</span>
+  <div class="figma-status-stack">
+    <div class="figma-status-row">
+      <span id="figma-dot" class="figma-dot"></span>
+      <span id="figma-status" class="figma-status-label">Figma: checking...</span>
+      <span id="figma-meta" class="figma-meta">Loading widget state</span>
+    </div>
+    <div id="figma-summary" class="figma-summary">
+      <span id="figma-summary-bridge" class="figma-chip">Bridge: --</span>
+      <span id="figma-summary-jobs" class="figma-chip">Jobs: --</span>
+      <span id="figma-summary-selection" class="figma-chip">Selection: --</span>
+      <span id="figma-summary-agents" class="figma-chip">Agents: --</span>
+      <span id="figma-summary-sync" class="figma-chip">Sync: --</span>
+      <span id="figma-summary-heal" class="figma-chip">Healer: --</span>
+    </div>
+  </div>
   <button class="figma-sync-btn" onclick="runAgent('Sync all changes to Figma')">SYNC</button>
 </div>
 
@@ -2697,7 +2710,17 @@ body {
 @keyframes slideIn { from { transform:translateX(20px); opacity:0; } to { transform:translateX(0); opacity:1; } }
 
 /* ── Figma Bar ────────────────────────────── */
-.figma-bar { position:fixed; bottom:0; left:0; right:0; display:flex; align-items:center; gap:8px; padding:6px 16px; background:var(--bg-card); border-top:1px solid var(--border); font-size:10px; color:var(--fg-muted); z-index:40; }
+.figma-bar { position:fixed; bottom:0; left:0; right:0; display:flex; align-items:center; justify-content:space-between; gap:12px 16px; padding:8px 16px; background:var(--bg-card); border-top:1px solid var(--border); font-size:10px; color:var(--fg-muted); z-index:40; flex-wrap:wrap; }
+.figma-status-stack { display:flex; flex-direction:column; gap:6px; min-width:0; flex:1 1 520px; }
+.figma-status-row { display:flex; align-items:center; gap:8px; min-width:0; flex-wrap:wrap; }
+.figma-status-label { color:var(--fg); font-weight:600; letter-spacing:0.4px; }
+.figma-meta { color:var(--fg-muted); text-transform:uppercase; letter-spacing:0.9px; white-space:nowrap; }
+.figma-summary { display:flex; flex-wrap:wrap; gap:6px; }
+.figma-chip { display:inline-flex; align-items:center; gap:4px; padding:3px 8px; border:1px solid var(--border); border-radius:999px; background:rgba(255,255,255,0.42); color:var(--fg-muted); text-transform:uppercase; letter-spacing:0.8px; white-space:nowrap; }
+.figma-chip.good { color:var(--green); border-color:rgba(31, 122, 70, 0.2); background:rgba(31, 122, 70, 0.08); }
+.figma-chip.warn { color:var(--yellow); border-color:rgba(139, 106, 21, 0.2); background:rgba(139, 106, 21, 0.08); }
+.figma-chip.bad { color:var(--red); border-color:rgba(164, 58, 44, 0.2); background:rgba(164, 58, 44, 0.08); }
+.figma-chip.dim { color:var(--fg-dim); }
 .figma-dot { width:6px; height:6px; border-radius:50%; background:var(--fg-muted); }
 .figma-dot.connected { background:#4ade80; box-shadow:0 0 6px #4ade80; }
 .figma-sync-btn { margin-left:auto; padding:3px 10px; background:none; border:1px solid var(--border); color:var(--fg-muted); font-family:var(--mono); font-size:9px; letter-spacing:1px; cursor:pointer; border-radius:2px; }
@@ -2776,6 +2799,7 @@ const API_BASE = window.location.origin;
 let ws = null;
 let currentEdit = null;
 let agentLogVisible = false;
+let figmaControlState = createEmptyFigmaControlState();
 
 // ── WebSocket Connection ───────────────────
 function connectWs() {
@@ -2810,12 +2834,15 @@ function handleWsMessage(msg) {
       break;
     case 'spec-updated':
       showToast('Spec updated: ' + (msg.data?.spec?.name || ''), 'success');
+      checkFigmaStatus();
       break;
     case 'figma-synced':
       showToast('Synced to Figma: ' + (msg.data?.token || msg.data?.scope || ''), 'synced');
+      checkFigmaStatus();
       break;
     case 'agent-status':
       updateAgentLog(msg.data?.task);
+      checkFigmaStatus();
       break;
     case 'agent-result':
       updateAgentLog(msg.data?.task);
@@ -2824,6 +2851,7 @@ function handleWsMessage(msg) {
       } else if (msg.data?.task?.status === 'failed') {
         showToast('Agent failed: ' + (msg.data.task.error || ''), 'error');
       }
+      checkFigmaStatus();
       break;
     case 'reload':
       showToast('Code updated — reloading...', 'success');
@@ -3137,22 +3165,272 @@ function updateAgentLog(task) {
 // ── Figma Status ───────────────────────────
 async function checkFigmaStatus() {
   try {
-    const res = await fetch(API_BASE + '/api/figma/status');
-    const data = await res.json();
-    const dot = document.getElementById('figma-dot');
-    const status = document.getElementById('figma-status');
-    if (data.connected) {
-      dot.classList.add('connected');
-      const clientCount = (data.clients || []).length;
-      status.textContent = 'Figma: connected (' + clientCount + ' plugin' + (clientCount !== 1 ? 's' : '') + ')';
-    } else {
-      dot.classList.remove('connected');
-      status.textContent = 'Figma: not connected';
-    }
+    const [statusPayload, jobsPayload, selectionPayload, agentsPayload] = await Promise.all([
+      fetchJsonWithFallback(['/api/figma/status', '/api/status']),
+      fetchJsonOptional('/api/figma/jobs', []),
+      fetchJsonOptional('/api/figma/selection', null),
+      fetchJsonOptional('/api/figma/agents', []),
+    ]);
+
+    figmaControlState = normalizeFigmaControlState(statusPayload, jobsPayload, selectionPayload, agentsPayload);
+    renderFigmaControlSummary();
+    syncAgentLogFromControlState();
   } catch {
-    document.getElementById('figma-dot').classList.remove('connected');
-    document.getElementById('figma-status').textContent = 'Figma: offline';
+    figmaControlState = createEmptyFigmaControlState();
+    renderFigmaControlSummary();
   }
+}
+
+function createEmptyFigmaControlState() {
+  return {
+    connected: false,
+    port: null,
+    clients: [],
+    jobs: [],
+    selection: null,
+    agents: [],
+    sync: null,
+    heal: null,
+    source: 'offline',
+    fetchedAt: 0,
+  };
+}
+
+async function fetchJsonWithFallback(paths) {
+  let lastError = null;
+  for (const path of paths) {
+    try {
+      const res = await fetch(API_BASE + path);
+      if (!res.ok) {
+        throw new Error('HTTP ' + res.status);
+      }
+      return await res.json();
+    } catch (err) {
+      lastError = err;
+    }
+  }
+  throw lastError || new Error('Unable to load status');
+}
+
+async function fetchJsonOptional(path, fallback) {
+  try {
+    const res = await fetch(API_BASE + path);
+    if (!res.ok) {
+      return fallback;
+    }
+    return await res.json();
+  } catch {
+    return fallback;
+  }
+}
+
+function normalizeFigmaControlState(statusPayload, jobsPayload, selectionPayload, agentsPayload) {
+  const connected = Boolean(
+    statusPayload?.connected ??
+    statusPayload?.figma?.running ??
+    statusPayload?.figma ??
+    statusPayload?.bridge?.connected ??
+    statusPayload?.connection?.stage === 'connected'
+  );
+  const clients = Array.isArray(statusPayload?.clients)
+    ? statusPayload.clients
+    : Array.isArray(statusPayload?.bridge?.clients)
+      ? statusPayload.bridge.clients
+      : [];
+  const port = statusPayload?.port ?? statusPayload?.bridge?.port ?? statusPayload?.connection?.port ?? null;
+  const jobs = normalizeArrayPayload(jobsPayload, 'jobs');
+  const selection = selectionPayload && selectionPayload.selection ? selectionPayload.selection : selectionPayload;
+  const agents = normalizeArrayPayload(agentsPayload, 'agents');
+  const sync = inferLatestSyncSummary(statusPayload, jobsPayload);
+  const heal = inferLatestHealSummary(statusPayload, jobsPayload);
+
+  return {
+    connected,
+    port,
+    clients,
+    jobs,
+    selection,
+    agents,
+    sync,
+    heal,
+    source: connected ? 'connected' : 'offline',
+    fetchedAt: Date.now(),
+  };
+}
+
+function normalizeArrayPayload(payload, key) {
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+  if (payload && typeof payload === 'object' && Array.isArray(payload[key])) {
+    return payload[key];
+  }
+  return [];
+}
+
+function inferLatestSyncSummary(statusPayload, jobsPayload) {
+  if (statusPayload && typeof statusPayload === 'object' && statusPayload.sync) {
+    return statusPayload.sync;
+  }
+  if (statusPayload && typeof statusPayload === 'object' && statusPayload.syncSummary) {
+    return statusPayload.syncSummary;
+  }
+  if (jobsPayload && typeof jobsPayload === 'object' && jobsPayload.sync) {
+    return jobsPayload.sync;
+  }
+  return null;
+}
+
+function inferLatestHealSummary(statusPayload, jobsPayload) {
+  if (statusPayload && typeof statusPayload === 'object' && statusPayload.heal) {
+    return statusPayload.heal;
+  }
+  if (statusPayload && typeof statusPayload === 'object' && statusPayload.healSummary) {
+    return statusPayload.healSummary;
+  }
+  if (jobsPayload && typeof jobsPayload === 'object' && jobsPayload.heal) {
+    return jobsPayload.heal;
+  }
+  return null;
+}
+
+function renderFigmaControlSummary() {
+  const dot = document.getElementById('figma-dot');
+  const status = document.getElementById('figma-status');
+  const meta = document.getElementById('figma-meta');
+  const bridgeChip = document.getElementById('figma-summary-bridge');
+  const jobsChip = document.getElementById('figma-summary-jobs');
+  const selectionChip = document.getElementById('figma-summary-selection');
+  const agentsChip = document.getElementById('figma-summary-agents');
+  const syncChip = document.getElementById('figma-summary-sync');
+  const healChip = document.getElementById('figma-summary-heal');
+  const clients = figmaControlState.clients || [];
+  const jobs = figmaControlState.jobs || [];
+  const agents = figmaControlState.agents || [];
+  const selection = figmaControlState.selection || {};
+  const activeJobs = jobs.filter((job) => job.status === 'running' || job.status === 'queued');
+  const failedJobs = jobs.filter((job) => job.status === 'failed');
+  const connected = Boolean(figmaControlState.connected);
+
+  if (dot) {
+    dot.classList.toggle('connected', connected);
+  }
+  if (status) {
+    status.textContent = connected ? 'Figma: connected' : 'Figma: offline';
+  }
+  if (meta) {
+    meta.textContent = connected
+      ? bridgeLabel(figmaControlState.port, clients.length, figmaControlState.fetchedAt)
+      : 'Waiting for widget state';
+  }
+
+  setChip(bridgeChip, connected ? 'Bridge: live' : 'Bridge: offline', connected ? 'good' : 'bad');
+  setChip(jobsChip, 'Jobs: ' + jobsLabel(activeJobs.length, jobs.length, failedJobs.length), jobs.length ? 'good' : 'dim');
+  setChip(selectionChip, 'Selection: ' + selectionLabel(selection), selection?.count ? 'good' : 'dim');
+  setChip(agentsChip, 'Agents: ' + agentsLabel(agents), agents.length ? 'good' : 'dim');
+  setChip(syncChip, 'Sync: ' + syncLabel(figmaControlState.sync), figmaControlState.sync ? 'good' : 'dim');
+  setChip(healChip, 'Healer: ' + healLabel(figmaControlState.heal), figmaControlState.heal?.healed ? 'good' : figmaControlState.heal ? 'warn' : 'dim');
+}
+
+function syncAgentLogFromControlState() {
+  const agents = Array.isArray(figmaControlState.agents) ? figmaControlState.agents : [];
+  for (const agent of agents) {
+    updateAgentLog({
+      id: agent.runId + ':' + agent.taskId + ':' + agent.role,
+      intent: '[' + agent.role + '] ' + agent.title,
+      steps: [{
+        name: 'status',
+        status: normalizeAgentStatus(agent.status),
+        detail: [
+          agent.summary || '',
+          agent.error || '',
+          agent.healRound !== undefined ? ('heal ' + agent.healRound) : '',
+          agent.elapsedMs !== undefined ? formatAgentElapsed(agent.elapsedMs) : '',
+        ].filter(Boolean).join(' / '),
+      }],
+      status: agent.status === 'done' ? 'completed' : agent.status === 'error' ? 'failed' : 'running',
+      error: agent.error || '',
+    });
+  }
+}
+
+function bridgeLabel(port, clientCount, fetchedAt) {
+  const parts = [];
+  if (port) {
+    parts.push(':' + port);
+  }
+  parts.push(clientCount + ' plugin' + (clientCount === 1 ? '' : 's'));
+  if (fetchedAt) {
+    parts.push(new Date(fetchedAt).toLocaleTimeString());
+  }
+  return parts.join(' / ');
+}
+
+function jobsLabel(activeCount, totalCount, failedCount) {
+  if (!totalCount) {
+    return 'idle';
+  }
+  const parts = [];
+  if (activeCount) {
+    parts.push(activeCount + ' active');
+  }
+  parts.push(totalCount + ' total');
+  if (failedCount) {
+    parts.push(failedCount + ' failed');
+  }
+  return parts.join(' / ');
+}
+
+function selectionLabel(selection) {
+  if (!selection || !selection.count) {
+    return 'none';
+  }
+  const pageName = selection.pageName || 'current page';
+  return selection.count + ' on ' + pageName;
+}
+
+function agentsLabel(agents) {
+  if (!agents.length) {
+    return 'none';
+  }
+  const active = agents.filter((agent) => agent.status === 'busy' || agent.status === 'idle').length;
+  return active ? active + ' active / ' + agents.length + ' total' : agents.length + ' total';
+}
+
+function syncLabel(sync) {
+  if (!sync) {
+    return 'n/a';
+  }
+  const failures = sync.partialFailures ? sync.partialFailures.length : 0;
+  return sync.tokens + 't / ' + sync.components + 'c / ' + sync.styles + 's' + (failures ? ' / ' + failures + ' partial' : '');
+}
+
+function healLabel(heal) {
+  if (!heal) {
+    return 'n/a';
+  }
+  return 'r' + heal.round + ' / ' + heal.issueCount + ' issues' + (heal.healed ? ' / healed' : '');
+}
+
+function normalizeAgentStatus(status) {
+  if (status === 'done') return 'completed';
+  if (status === 'busy') return 'running';
+  return status || 'idle';
+}
+
+function formatAgentElapsed(elapsedMs) {
+  if (elapsedMs < 1000) return elapsedMs + 'ms';
+  const seconds = Math.floor(elapsedMs / 1000);
+  if (seconds < 60) return seconds + 's';
+  const minutes = Math.floor(seconds / 60);
+  const remainder = seconds % 60;
+  return minutes + 'm ' + remainder + 's';
+}
+
+function setChip(element, label, tone) {
+  if (!element) return;
+  element.textContent = label;
+  element.className = 'figma-chip ' + tone;
 }
 
 // ── Make Cards Editable ────────────────────

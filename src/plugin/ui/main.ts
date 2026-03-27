@@ -1,4 +1,5 @@
 import {
+  type AgentBoxState,
   WIDGET_V2_CHANNEL,
   createRunId,
   isWidgetV2Envelope,
@@ -38,6 +39,7 @@ import { disconnectActiveJobs, mergeSyncSummaries, reduceHealEvent, upsertJobSta
 interface UiState {
   activeTab: "jobs" | "selection" | "system";
   connection: WidgetConnectionState;
+  agentStatuses: AgentBoxState[];
   jobs: WidgetJob[];
   selection: WidgetSelectionSnapshot;
   logs: WidgetLogEntry[];
@@ -66,6 +68,7 @@ const PORT_START = 9223;
 const PORT_END = 9232;
 const LOG_LIMIT = 80;
 const MAX_JOBS = 24;
+const MAX_AGENT_STATUSES = 48;
 const pendingBridgeRequests = new Map<string, PendingBridgeRequest>();
 
 const appRoot = document.getElementById("app");
@@ -99,6 +102,7 @@ const emptySelection: WidgetSelectionSnapshot = {
 const state: UiState = {
   activeTab: "jobs",
   connection: emptyConnection,
+  agentStatuses: [],
   jobs: [],
   selection: emptySelection,
   logs: [],
@@ -376,6 +380,18 @@ function handleBridgeMessage(payload: any): void {
     case "chat":
       addLog("info", `Bridge chat from ${message.from}`, message.text);
       break;
+    case "agent-status":
+      upsertAgentStatus(message.data);
+      if (message.data.status === "error") {
+        addLog("error", `Agent ${message.data.role} failed`, {
+          runId: message.data.runId,
+          taskId: message.data.taskId,
+          summary: message.data.summary,
+          error: message.data.error,
+        });
+      }
+      render();
+      break;
     case "error":
       addLog("error", message.message || "Bridge error", message.details || null);
       break;
@@ -494,6 +510,17 @@ function sendToMain(message: WidgetUiEnvelope): void {
 
 function upsertJob(job: WidgetJob): void {
   state.jobs = upsertJobState(state.jobs, job, MAX_JOBS);
+}
+
+function upsertAgentStatus(status: AgentBoxState): void {
+  const next = [...state.agentStatuses];
+  const existing = next.findIndex((candidate) => getAgentStatusKey(candidate) === getAgentStatusKey(status));
+  if (existing >= 0) {
+    next[existing] = status;
+  } else {
+    next.unshift(status);
+  }
+  state.agentStatuses = next.sort(compareAgentStatuses).slice(0, MAX_AGENT_STATUSES);
 }
 
 function addLog(level: WidgetLogEntry["level"], message: string, detail?: unknown): void {
@@ -718,8 +745,28 @@ function renderJobs(): string {
           <span>${escapeHtml(formatHealSummary(state.healSummary))}</span>
         </div>
       ` : ""}
+      ${state.agentStatuses.length ? `
+        <div class="jobs-alert">
+          <strong>Agent surface</strong>
+          <span>${escapeHtml(formatAgentStatusSummary(state.agentStatuses))}</span>
+        </div>
+      ` : ""}
     </article>
   `);
+
+  cards.push(...state.agentStatuses.slice(0, 6).map((agent) => `
+      <article class="job-card ${agent.status === "done" ? "completed" : agent.status === "error" ? "failed" : "running"}">
+        <div class="card-topline">
+          <strong class="card-title">${escapeHtml(agent.title)}</strong>
+          <span class="chip">${escapeHtml(agent.status)}</span>
+        </div>
+        <div class="stack muted">
+          <div>${escapeHtml(agent.role)} · ${escapeHtml(agent.elapsedMs !== undefined ? formatDuration(agent.elapsedMs) : "live")}</div>
+          <div class="mono">run ${escapeHtml(agent.runId)} · task ${escapeHtml(agent.taskId)}</div>
+          <div>${escapeHtml(agent.summary || agent.error || "Agent update received")}</div>
+        </div>
+      </article>
+    `));
 
   cards.push(...state.jobs.map((job) => `
       <article class="job-card ${job.status}">
@@ -822,6 +869,38 @@ function renderSelectionNode(node: WidgetSelectionNodeSnapshot): string {
 function renderSystem(): string {
   const cards: string[] = [];
 
+  if (state.agentStatuses.length) {
+    cards.push(`
+      <article class="system-card">
+        <div class="card-topline">
+          <strong class="card-title">Agent status</strong>
+          <span class="chip">${escapeHtml(formatAgentStatusSummary(state.agentStatuses))}</span>
+        </div>
+        <div class="stack">
+          ${state.agentStatuses.slice(0, 8).map((agent) => `
+            <div class="job-card ${agent.status === "done" ? "completed" : agent.status === "error" ? "failed" : agent.status === "busy" ? "running" : "queued"}">
+              <div class="card-topline">
+                <strong class="card-title">${escapeHtml(agent.title)}</strong>
+                <span class="chip">${escapeHtml(agent.status)}</span>
+              </div>
+              <div class="stack muted">
+                <div>${escapeHtml(agent.role)} · <span class="mono">${escapeHtml(agent.runId)}</span></div>
+                ${agent.summary ? `<div>${escapeHtml(agent.summary)}</div>` : ""}
+                ${agent.error ? `<div class="mono">${escapeHtml(agent.error)}</div>` : ""}
+                <div>${escapeHtml(formatAgentStatusMeta(agent))}</div>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      </article>
+    `);
+  } else {
+    cards.push(emptyCard(
+      "Agent status unavailable",
+      "Agent run and task state will appear here when the orchestrator publishes updates through the bridge.",
+    ));
+  }
+
   cards.push(`
     <article class="system-card">
       <div class="card-topline">
@@ -921,6 +1000,73 @@ function formatSyncSummary(summary: WidgetSyncSummary): string {
 function formatHealSummary(summary: WidgetHealSummary): string {
   const status = summary.healed ? "healed" : "needs review";
   return `round ${summary.round} · ${summary.issueCount} issue(s) · ${status}`;
+}
+
+function getAgentStatusKey(agent: AgentBoxState): string {
+  return `${agent.runId}:${agent.taskId}:${agent.role}`;
+}
+
+function compareAgentStatuses(left: AgentBoxState, right: AgentBoxState): number {
+  const priority = (status: AgentBoxState["status"]): number => {
+    switch (status) {
+      case "busy":
+        return 0;
+      case "error":
+        return 1;
+      case "idle":
+        return 2;
+      case "done":
+        return 3;
+      default:
+        return 4;
+    }
+  };
+
+  const priorityDiff = priority(left.status) - priority(right.status);
+  if (priorityDiff !== 0) {
+    return priorityDiff;
+  }
+
+  const elapsedDiff = (right.elapsedMs ?? 0) - (left.elapsedMs ?? 0);
+  if (elapsedDiff !== 0) {
+    return elapsedDiff;
+  }
+
+  return getAgentStatusKey(left).localeCompare(getAgentStatusKey(right));
+}
+
+function formatAgentStatusSummary(agents: AgentBoxState[]): string {
+  const busy = agents.filter((agent) => agent.status === "busy").length;
+  const done = agents.filter((agent) => agent.status === "done").length;
+  const error = agents.filter((agent) => agent.status === "error").length;
+  return `${busy} busy · ${done} done · ${error} error`;
+}
+
+function formatAgentStatusMeta(agent: AgentBoxState): string {
+  const parts: string[] = [];
+  if (agent.elapsedMs !== undefined) {
+    parts.push(`elapsed ${formatDuration(agent.elapsedMs)}`);
+  }
+  if (agent.healRound !== undefined) {
+    parts.push(`heal round ${agent.healRound}`);
+  }
+  if (!parts.length) {
+    parts.push(`task ${agent.taskId}`);
+  }
+  return parts.join(" · ");
+}
+
+function formatDuration(elapsedMs: number): string {
+  if (elapsedMs < 1000) {
+    return `${elapsedMs}ms`;
+  }
+  const seconds = Math.floor(elapsedMs / 1000);
+  if (seconds < 60) {
+    return `${seconds}s`;
+  }
+  const minutes = Math.floor(seconds / 60);
+  const remainder = seconds % 60;
+  return `${minutes}m ${remainder}s`;
 }
 
 function emptyCard(title: string, copy: string): string {

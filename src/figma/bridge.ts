@@ -17,6 +17,7 @@ import { MemoireWsServer } from "./ws-server.js";
 import type { MemoireEvent } from "../engine/core.js";
 import type { DesignSystem, DesignToken, DesignComponent, DesignStyle } from "../engine/registry.js";
 import type { IANode, IASpec } from "../specs/types.js";
+import type { AgentBoxState } from "../plugin/shared/contracts.js";
 
 export interface FigmaBridgeConfig {
   token?: string;
@@ -178,6 +179,10 @@ export class FigmaBridge extends EventEmitter {
    */
   sendChat(text: string): void {
     this.server.sendChat(text);
+  }
+
+  publishAgentStatus(status: AgentBoxState): void {
+    this.server.sendAgentStatus(status);
   }
 
   /**

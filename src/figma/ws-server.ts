@@ -16,7 +16,7 @@ import {
   serializeBridgeEnvelope,
   type BridgeEnvelope,
 } from "../plugin/shared/bridge.js";
-import type { WidgetCommandName } from "../plugin/shared/contracts.js";
+import type { AgentBoxState, WidgetCommandName } from "../plugin/shared/contracts.js";
 
 const log = createLogger("ws-server");
 
@@ -223,6 +223,21 @@ export class MemoireWsServer extends EventEmitter {
         data: { source: event.source },
       }),
     );
+  }
+
+  /**
+   * Broadcast agent-box state so non-canvas consumers can observe orchestration progress.
+   */
+  sendAgentStatus(status: AgentBoxState): void {
+    this.broadcast(
+      serializeBridgeEnvelope({
+        channel: "memoire.bridge.v2",
+        source: "plugin",
+        type: "agent-status",
+        data: status,
+      }),
+    );
+    this.emit("agent-status", status);
   }
 
   /**

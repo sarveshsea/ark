@@ -11,6 +11,7 @@ import { join, extname } from "path";
 import { WebSocketServer, WebSocket } from "ws";
 import type { MemoireEngine } from "../engine/core.js";
 import type { MemoireEvent } from "../engine/core.js";
+import { PreviewWidgetStateCache } from "./widget-state-cache.js";
 
 const MIME_TYPES: Record<string, string> = {
   ".html": "text/html",
@@ -43,6 +44,15 @@ export class PreviewApiServer {
   private wss: WebSocketServer | null = null;
   private liveClients = new Set<WebSocket>();
   private onEngineEvent: ((evt: MemoireEvent) => void) | null = null;
+  private onFigmaConnectionState: ((state: unknown) => void) | null = null;
+  private onFigmaSelection: ((selection: unknown) => void) | null = null;
+  private onFigmaJobStatus: ((job: unknown) => void) | null = null;
+  private onFigmaAgentStatus: ((agent: unknown) => void) | null = null;
+  private onFigmaSyncResult: ((result: unknown) => void) | null = null;
+  private onFigmaHealResult: ((result: unknown) => void) | null = null;
+  private onFigmaPluginConnected: (() => void) | null = null;
+  private onFigmaPluginDisconnected: (() => void) | null = null;
+  private widgetState = new PreviewWidgetStateCache();
 
   constructor(engine: MemoireEngine, staticDir: string, port = 3030) {
     this.engine = engine;
@@ -82,6 +92,38 @@ export class PreviewApiServer {
           if (url.pathname === "/api/status") {
             res.end(JSON.stringify({
               figma: this.engine.figma.isConnected,
+              connected: this.engine.figma.isConnected,
+              port: this.engine.figma.wsServer.activePort || null,
+            }));
+            return;
+          }
+
+          if (url.pathname === "/api/figma/status") {
+            res.end(JSON.stringify(this.buildWidgetStatusPayload()));
+            return;
+          }
+
+          if (url.pathname === "/api/figma/jobs") {
+            res.end(JSON.stringify({
+              jobs: this.widgetState.getJobs(),
+              updatedAt: Date.now(),
+            }));
+            return;
+          }
+
+          if (url.pathname === "/api/figma/selection") {
+            const selection = this.widgetState.getSelection();
+            res.end(JSON.stringify({
+              selection,
+              updatedAt: Date.now(),
+            }));
+            return;
+          }
+
+          if (url.pathname === "/api/figma/agents") {
+            res.end(JSON.stringify({
+              agents: this.widgetState.getAgents(),
+              updatedAt: Date.now(),
             }));
             return;
           }
@@ -114,6 +156,7 @@ export class PreviewApiServer {
         }
       };
       this.engine.on("event", this.onEngineEvent);
+      this.attachFigmaListeners();
 
       const setupWebSocketServer = () => {
         if (!this.server) return;
@@ -180,9 +223,98 @@ export class PreviewApiServer {
       this.engine.off("event", this.onEngineEvent);
       this.onEngineEvent = null;
     }
+    this.detachFigmaListeners();
     for (const ws of this.liveClients) ws.close();
     this.liveClients.clear();
     this.wss?.close();
     this.server?.close();
+  }
+
+  private attachFigmaListeners(): void {
+    const figma = this.engine.figma;
+    this.onFigmaConnectionState = (state) => {
+      this.widgetState.updateConnection(state as Parameters<PreviewWidgetStateCache["updateConnection"]>[0]);
+    };
+    this.onFigmaSelection = (selection) => {
+      this.widgetState.updateSelection(selection as Parameters<PreviewWidgetStateCache["updateSelection"]>[0]);
+    };
+    this.onFigmaJobStatus = (job) => {
+      this.widgetState.upsertJob(job as Parameters<PreviewWidgetStateCache["upsertJob"]>[0]);
+    };
+    this.onFigmaAgentStatus = (agent) => {
+      this.widgetState.upsertAgent(agent as Parameters<PreviewWidgetStateCache["upsertAgent"]>[0]);
+    };
+    this.onFigmaSyncResult = (result) => {
+      const payload = result as { summary?: Parameters<PreviewWidgetStateCache["mergeSync"]>[0] };
+      if (payload?.summary) {
+        this.widgetState.mergeSync(payload.summary);
+      }
+    };
+    this.onFigmaHealResult = (result) => {
+      this.widgetState.updateHeal(result as Parameters<PreviewWidgetStateCache["updateHeal"]>[0]);
+    };
+    this.onFigmaPluginConnected = () => {
+      this.widgetState.updateConnection({
+        ...(this.widgetState.getConnection() ?? {
+          stage: "connected",
+          port: this.engine.figma.wsServer.activePort || null,
+          name: "Mémoire Control Plane",
+          latencyMs: null,
+          fileName: "",
+          fileKey: null,
+          pageName: "",
+          pageId: null,
+          editorType: "",
+          connectedAt: Date.now(),
+          reconnectDelayMs: null,
+        }),
+        stage: "connected",
+      });
+    };
+    this.onFigmaPluginDisconnected = () => {
+      const current = this.widgetState.getConnection();
+      if (current) {
+        this.widgetState.updateConnection({
+          ...current,
+          stage: "offline",
+          port: current.port,
+          reconnectDelayMs: current.reconnectDelayMs,
+        });
+      }
+    };
+
+    figma.on("connection-state", this.onFigmaConnectionState);
+    figma.on("selection", this.onFigmaSelection);
+    figma.on("job-status", this.onFigmaJobStatus);
+    figma.on("agent-status", this.onFigmaAgentStatus);
+    figma.on("sync-result", this.onFigmaSyncResult);
+    figma.on("heal-result", this.onFigmaHealResult);
+    figma.on("plugin-connected", this.onFigmaPluginConnected);
+    figma.on("plugin-disconnected", this.onFigmaPluginDisconnected);
+  }
+
+  private detachFigmaListeners(): void {
+    const figma = this.engine.figma;
+    if (this.onFigmaConnectionState) figma.off("connection-state", this.onFigmaConnectionState);
+    if (this.onFigmaSelection) figma.off("selection", this.onFigmaSelection);
+    if (this.onFigmaJobStatus) figma.off("job-status", this.onFigmaJobStatus);
+    if (this.onFigmaAgentStatus) figma.off("agent-status", this.onFigmaAgentStatus);
+    if (this.onFigmaSyncResult) figma.off("sync-result", this.onFigmaSyncResult);
+    if (this.onFigmaHealResult) figma.off("heal-result", this.onFigmaHealResult);
+    if (this.onFigmaPluginConnected) figma.off("plugin-connected", this.onFigmaPluginConnected);
+    if (this.onFigmaPluginDisconnected) figma.off("plugin-disconnected", this.onFigmaPluginDisconnected);
+    this.onFigmaConnectionState = null;
+    this.onFigmaSelection = null;
+    this.onFigmaJobStatus = null;
+    this.onFigmaAgentStatus = null;
+    this.onFigmaSyncResult = null;
+    this.onFigmaHealResult = null;
+    this.onFigmaPluginConnected = null;
+    this.onFigmaPluginDisconnected = null;
+  }
+
+  private buildWidgetStatusPayload() {
+    const bridge = this.engine.figma.wsServer.getStatus();
+    return this.widgetState.snapshot(bridge);
   }
 }

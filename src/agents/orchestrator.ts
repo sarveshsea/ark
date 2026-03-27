@@ -17,6 +17,7 @@ import { createLogger } from "../engine/logger.js";
 import type { MemoireEngine } from "../engine/core.js";
 import type { DesignToken, DesignSystem, DesignComponent } from "../engine/registry.js";
 import type { AnySpec, ComponentSpec, PageSpec, DataVizSpec } from "../specs/types.js";
+import type { AgentBoxState } from "../plugin/shared/contracts.js";
 import { AGENT_PROMPTS } from "./prompts.js";
 import { getAI, type AnthropicClient } from "../ai/index.js";
 import { resolveForIntent, wrapWithNotes, type ResolvedSkill } from "../notes/index.js";
@@ -700,13 +701,11 @@ ${existingMappings}
     const completed = new Set<string>();
     const totalTasks = plan.subTasks.length;
 
-    if (plan.context.figmaConnected) {
-      await Promise.all(
-        sortAgentBoxUpdates(
-          plan.subTasks.map((task, index) => this.makeAgentBoxUpdate(plan, task, index, "idle")),
-        ).map((update) => this.updateAgentBox(update)),
-      );
-    }
+    await Promise.all(
+      sortAgentBoxUpdates(
+        plan.subTasks.map((task, index) => this.makeAgentBoxUpdate(plan, task, index, "idle")),
+      ).map((update) => this.updateAgentBox(update)),
+    );
 
     // Topological execution — respect dependencies
     while (completed.size < plan.subTasks.length) {
@@ -727,9 +726,7 @@ ${existingMappings}
           task.startedAt = new Date().toISOString();
           this.onUpdate?.(plan);
 
-          if (plan.context.figmaConnected) {
-            await this.updateAgentBox(this.makeAgentBoxUpdate(plan, task, taskIndex, "busy"));
-          }
+          await this.updateAgentBox(this.makeAgentBoxUpdate(plan, task, taskIndex, "busy"));
 
           try {
             const result = await this.executeSubTask(task, plan.context);
@@ -738,11 +735,9 @@ ${existingMappings}
             task.completedAt = new Date().toISOString();
             completedTasks++;
 
-            if (plan.context.figmaConnected) {
-              await this.updateAgentBox(
-                this.makeAgentBoxUpdate(plan, task, taskIndex, "done", result),
-              );
-            }
+            await this.updateAgentBox(
+              this.makeAgentBoxUpdate(plan, task, taskIndex, "done", result),
+            );
 
             if (result && typeof result === "object" && "mutations" in result) {
               mutations.push(...(result as { mutations: DesignMutation[] }).mutations);
@@ -752,11 +747,9 @@ ${existingMappings}
             task.error = (err as Error).message;
             task.completedAt = new Date().toISOString();
 
-            if (plan.context.figmaConnected) {
-              await this.updateAgentBox(
-                this.makeAgentBoxUpdate(plan, task, taskIndex, "error"),
-              );
-            }
+            await this.updateAgentBox(
+              this.makeAgentBoxUpdate(plan, task, taskIndex, "error"),
+            );
           }
 
           completed.add(task.id);
@@ -1754,6 +1747,10 @@ ${existingMappings}
   }
 
   async updateAgentBox(update: AgentBoxUpdate): Promise<void> {
+    this.publishAgentStatus(update);
+    if (!this.engine.figma.isConnected) {
+      return;
+    }
     await this.createAgentBox(update);
   }
 
@@ -1811,5 +1808,23 @@ ${existingMappings}
       return record.status;
     }
     return undefined;
+  }
+
+  private publishAgentStatus(update: AgentBoxUpdate): void {
+    this.engine.figma.publishAgentStatus(this.toAgentStatus(update));
+  }
+
+  private toAgentStatus(update: AgentBoxUpdate): AgentBoxState {
+    return {
+      runId: update.runId,
+      taskId: update.taskId,
+      role: update.role,
+      title: update.title,
+      status: update.status,
+      summary: update.summary,
+      error: update.error,
+      healRound: update.healRound,
+      elapsedMs: update.elapsedMs,
+    };
   }
 }
