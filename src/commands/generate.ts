@@ -1,42 +1,221 @@
 import type { Command } from "commander";
 import type { MemoireEngine } from "../engine/core.js";
 
+export interface GeneratePayload {
+  mode: "single" | "all";
+  status: "completed" | "partial" | "failed" | "empty";
+  target: string | null;
+  options: {
+    all: boolean;
+    json: boolean;
+  };
+  summary: {
+    totalSpecs: number;
+    attempted: number;
+    generated: number;
+    failed: number;
+  };
+  results: GenerateResultPayload[];
+  generatedFiles: string[];
+  elapsedMs: number;
+  error?: {
+    message: string;
+  };
+}
+
+export interface GenerateResultPayload {
+  name: string;
+  status: "generated" | "failed";
+  entryFile: string | null;
+  error: string | null;
+}
+
 export function registerGenerateCommand(program: Command, engine: MemoireEngine) {
   program
     .command("generate [specName]")
     .description("Generate code from a spec (or all specs if no name given)")
     .option("-a, --all", "Generate all specs")
-    .action(async (specName: string | undefined, opts) => {
-      await engine.init();
+    .option("--json", "Output generate results as JSON")
+    .action(async (specName: string | undefined, opts: { all?: boolean; json?: boolean }) => {
+      const startedAt = Date.now();
+      const generateAll = Boolean(opts.all || !specName);
 
-      if (opts.all || !specName) {
-        const specs = await engine.registry.getAllSpecs();
-        if (specs.length === 0) {
-          console.log("\n  No specs found. Create one first.\n");
+      try {
+        await engine.init();
+
+        if (generateAll) {
+          const specs = await engine.registry.getAllSpecs();
+          if (specs.length === 0) {
+            const payload = buildGeneratePayload({
+              mode: "all",
+              target: null,
+              options: {
+                all: generateAll,
+                json: Boolean(opts.json),
+              },
+              results: [],
+              generatedFiles: [],
+              elapsedMs: Date.now() - startedAt,
+            });
+
+            if (opts.json) {
+              console.log(JSON.stringify(payload, null, 2));
+            } else {
+              console.log("\n  No specs found. Create one first.\n");
+            }
+            return;
+          }
+
+          if (!opts.json) {
+            console.log(`\n  Generating ${specs.length} specs...\n`);
+          }
+
+          const results: GenerateResultPayload[] = [];
+          const generatedFiles: string[] = [];
+
+          for (const spec of specs) {
+            try {
+              const entryFile = await engine.generateFromSpec(spec.name);
+              results.push({
+                name: spec.name,
+                status: "generated",
+                entryFile,
+                error: null,
+              });
+              generatedFiles.push(entryFile);
+            } catch (err) {
+              const msg = err instanceof Error ? err.message : String(err);
+              results.push({
+                name: spec.name,
+                status: "failed",
+                entryFile: null,
+                error: msg,
+              });
+
+              if (!opts.json) {
+                console.error(`  ✖ ${spec.name}: ${msg}`);
+              }
+            }
+          }
+
+          const payload = buildGeneratePayload({
+            mode: "all",
+            target: null,
+            options: {
+              all: generateAll,
+              json: Boolean(opts.json),
+            },
+            results,
+            generatedFiles,
+            elapsedMs: Date.now() - startedAt,
+          });
+
+          if (opts.json) {
+            console.log(JSON.stringify(payload, null, 2));
+            return;
+          }
+
+          console.log(`\n  Done. Generated files in generated/${payload.summary.failed > 0 ? ` (${payload.summary.failed} errors)` : ""}\n`);
           return;
         }
 
-        console.log(`\n  Generating ${specs.length} specs...\n`);
-        let errors = 0;
-        for (const spec of specs) {
-          try {
-            await engine.generateFromSpec(spec.name);
-          } catch (err) {
-            const msg = err instanceof Error ? err.message : String(err);
-            console.error(`  ✖ ${spec.name}: ${msg}`);
-            errors++;
-          }
+        if (!specName) {
+          throw new Error("Missing spec name for single generation");
         }
-        console.log(`\n  Done. Generated files in generated/${errors > 0 ? ` (${errors} errors)` : ""}\n`);
-      } else {
-        try {
-          const entryFile = await engine.generateFromSpec(specName);
-          console.log(`\n  Generated: ${entryFile}\n`);
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : String(err);
-          console.error(`\n  ✖ ${msg}\n`);
-          process.exit(1);
+
+        const entryFile = await engine.generateFromSpec(specName);
+        const payload = buildGeneratePayload({
+          mode: "single",
+          target: specName,
+          options: {
+            all: false,
+            json: Boolean(opts.json),
+          },
+          results: [{
+            name: specName,
+            status: "generated",
+            entryFile,
+            error: null,
+          }],
+          generatedFiles: [entryFile],
+          elapsedMs: Date.now() - startedAt,
+        });
+
+        if (opts.json) {
+          console.log(JSON.stringify(payload, null, 2));
+          return;
         }
+
+        console.log(`\n  Generated: ${entryFile}\n`);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+
+        if (opts.json) {
+          const payload = buildGeneratePayload({
+            mode: generateAll ? "all" : "single",
+            target: generateAll ? null : specName ?? null,
+            options: {
+              all: generateAll,
+              json: Boolean(opts.json),
+            },
+            results: [{
+              name: specName ?? "all",
+              status: "failed",
+              entryFile: null,
+              error: msg,
+            }],
+            generatedFiles: [],
+            elapsedMs: Date.now() - startedAt,
+            error: { message: msg },
+          });
+          console.log(JSON.stringify(payload, null, 2));
+          process.exitCode = 1;
+          return;
+        }
+
+        console.error(`\n  ✖ ${msg}\n`);
+        process.exit(1);
       }
     });
+}
+
+function buildGeneratePayload(input: {
+  mode: "single" | "all";
+  target: string | null;
+  options: GeneratePayload["options"];
+  results: GenerateResultPayload[];
+  generatedFiles: string[];
+  elapsedMs: number;
+  error?: {
+    message: string;
+  };
+}): GeneratePayload {
+  const generated = input.results.filter((result) => result.status === "generated").length;
+  const failed = input.results.filter((result) => result.status === "failed").length;
+  const totalSpecs = input.mode === "single"
+    ? 1
+    : input.results.length;
+
+  return {
+    mode: input.mode,
+    status: totalSpecs === 0
+      ? "empty"
+      : failed > 0
+        ? generated > 0
+          ? "partial"
+          : "failed"
+        : "completed",
+    target: input.target,
+    options: input.options,
+    summary: {
+      totalSpecs,
+      attempted: input.results.length,
+      generated,
+      failed,
+    },
+    results: input.results,
+    generatedFiles: input.generatedFiles,
+    elapsedMs: input.elapsedMs,
+    error: input.error,
+  };
 }
