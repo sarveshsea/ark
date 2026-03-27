@@ -293,6 +293,24 @@ export class FigmaBridge extends EventEmitter {
     };
   }
 
+  /**
+   * Navigate to a specific page by name or ID.
+   * Uses figma.setCurrentPageAsync (required for dynamic-page documentAccess).
+   */
+  async navigateToPage(pageNameOrId: string): Promise<void> {
+    await this.server.sendCommand("execute", {
+      code: `
+        const doc = figma.root;
+        const page = doc.children.find(
+          p => p.name === ${JSON.stringify(pageNameOrId)} || p.id === ${JSON.stringify(pageNameOrId)}
+        );
+        if (!page) throw new Error("Page not found: ${pageNameOrId}");
+        await figma.setCurrentPageAsync(page);
+        return { page: page.name, pageId: page.id };
+      `,
+    }, 10000);
+  }
+
   async getComponentImage(nodeId: string, format: "png" | "svg" = "png"): Promise<Buffer> {
     const result = await this.server.sendCommand(
       "getComponentImage",
