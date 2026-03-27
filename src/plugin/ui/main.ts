@@ -30,6 +30,7 @@ import {
   trackBridgeRequest,
   type PendingBridgeRequest,
 } from "./bridge-adapter.js";
+import { buildJobsOverview, describeSelectionNode, formatElapsedTime } from "./presenters.js";
 
 interface UiState {
   activeTab: "jobs" | "selection" | "system";
@@ -563,6 +564,10 @@ function render(): void {
   app.querySelectorAll<HTMLButtonElement>("[data-action]").forEach((button) => {
     button.onclick = () => handleAction(button.dataset.action || "");
   });
+
+  app.querySelectorAll<HTMLButtonElement>("[data-node-action]").forEach((button) => {
+    button.onclick = () => handleNodeAction(button.dataset.nodeAction || "", button.dataset.nodeId || "");
+  });
 }
 
 function handleAction(action: string): void {
@@ -609,26 +614,87 @@ function handleAction(action: string): void {
   }
 }
 
+function handleNodeAction(action: string, nodeId: string): void {
+  const node = state.selection.nodes.find((candidate) => candidate.id === nodeId);
+  if (!node) {
+    addLog("warn", "Selection node is no longer available", { nodeId });
+    render();
+    return;
+  }
+
+  switch (action) {
+    case "copy-id":
+      void copyToClipboard(node.id, "Copied node id", { nodeId: node.id });
+      break;
+    case "copy-key":
+      if (!node.component?.key) {
+        addLog("warn", "Selection does not have a component key", { nodeId: node.id });
+        render();
+        return;
+      }
+      void copyToClipboard(node.component.key, "Copied component key", { nodeId: node.id, key: node.component.key });
+      break;
+    case "jump":
+      requestCommand("navigateTo", { nodeId: node.id }, `Jump to ${node.name}`, "navigation");
+      break;
+    case "capture-node":
+      requestCommand("captureScreenshot", { nodeId: node.id, format: "PNG", scale: 2 }, `Capture ${node.name}`, "capture");
+      break;
+    default:
+      break;
+  }
+}
+
 function renderJobs(): string {
+  const overview = buildJobsOverview(state.jobs);
   if (!state.jobs.length) {
     return emptyCard("No tracked jobs yet", "Run sync, inspect selection, or capture a node to populate the operator timeline.");
   }
 
-  return state.jobs
-    .map((job) => `
+  const cards: string[] = [];
+  cards.push(`
+    <article class="system-card">
+      <div class="card-topline">
+        <strong class="card-title">Run overview</strong>
+        <span class="chip">${overview.runningCount} active</span>
+      </div>
+      <div class="jobs-summary-grid">
+        ${summaryMetric("Running", String(overview.runningCount), `${overview.active.length} in flight`)}
+        ${summaryMetric("Completed", String(overview.completedCount), overview.latestCompleted ? overview.latestCompleted.label : "No recent success")}
+        ${summaryMetric("Failed", String(overview.failedCount), overview.latestFailure ? overview.latestFailure.label : "No failures")}
+        ${summaryMetric("Bridge queue", String(pendingBridgeRequests.size), state.bridge.stage)}
+      </div>
+      ${overview.latestFailure ? `
+        <div class="jobs-alert error">
+          <strong>Last failure</strong>
+          <span>${escapeHtml(overview.latestFailure.label)} · ${escapeHtml(overview.latestFailure.error || overview.latestFailure.summary || "No error text")}</span>
+        </div>
+      ` : ""}
+      ${overview.latestCompleted ? `
+        <div class="jobs-alert success">
+          <strong>Last completion</strong>
+          <span>${escapeHtml(overview.latestCompleted.label)} · ${escapeHtml(overview.latestCompleted.summary || overview.latestCompleted.command || "Complete")}</span>
+        </div>
+      ` : ""}
+    </article>
+  `);
+
+  cards.push(...state.jobs.map((job) => `
       <article class="job-card ${job.status}">
         <div class="card-topline">
           <strong class="card-title">${escapeHtml(job.label)}</strong>
           <span class="chip">${escapeHtml(job.status)}</span>
         </div>
         <div class="stack muted">
-          <div>${escapeHtml(job.command || job.kind)}</div>
+          <div>${escapeHtml(job.command || job.kind)} · ${escapeHtml(formatElapsedTime(job))}</div>
+          <div class="mono">run ${escapeHtml(job.runId)}</div>
           <div>${escapeHtml(job.summary || job.progressText || "Running")}</div>
           ${job.error ? `<div class="mono">${escapeHtml(job.error)}</div>` : ""}
         </div>
       </article>
-    `)
-    .join("");
+    `));
+
+  return cards.join("");
 }
 
 function renderSelection(): string {
@@ -642,6 +708,7 @@ function renderSelection(): string {
       <div class="split-grid">
         <div class="kv-grid">
           <span class="kv-key">Page</span><span>${escapeHtml(state.selection.pageName || "Current page")}</span>
+          <span class="kv-key">Page ID</span><span class="mono">${escapeHtml(state.selection.pageId || "—")}</span>
           <span class="kv-key">Updated</span><span>${state.selection.updatedAt ? escapeHtml(new Date(state.selection.updatedAt).toLocaleTimeString()) : "--"}</span>
         </div>
         <div class="inline-actions">
@@ -679,31 +746,32 @@ function renderSelection(): string {
 }
 
 function renderSelectionNode(node: WidgetSelectionNodeSnapshot): string {
-  const chips = [
-    node.type,
-    node.component?.isVariant ? "variant" : "",
-    node.layout?.layoutMode && node.layout.layoutMode !== "NONE" ? node.layout.layoutMode.toLowerCase() : "",
-  ].filter(Boolean);
-
-  const fillHex = node.fills?.[0]?.color ? rgbToHex(node.fills[0].color) : null;
-  const variantPairs = node.component?.variantProperties
-    ? Object.entries(node.component.variantProperties).map(([key, value]) => `${key}: ${value}`)
-    : [];
+  const facts = describeSelectionNode(node);
 
   return `
     <article class="selection-card">
       <div class="card-topline">
         <strong class="card-title">${escapeHtml(node.name)}</strong>
-        <div class="chips">${chips.map((chip) => `<span class="chip">${escapeHtml(chip)}</span>`).join("")}</div>
+        <div class="chips">${facts.chips.map((chip) => `<span class="chip">${escapeHtml(chip)}</span>`).join("")}</div>
+      </div>
+      <div class="inline-actions">
+        <button class="tool-btn" data-node-action="copy-id" data-node-id="${escapeHtml(node.id)}">Copy ID</button>
+        <button class="tool-btn" data-node-action="jump" data-node-id="${escapeHtml(node.id)}">Jump to node</button>
+        <button class="tool-btn" data-node-action="capture-node" data-node-id="${escapeHtml(node.id)}">Capture</button>
+        ${node.component?.key ? `<button class="tool-btn" data-node-action="copy-key" data-node-id="${escapeHtml(node.id)}">Copy key</button>` : ""}
       </div>
       <div class="kv-grid">
         <span class="kv-key">Node</span><span class="mono">${escapeHtml(node.id)}</span>
         <span class="kv-key">Bounds</span><span>${formatBounds(node)}</span>
         <span class="kv-key">Text</span><span>${escapeHtml(node.characters ? node.characters.slice(0, 120) : "—")}</span>
-        <span class="kv-key">Fill</span><span>${fillHex ? `<span class="mono">${fillHex}</span>` : "—"}</span>
-        <span class="kv-key">Styles</span><span>${escapeHtml([node.fillStyleId, node.strokeStyleId, node.textStyleId].filter(Boolean).join(" / ") || "—")}</span>
+        <span class="kv-key">Fill</span><span>${facts.fillHex ? `<span class="mono">${facts.fillHex}</span>` : "—"}</span>
+        <span class="kv-key">Styles</span><span>${escapeHtml(facts.styleIds.join(" / ") || "—")}</span>
+        <span class="kv-key">State</span><span>${escapeHtml(facts.stateFacts.join(", ") || "—")}</span>
         <span class="kv-key">Component</span><span>${escapeHtml(node.component?.key || node.component?.description || "—")}</span>
-        <span class="kv-key">Variant</span><span>${escapeHtml(variantPairs.join(", ") || "—")}</span>
+        <span class="kv-key">Variant</span><span>${escapeHtml(facts.variantPairs.join(", ") || "—")}</span>
+        <span class="kv-key">Variables</span><span>${escapeHtml(facts.variableBindings.join(", ") || "—")}</span>
+        <span class="kv-key">Layout</span><span>${escapeHtml(facts.layoutFacts.join(", ") || "—")}</span>
+        <span class="kv-key">Props</span><span>${escapeHtml(facts.propertyFacts.join(", ") || "—")}</span>
       </div>
     </article>
   `;
@@ -724,6 +792,8 @@ function renderSystem(): string {
         <span class="kv-key">Latency</span><span>${state.bridge.latencyMs ? `${state.bridge.latencyMs}ms` : "--"}</span>
         <span class="kv-key">Editor</span><span>${escapeHtml(state.connection.editorType || "figma")}</span>
         <span class="kv-key">Ports tried</span><span>${escapeHtml(state.bridge.portsTried.join(", ") || "—")}</span>
+        <span class="kv-key">Reconnect</span><span>${state.bridge.scanTimer ? `${state.bridge.reconnectDelayMs}ms` : "Idle"}</span>
+        <span class="kv-key">Pending bridge</span><span>${pendingBridgeRequests.size}</span>
       </div>
     </article>
   `);
@@ -788,6 +858,16 @@ function metric(label: string, value: string): string {
   `;
 }
 
+function summaryMetric(label: string, value: string, detail: string): string {
+  return `
+    <div class="summary-metric">
+      <div class="metric-label">${escapeHtml(label)}</div>
+      <div class="metric-value">${escapeHtml(value)}</div>
+      <div class="muted">${escapeHtml(detail)}</div>
+    </div>
+  `;
+}
+
 function emptyCard(title: string, copy: string): string {
   return `
     <article class="empty-card">
@@ -817,9 +897,14 @@ function formatBounds(node: WidgetSelectionNodeSnapshot): string {
   return `${parts[0]}, ${parts[1]} / ${parts[2]} × ${parts[3]}`;
 }
 
-function rgbToHex(color: { r: number; g: number; b: number; a?: number }): string {
-  const values = [color.r, color.g, color.b].map((value) => Math.round(value * 255).toString(16).padStart(2, "0"));
-  return `#${values.join("")}`;
+async function copyToClipboard(value: string, successMessage: string, detail: Record<string, unknown>): Promise<void> {
+  try {
+    await navigator.clipboard.writeText(value);
+    addLog("success", successMessage, detail);
+  } catch (error) {
+    addLog("warn", "Clipboard write failed", error instanceof Error ? error.message : String(error));
+  }
+  render();
 }
 
 function escapeHtml(value: string): string {

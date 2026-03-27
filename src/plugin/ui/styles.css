@@ -316,9 +316,47 @@ button {
   background: rgba(37, 123, 75, 0.07);
 }
 
+.job-card.disconnected {
+  border-color: rgba(47, 94, 184, 0.22);
+  background: rgba(47, 94, 184, 0.07);
+}
+
 .job-card.failed {
   border-color: rgba(166, 61, 49, 0.22);
   background: rgba(166, 61, 49, 0.07);
+}
+
+.jobs-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.summary-metric {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.54);
+  padding: 10px 12px;
+}
+
+.jobs-alert {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+.jobs-alert.success {
+  border-color: rgba(37, 123, 75, 0.18);
+  background: rgba(37, 123, 75, 0.08);
+}
+
+.jobs-alert.error {
+  border-color: rgba(166, 61, 49, 0.18);
+  background: rgba(166, 61, 49, 0.08);
 }
 
 .card-topline {
@@ -431,5 +469,10 @@ button {
 
   .metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .jobs-summary-grid,
+  .split-grid {
+    grid-template-columns: 1fr;
   }
 }
