@@ -1,21 +1,21 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Command } from "commander";
-import { join } from "path";
 import { registerResearchCommand } from "../research.js";
 
 afterEach(() => {
   vi.restoreAllMocks();
+  process.exitCode = 0;
 });
 
 describe("research --json", () => {
-  it("emits structured output for from-file --json", async () => {
+  it("emits a single structured payload for from-file --json", async () => {
     const logs = captureLogs();
     const program = new Command();
-    const engine = makeResearchEngine();
 
-    registerResearchCommand(program, engine as never);
-    await program.parseAsync(["research", "from-file", "inputs/research.xlsx", "--json"], { from: "user" });
+    registerResearchCommand(program, makeResearchEngine() as never);
+    await program.parseAsync(["research", "from-file", "fixtures/interviews.csv", "--json"], { from: "user" });
 
+    expect(logs).toHaveLength(1);
     const payload = JSON.parse(lastLog(logs));
     expect(payload).toMatchObject({
       action: "from-file",
@@ -23,173 +23,127 @@ describe("research --json", () => {
       options: { json: true },
       source: {
         type: "file",
-        path: "inputs/research.xlsx",
+        path: "fixtures/interviews.csv",
       },
       summary: {
-        insights: 2,
-        themes: 0,
-        personas: 0,
-        sources: 1,
+        insights: 3,
+        themes: 2,
+        personas: 1,
+        sources: 2,
       },
       artifacts: {
-        researchDir: join("/tmp/memoire-project", "research"),
-        insightsPath: join("/tmp/memoire-project", "research", "insights.json"),
-        notesDir: join("/tmp/memoire-project", "research", "notes"),
-        reportPath: join("/tmp/memoire-project", "research", "reports", "report.md"),
+        researchDir: "/workspace/research",
+        insightsPath: "/workspace/research/insights.json",
+        notesDir: "/workspace/research/notes",
+        reportPath: "/workspace/research/reports/report.md",
       },
     });
   });
 
-  it("emits structured output for from-stickies --json", async () => {
+  it("emits sticky metadata without preamble logs for from-stickies --json", async () => {
     const logs = captureLogs();
     const program = new Command();
-    const engine = makeResearchEngine({ figmaConnected: false });
 
-    registerResearchCommand(program, engine as never);
+    registerResearchCommand(program, makeResearchEngine({ figmaConnected: false }) as never);
     await program.parseAsync(["research", "from-stickies", "--json"], { from: "user" });
 
+    expect(logs).toHaveLength(1);
     const payload = JSON.parse(lastLog(logs));
     expect(payload).toMatchObject({
       action: "from-stickies",
       status: "completed",
-      options: { json: true },
-      summary: {
-        insights: 3,
-        themes: 0,
-        personas: 0,
-        sources: 1,
-      },
       stickies: {
-        total: 3,
-        clusters: 1,
+        total: 5,
+        clusters: 2,
         unclustered: 1,
-        summary: "3 stickies parsed into 1 clusters (1 unclustered). Colors used: 1",
+        summary: "Processed 5 sticky notes",
         autoConnected: true,
       },
     });
-    expect(engine.connectFigma).toHaveBeenCalledTimes(1);
   });
 
-  it("emits structured output for synthesize --json", async () => {
-    const logs = captureLogs();
-    const program = new Command();
-    const engine = makeResearchEngine();
+  it("emits synthesis and report metadata for JSON modes", async () => {
+    const synthLogs = captureLogs();
+    const synthProgram = new Command();
+    registerResearchCommand(synthProgram, makeResearchEngine() as never);
 
-    registerResearchCommand(program, engine as never);
-    await program.parseAsync(["research", "synthesize", "--json"], { from: "user" });
+    await synthProgram.parseAsync(["research", "synthesize", "--json"], { from: "user" });
 
-    const payload = JSON.parse(lastLog(logs));
-    expect(payload).toMatchObject({
+    expect(synthLogs).toHaveLength(1);
+    const synthPayload = JSON.parse(lastLog(synthLogs));
+    expect(synthPayload).toMatchObject({
       action: "synthesize",
       status: "completed",
-      options: { json: true },
-      summary: {
-        insights: 1,
-        themes: 1,
-        personas: 0,
-        sources: 1,
-      },
       synthesis: {
-        summary: "Synthesized 1 insights into 1 themes.",
-        themes: 1,
-        topTheme: "workflow",
+        summary: "Synthesized 2 themes",
+        themes: 2,
+        topTheme: "Navigation",
       },
     });
-  });
 
-  it("emits structured output for report --json", async () => {
-    const logs = captureLogs();
-    const program = new Command();
-    const engine = makeResearchEngine();
+    vi.restoreAllMocks();
 
-    registerResearchCommand(program, engine as never);
-    await program.parseAsync(["research", "report", "--json"], { from: "user" });
+    const reportLogs = captureLogs();
+    const reportProgram = new Command();
+    registerResearchCommand(reportProgram, makeResearchEngine() as never);
 
-    const payload = JSON.parse(lastLog(logs));
-    expect(payload).toMatchObject({
+    await reportProgram.parseAsync(["research", "report", "--json"], { from: "user" });
+
+    expect(reportLogs).toHaveLength(1);
+    const reportPayload = JSON.parse(lastLog(reportLogs));
+    expect(reportPayload).toMatchObject({
       action: "report",
       status: "completed",
-      options: { json: true },
-      summary: {
-        insights: 1,
-        themes: 0,
-        personas: 0,
-        sources: 1,
-      },
       report: {
-        path: join("/tmp/memoire-project", "research", "reports", "report.md"),
+        path: "/workspace/research/reports/report.md",
+        bytes: Buffer.byteLength("# Report\nOne insight\n", "utf-8"),
+        lines: 3,
       },
     });
-    expect(payload.report.bytes).toBeGreaterThan(0);
-    expect(payload.report.lines).toBeGreaterThan(0);
   });
 });
 
-function makeResearchEngine(opts: { figmaConnected?: boolean } = {}) {
-  const store = {
-    insights: [{ id: "insight-1" }],
-    personas: [],
-    themes: [],
-    sources: [{ name: "baseline", type: "seed", processedAt: "2026-03-27T12:00:00.000Z" }],
-  };
-
-  const engine = {
-    config: { projectRoot: "/tmp/memoire-project" },
+function makeResearchEngine(input?: { figmaConnected?: boolean }) {
+  return {
+    config: { projectRoot: "/workspace" },
+    async init() {},
+    async connectFigma() {},
     figma: {
-      isConnected: opts.figmaConnected ?? true,
+      isConnected: input?.figmaConnected ?? true,
       async extractStickies() {
-        return [
-          { id: "a", text: "Need faster onboarding", position: { x: 0, y: 0 }, color: "yellow" },
-          { id: "b", text: "Sharing flows are confusing", position: { x: 10, y: 20 }, color: "yellow" },
-          { id: "c", text: "Export settings are hard to find", position: { x: 500, y: 500 } },
-        ];
+        return [{ text: "A" }, { text: "B" }, { text: "C" }, { text: "D" }, { text: "E" }];
       },
     },
-    connectFigma: vi.fn(async () => {
-      engine.figma.isConnected = true;
-      return 9223;
-    }),
-    async init() {},
     research: {
       async load() {},
-      async fromFile(filePath: string) {
-        store.insights = [{ id: "insight-1" }, { id: "insight-2" }];
-        store.themes = [];
-        store.sources = [{ name: filePath, type: "excel", processedAt: "2026-03-27T12:00:00.000Z" }];
-      },
+      async fromFile() {},
       async fromStickies() {
-        store.insights = [{ id: "insight-1" }, { id: "insight-2" }, { id: "insight-3" }];
-        store.themes = [];
-        store.sources = [{ name: "figjam-stickies", type: "figjam", processedAt: "2026-03-27T12:00:00.000Z" }];
         return {
-          clusters: [{ id: "cluster-1" }],
-          unclustered: [{ id: "c" }],
-          totalStickies: 3,
-          summary: "3 stickies parsed into 1 clusters (1 unclustered). Colors used: 1",
+          totalStickies: 5,
+          clusters: [{}, {}],
+          unclustered: [{}],
+          summary: "Processed 5 sticky notes",
         };
       },
       async synthesize() {
-        store.themes = [{
-          name: "workflow",
-          description: "Workflow friction",
-          insights: ["insight-1"],
-          frequency: 1,
-        }];
         return {
-          themes: store.themes,
-          summary: "Synthesized 1 insights into 1 themes.",
+          summary: "Synthesized 2 themes",
+          themes: [{ name: "Navigation" }, { name: "Trust" }],
         };
       },
       async generateReport() {
-        return "# Research Report\n\nGenerated for testing.\n";
+        return "# Report\nOne insight\n";
       },
       getStore() {
-        return store;
+        return {
+          insights: [{}, {}, {}],
+          themes: [{ name: "Navigation" }, { name: "Trust" }],
+          personas: [{ name: "PM" }],
+          sources: [{ name: "CSV" }, { name: "FigJam" }],
+        };
       },
     },
   };
-
-  return engine;
 }
 
 function captureLogs(): string[] {

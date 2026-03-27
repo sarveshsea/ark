@@ -2,8 +2,16 @@ node_modules/
 dist/
 .memoire/
 .noche/
+.astro/
 *.tsbuildinfo
 preview/dist/
+preview/generated/
+
+# Generated atomic output is workspace state, not product source
+generated/components/ui/
+generated/components/molecules/
+generated/components/organisms/
+generated/components/templates/
 
 # User-generated preview pages (local to each user's project)
 preview/research.html
