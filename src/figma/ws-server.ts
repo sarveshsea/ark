@@ -59,6 +59,20 @@ const RATE_LIMIT = {
   windowMs: 60_000,
 };
 
+function isRetriableBindError(err: Error & { code?: string }): boolean {
+  return err.code === "EADDRINUSE";
+}
+
+function createWsBindError(port: number, err: Error & { code?: string }): Error & { code?: string; port?: number } {
+  const wrapped = new Error(`Failed to bind bridge port ${port}: ${err.message}`) as Error & {
+    code?: string;
+    port?: number;
+  };
+  wrapped.code = err.code;
+  wrapped.port = port;
+  return wrapped;
+}
+
 export class MemoireWsServer extends EventEmitter {
   private config: MemoireWsServerConfig;
   private wss: WebSocketServer | null = null;
@@ -108,8 +122,11 @@ export class MemoireWsServer extends EventEmitter {
         log.info(`Mémoire WS server listening on port ${p}`);
         this.emitEvent("success", `Bridge server started on port ${p}`);
         return p;
-      } catch {
-        // Port in use, try next
+      } catch (err) {
+        if (isRetriableBindError(err as Error & { code?: string })) {
+          continue;
+        }
+        throw err;
       }
     }
 
@@ -252,11 +269,8 @@ export class MemoireWsServer extends EventEmitter {
       });
 
       wss.on("error", (err: Error & { code?: string }) => {
-        if (err.code === "EADDRINUSE") {
-          reject(new Error(`Port ${port} in use`));
-        } else {
-          reject(err);
-        }
+        wss.close();
+        reject(createWsBindError(port, err));
       });
     });
   }

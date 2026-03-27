@@ -24,6 +24,16 @@ const MIME_TYPES: Record<string, string> = {
 
 const MAX_PORT_RETRIES = 10;
 
+function createPortBindError(port: number, err: NodeJS.ErrnoException): Error & { code?: string; port?: number } {
+  const wrapped = new Error(`Failed to bind preview port ${port}: ${err.message}`) as Error & {
+    code?: string;
+    port?: number;
+  };
+  wrapped.code = err.code;
+  wrapped.port = port;
+  return wrapped;
+}
+
 export class PreviewApiServer {
   private engine: MemoireEngine;
   private staticDir: string;
@@ -43,6 +53,8 @@ export class PreviewApiServer {
 
   async start(): Promise<number> {
     return new Promise((resolve, reject) => {
+      let resolved = false;
+
       this.server = createServer(async (req, res) => {
         const url = new URL(req.url || "/", `http://localhost:${this.port}`);
 
@@ -95,14 +107,6 @@ export class PreviewApiServer {
         }
       });
 
-      // WebSocket server for live-reload
-      this.wss = new WebSocketServer({ server: this.server });
-      this.wss.on("connection", (ws) => {
-        this.liveClients.add(ws);
-        ws.on("close", () => this.liveClients.delete(ws));
-        ws.on("error", () => this.liveClients.delete(ws));
-      });
-
       // Listen for engine events that should trigger browser reload
       this.onEngineEvent = (evt: MemoireEvent) => {
         if (evt.source === "codegen" || evt.source === "auto-spec") {
@@ -111,22 +115,53 @@ export class PreviewApiServer {
       };
       this.engine.on("event", this.onEngineEvent);
 
-      this.server.listen(this.port, () => {
+      const setupWebSocketServer = () => {
+        if (!this.server) return;
+
+        this.wss = new WebSocketServer({ server: this.server });
+        this.wss.on("connection", (ws) => {
+          this.liveClients.add(ws);
+          ws.on("close", () => this.liveClients.delete(ws));
+          ws.on("error", () => this.liveClients.delete(ws));
+        });
+        this.wss.on("error", (err) => {
+          if (!resolved) {
+            reject(err);
+            return;
+          }
+          for (const ws of this.liveClients) ws.close();
+          this.liveClients.clear();
+          this.wss?.close();
+          this.wss = null;
+        });
+      };
+
+      this.server.on("listening", () => {
+        setupWebSocketServer();
+        resolved = true;
         resolve(this.port);
       });
 
       this.server.on("error", (err: NodeJS.ErrnoException) => {
         if (err.code === "EADDRINUSE") {
           if (this.port - this.startPort >= MAX_PORT_RETRIES) {
-            reject(new Error(`All preview ports ${this.startPort}-${this.port} are in use`));
+            const wrapped = new Error(`All preview ports ${this.startPort}-${this.port} are in use`) as Error & {
+              code?: string;
+              port?: number;
+            };
+            wrapped.code = err.code;
+            wrapped.port = this.port;
+            reject(wrapped);
             return;
           }
           this.port++;
           this.server?.listen(this.port);
         } else {
-          reject(err);
+          reject(createPortBindError(this.port, err));
         }
       });
+
+      this.server.listen(this.port);
     });
   }
 

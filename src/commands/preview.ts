@@ -16,6 +16,10 @@ import { writeFile, mkdir, readFile } from "fs/promises";
 import { join, basename } from "path";
 import { spawn } from "child_process";
 
+function isBindError(err: Error & { code?: string }): boolean {
+  return err.code === "EADDRINUSE" || err.code === "EACCES" || err.code === "EPERM";
+}
+
 export function registerPreviewCommand(program: Command, engine: MemoireEngine) {
   program
     .command("preview")
@@ -101,7 +105,15 @@ export function registerPreviewCommand(program: Command, engine: MemoireEngine) 
           process.exit(0);
         });
       } catch (err) {
-        console.error(`\n  Failed to start API server: ${(err as Error).message}`);
+        const error = err as Error & { code?: string };
+        console.error(`\n  Failed to start API server: ${error.message}`);
+
+        if (isBindError(error)) {
+          console.error("  Resolve the port issue and retry with --port if needed.\n");
+          process.exitCode = 1;
+          return;
+        }
+
         console.log("  Falling back to static server...\n");
 
         try {
