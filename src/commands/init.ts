@@ -2,6 +2,7 @@ import type { Command } from "commander";
 import type { MemoireEngine } from "../engine/core.js";
 import type { ComponentSpec, DataVizSpec, PageSpec } from "../specs/types.js";
 import { writeFile, mkdir } from "fs/promises";
+import { existsSync } from "fs";
 import { join } from "path";
 
 export function registerInitCommand(program: Command, engine: MemoireEngine) {
@@ -178,6 +179,17 @@ export function registerInitCommand(program: Command, engine: MemoireEngine) {
     3 starter specs (MetricCard, ActivityChart, Dashboard)
     Generated shadcn components in generated/
     Research directory ready for data
+
+  Figma Plugin:${(() => {
+        const home = process.env.HOME || process.env.USERPROFILE || "";
+        const homePlugin = join(home, ".memoire", "plugin", "manifest.json");
+        const localPlugin = join(root, "plugin", "manifest.json");
+        const pluginPath = existsSync(homePlugin) ? homePlugin : localPlugin;
+        return `
+    Import in Figma: Plugins → Development → Import from manifest
+    Path: ${pluginPath}
+    (macOS: Cmd+Shift+G in file picker to paste the path)`;
+      })()}
 
   Next steps (one at a time):
 

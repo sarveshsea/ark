@@ -3,6 +3,7 @@ import type { MemoireEngine } from "../engine/core.js";
 import type { BridgeClient } from "../figma/ws-server.js";
 
 import { readFile, writeFile } from "fs/promises";
+import { existsSync, lstatSync } from "fs";
 import { join } from "path";
 import { createInterface } from "readline";
 
@@ -135,10 +136,31 @@ export function registerConnectCommand(program: Command, engine: MemoireEngine) 
         // ── Step 3: Install plugin ────────────────────────
         console.log("  STEP 3 / 3 — Install the Mémoire Plugin\n");
         console.log("  The plugin runs inside Figma and talks to Mémoire over WebSocket.\n");
+
+        // Prefer ~/.memoire/plugin/ (non-symlinked copy from postinstall)
+        // because Figma rejects symlinked manifests (npm global installs use symlinks)
+        const home = process.env.HOME || process.env.USERPROFILE || "";
+        const homePlugin = join(home, ".memoire", "plugin", "manifest.json");
+        const localPlugin = join(root, "plugin", "manifest.json");
+        let pluginPath = localPlugin;
+
+        if (existsSync(homePlugin)) {
+          pluginPath = homePlugin;
+        } else if (existsSync(localPlugin)) {
+          // Warn if it's a symlink — Figma will reject it
+          try {
+            if (lstatSync(localPlugin).isSymbolicLink()) {
+              console.log("  Warning: plugin/manifest.json is a symlink — Figma may reject it.");
+              console.log("  Run `npm install -g @sarveshsea/memoire` again to copy the plugin to ~/.memoire/plugin/\n");
+            }
+          } catch { /* ignore stat errors */ }
+        }
+
         console.log("  To install it:");
         console.log("    1. Open Figma Desktop");
         console.log("    2. Go to Plugins → Development → Import plugin from manifest");
-        console.log(`    3. Select: ${join(root, "plugin", "manifest.json")}`);
+        console.log(`    3. Select: ${pluginPath}`);
+        console.log("       (In macOS file picker: Cmd+Shift+G, then paste the path)");
         console.log("    4. The plugin will appear under Plugins → Development → Mémoire\n");
 
         const ready = await ask("Press Enter when ready to connect...");
