@@ -13,6 +13,87 @@ import type { MemoireEngine } from "../engine/core.js";
 import type { IASpec, IANode } from "../specs/types.js";
 import { validateSpec, validateCrossRefs } from "../specs/validator.js";
 
+type IAJsonStatus = "completed" | "empty" | "missing";
+
+export interface IAListPayload {
+  status: IAJsonStatus;
+  options: {
+    json: boolean;
+  };
+  summary: {
+    total: number;
+    pages: number;
+    nodes: number;
+    flows: number;
+  };
+  specs: IAListEntry[];
+}
+
+export interface IAListEntry {
+  name: string;
+  pages: number;
+  nodes: number;
+  flows: number;
+  entryPoints: number;
+  sourceFileKey: string | null;
+}
+
+export interface IAShowPayload {
+  status: IAJsonStatus;
+  options: {
+    json: boolean;
+  };
+  requestedName: string | null;
+  spec: IAShowEntry | null;
+  error?: {
+    message: string;
+  };
+}
+
+export interface IAShowEntry {
+  name: string;
+  purpose: string;
+  nodeCount: number;
+  pages: number;
+  sourceFileKey: string | null;
+  entryPoints: string[];
+  flows: IASpec["flows"];
+  globals: IASpec["globals"];
+  root: IASpec["root"];
+}
+
+export interface IAValidatePayload {
+  status: IAJsonStatus;
+  options: {
+    json: boolean;
+  };
+  requestedName: string | null;
+  summary: {
+    checked: number;
+    valid: number;
+    invalid: number;
+    warnings: number;
+  };
+  specs: IAValidateEntry[];
+  error?: {
+    message: string;
+  };
+}
+
+export interface IAValidateEntry {
+  name: string;
+  valid: boolean;
+  errors: Array<{
+    path: string;
+    message: string;
+  }>;
+  warnings: Array<{
+    path: string;
+    message: string;
+    suggestion?: string;
+  }>;
+}
+
 /** Validate spec name is a valid identifier */
 function validateName(name: string): void {
   if (!name || name.length === 0) {
@@ -133,13 +214,25 @@ export function registerIACommand(program: Command, engine: MemoireEngine) {
   ia
     .command("show [name]")
     .description("Print IA tree to terminal")
-    .action(async (name?: string) => {
+    .option("--json", "Output IA tree as JSON")
+    .action(async (name: string | undefined, opts: { json?: boolean }) => {
       await engine.init();
 
       const specs = await engine.registry.getAllSpecs();
       const iaSpecs = specs.filter((s) => s.type === "ia") as IASpec[];
 
       if (iaSpecs.length === 0) {
+        if (opts.json) {
+          const payload: IAShowPayload = {
+            status: "empty",
+            options: { json: true },
+            requestedName: name ?? null,
+            spec: null,
+          };
+          console.log(JSON.stringify(payload, null, 2));
+          return;
+        }
+
         console.log("\n  No IA specs found. Run `memi ia extract <name>` or `memi ia create <name>`.\n");
         return;
       }
@@ -149,8 +242,32 @@ export function registerIACommand(program: Command, engine: MemoireEngine) {
         : iaSpecs[0];
 
       if (!target) {
+        if (opts.json) {
+          const payload: IAShowPayload = {
+            status: "missing",
+            options: { json: true },
+            requestedName: name ?? null,
+            spec: null,
+            error: { message: `IA spec "${name}" not found.` },
+          };
+          console.log(JSON.stringify(payload, null, 2));
+          process.exitCode = 1;
+          return;
+        }
+
         console.error(`\n  IA spec "${name}" not found.\n`);
         process.exit(1);
+      }
+
+      if (opts.json) {
+        const payload: IAShowPayload = {
+          status: "completed",
+          options: { json: true },
+          requestedName: name ?? null,
+          spec: buildIAShowEntry(target),
+        };
+        console.log(JSON.stringify(payload, null, 2));
+        return;
       }
 
       const nodeCount = countNodes(target.root);
@@ -186,7 +303,8 @@ export function registerIACommand(program: Command, engine: MemoireEngine) {
   ia
     .command("validate [name]")
     .description("Validate IA spec cross-references against page specs")
-    .action(async (name?: string) => {
+    .option("--json", "Output IA validation as JSON")
+    .action(async (name: string | undefined, opts: { json?: boolean }) => {
       await engine.init();
 
       const specs = await engine.registry.getAllSpecs();
@@ -196,18 +314,55 @@ export function registerIACommand(program: Command, engine: MemoireEngine) {
         : iaSpecs;
 
       if (targets.length === 0) {
+        if (opts.json) {
+          const payload: IAValidatePayload = {
+            status: "empty",
+            options: { json: true },
+            requestedName: name ?? null,
+            summary: {
+              checked: 0,
+              valid: 0,
+              invalid: 0,
+              warnings: 0,
+            },
+            specs: [],
+            error: name ? { message: `IA spec "${name}" not found.` } : undefined,
+          };
+          console.log(JSON.stringify(payload, null, 2));
+          return;
+        }
+
         console.log(name
           ? `\n  IA spec "${name}" not found.\n`
           : "\n  No IA specs found.\n");
         return;
       }
 
+      const entries: IAValidateEntry[] = [];
       let totalWarnings = 0;
 
       for (const spec of targets) {
         const validation = validateSpec(spec);
         const crossRefs = await validateCrossRefs(spec, engine.registry);
         const allWarnings = [...validation.warnings, ...crossRefs];
+        entries.push({
+          name: spec.name,
+          valid: validation.valid,
+          errors: validation.errors.map((error) => ({
+            path: error.path,
+            message: error.message,
+          })),
+          warnings: allWarnings.map((warning) => ({
+            path: warning.path,
+            message: warning.message,
+            suggestion: warning.suggestion,
+          })),
+        });
+
+        if (opts.json) {
+          totalWarnings += allWarnings.length;
+          continue;
+        }
 
         console.log(`\n  ${spec.name}: ${validation.valid ? "VALID" : "INVALID"}`);
 
@@ -228,6 +383,24 @@ export function registerIACommand(program: Command, engine: MemoireEngine) {
         }
       }
 
+      if (opts.json) {
+        const validCount = entries.filter((entry) => entry.valid).length;
+        const payload: IAValidatePayload = {
+          status: "completed",
+          options: { json: true },
+          requestedName: name ?? null,
+          summary: {
+            checked: entries.length,
+            valid: validCount,
+            invalid: entries.length - validCount,
+            warnings: totalWarnings,
+          },
+          specs: entries,
+        };
+        console.log(JSON.stringify(payload, null, 2));
+        return;
+      }
+
       console.log(`\n  ${targets.length} IA spec(s) checked, ${totalWarnings} warning(s).\n`);
     });
 
@@ -235,11 +408,18 @@ export function registerIACommand(program: Command, engine: MemoireEngine) {
   ia
     .command("list")
     .description("List all IA specs")
-    .action(async () => {
+    .option("--json", "Output IA spec inventory as JSON")
+    .action(async (opts: { json?: boolean }) => {
       await engine.init();
 
       const specs = await engine.registry.getAllSpecs();
       const iaSpecs = specs.filter((s) => s.type === "ia") as IASpec[];
+      const payload = buildIAListPayload(iaSpecs, Boolean(opts.json));
+
+      if (opts.json) {
+        console.log(JSON.stringify(payload, null, 2));
+        return;
+      }
 
       if (iaSpecs.length === 0) {
         console.log("\n  No IA specs. Run `memi ia extract <name>` to create one from Figma.\n");
@@ -254,4 +434,41 @@ export function registerIACommand(program: Command, engine: MemoireEngine) {
       }
       console.log();
     });
+}
+
+function buildIAListPayload(specs: IASpec[], json: boolean): IAListPayload {
+  const entries = specs.map((spec) => ({
+    name: spec.name,
+    pages: spec.root.children.length,
+    nodes: countNodes(spec.root),
+    flows: spec.flows.length,
+    entryPoints: spec.entryPoints.length,
+    sourceFileKey: spec.sourceFileKey ?? null,
+  }));
+
+  return {
+    status: entries.length > 0 ? "completed" : "empty",
+    options: { json },
+    summary: {
+      total: entries.length,
+      pages: entries.reduce((sum, entry) => sum + entry.pages, 0),
+      nodes: entries.reduce((sum, entry) => sum + entry.nodes, 0),
+      flows: entries.reduce((sum, entry) => sum + entry.flows, 0),
+    },
+    specs: entries,
+  };
+}
+
+function buildIAShowEntry(spec: IASpec): IAShowEntry {
+  return {
+    name: spec.name,
+    purpose: spec.purpose,
+    nodeCount: countNodes(spec.root),
+    pages: spec.root.children.length,
+    sourceFileKey: spec.sourceFileKey ?? null,
+    entryPoints: spec.entryPoints,
+    flows: spec.flows,
+    globals: spec.globals,
+    root: spec.root,
+  };
 }
