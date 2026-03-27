@@ -3,7 +3,7 @@
  * framework, existing components, design tokens, and conventions.
  */
 
-import { readFile, access } from "fs/promises";
+import { readFile, access, readdir } from "fs/promises";
 import { join } from "path";
 import { z } from "zod";
 
@@ -55,6 +55,15 @@ async function readJsonSafe(path: string): Promise<Record<string, unknown> | nul
   }
 }
 
+async function fileContains(path: string, patterns: RegExp[]): Promise<boolean> {
+  try {
+    const content = await readFile(path, "utf-8");
+    return patterns.some((pattern) => pattern.test(content));
+  } catch {
+    return false;
+  }
+}
+
 export async function detectProject(root: string): Promise<ProjectContext> {
   const pkg = await readJsonSafe(join(root, "package.json"));
   const deps = {
@@ -74,12 +83,31 @@ export async function detectProject(root: string): Promise<ProjectContext> {
   const hasTs = await fileExists(join(root, "tsconfig.json"));
   const language: ProjectContext["language"] = hasTs ? "typescript" : "javascript";
 
+  const tailwindCssFiles = [
+    join(root, "src", "index.css"),
+    join(root, "src", "app.css"),
+    join(root, "src", "globals.css"),
+    join(root, "src", "styles", "globals.css"),
+    join(root, "src", "styles", "app.css"),
+    join(root, "app", "globals.css"),
+    join(root, "styles", "globals.css"),
+    join(root, "styles", "app.css"),
+    join(root, "tailwind.css"),
+  ];
+
+  const hasTailwindFromCss = (await Promise.all(
+    tailwindCssFiles.map((path) => fileContains(path, [/@import\s+["']tailwindcss["']/, /@tailwind\b/, /@theme\b/])),
+  )).some(Boolean);
+
   // Detect Tailwind
   const hasTailwind = !!(
     deps?.tailwindcss ||
     deps?.["@tailwindcss/vite"] ||
     (await fileExists(join(root, "tailwind.config.ts"))) ||
-    (await fileExists(join(root, "tailwind.config.js")))
+    (await fileExists(join(root, "tailwind.config.js"))) ||
+    (await fileExists(join(root, "tailwind.config.mjs"))) ||
+    (await fileExists(join(root, "tailwind.config.cjs"))) ||
+    hasTailwindFromCss
   );
 
   let tailwindVersion: string | undefined;
@@ -89,22 +117,29 @@ export async function detectProject(root: string): Promise<ProjectContext> {
 
   // Detect shadcn
   const shadcnConfig = await readJsonSafe(join(root, "components.json"));
-  const hasShadcn = !!shadcnConfig;
+  const shadcnDirs = [
+    join(root, "components", "ui"),
+    join(root, "src", "components", "ui"),
+  ];
   let shadcnComponents: string[] = [];
 
-  if (hasShadcn) {
-    // Scan the shadcn ui directory for installed components
-    const uiDir = join(root, "components", "ui");
+  for (const uiDir of shadcnDirs) {
     try {
-      const { readdir } = await import("fs/promises");
       const files = await readdir(uiDir);
-      shadcnComponents = files
-        .filter((f) => f.endsWith(".tsx") || f.endsWith(".ts"))
+      const detected = files
+        .filter((f) => f.endsWith(".tsx") || f.endsWith(".ts") || f.endsWith(".jsx") || f.endsWith(".js"))
         .map((f) => f.replace(/\.(tsx?|jsx?)$/, ""));
+
+      if (detected.length > 0) {
+        shadcnComponents = detected;
+        break;
+      }
     } catch {
-      // ui dir doesn't exist yet
+      // ui dir doesn't exist
     }
   }
+
+  const hasShadcn = !!shadcnConfig || shadcnComponents.length > 0;
 
   // Detect CSS modules / styled-components
   const hasCssModules = !!(deps?.["css-loader"] || deps?.["@vanilla-extract/css"]);

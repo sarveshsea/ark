@@ -90,6 +90,14 @@ describe("detectProject — Tailwind detection", () => {
     expect(ctx.styling.tailwind).toBe(true);
   });
 
+  it("detects Tailwind from Tailwind v4-style CSS imports", async () => {
+    await writePkg({});
+    await mkdir(join(testDir, "src", "styles"), { recursive: true });
+    await writeFile(join(testDir, "src", "styles", "globals.css"), '@import "tailwindcss";\n@theme { --color-brand: #000; }');
+    const ctx = await detectProject(testDir);
+    expect(ctx.styling.tailwind).toBe(true);
+  });
+
   it("reports no Tailwind when absent", async () => {
     await writePkg({ react: "^18.0.0" });
     const ctx = await detectProject(testDir);
@@ -122,6 +130,18 @@ describe("detectProject — shadcn detection", () => {
 
     const ctx = await detectProject(testDir);
     expect(ctx.shadcn.components.sort()).toEqual(["badge", "button", "card"]);
+  });
+
+  it("detects shadcn from src/components/ui without components.json", async () => {
+    await writePkg({});
+    const uiDir = join(testDir, "src", "components", "ui");
+    await mkdir(uiDir, { recursive: true });
+    await writeFile(join(uiDir, "button.tsx"), "export {}");
+    await writeFile(join(uiDir, "dialog.tsx"), "export {}");
+
+    const ctx = await detectProject(testDir);
+    expect(ctx.shadcn.installed).toBe(true);
+    expect(ctx.shadcn.components.sort()).toEqual(["button", "dialog"]);
   });
 
   it("reports shadcn not installed when components.json missing", async () => {
