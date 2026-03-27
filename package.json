@@ -24,7 +24,8 @@
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit --strict",
     "prepublishOnly": "npm run typecheck && npm run test && npm run build",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "postinstall": "node scripts/postinstall.mjs"
   },
   "repository": {
     "type": "git",
@@ -47,6 +48,7 @@
   },
   "files": [
     "dist",
+    "scripts",
     "skills",
     "notes",
     "plugin",
