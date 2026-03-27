@@ -442,7 +442,7 @@ const releases = [
     version: "v0.2.1",
     date: "2026-03-27",
     tag: "fix",
-    summary: "Notes compatibility, faster build loops, Codex-oriented guidance, compose targeting, preview hardening, project detection, broader JSON-ready CLI output, a new plugin V2 foundation, and a normalized widget-bridge protocol.",
+    summary: "Notes compatibility, faster build loops, Codex-oriented guidance, compose targeting, preview hardening, project detection, broader JSON-ready CLI output, a new plugin V2 foundation, a normalized widget-bridge protocol, and stronger operator workflows.",
     commits: [
       ["3b8403e", "Update CHANGELOG - add v0.2.0 Notes ecosystem release"],
       ["a347a33", "Fix Notes audit issues - activation gaps, recursive copy, dead code"],
@@ -497,7 +497,9 @@ const releases = [
       ["cb9772f", "Reduce workspace state churn in init and prototype"],
       ["7391502", "Add plugin V2 source architecture"],
       ["0ab89d0", "Sync changelog for plugin V2 foundation"],
-      ["c953c7b", "Normalize widget and bridge protocol"]
+      ["c953c7b", "Normalize widget and bridge protocol"],
+      ["a79c591", "Sync changelog for widget bridge protocol"],
+      ["8af9a80", "Enhance operator console workflows"]
     ],
     decisions: [
       ["Notes become a real extension surface", "M\u00e9moire now treats Notes as installable skill packs, including workspace SKILL.md bundles, built-in notes, and compatibility fixes for activation and copy behavior."],
@@ -513,7 +515,8 @@ const releases = [
       ["Runtime and bridge hardening", "Preview, the Figma bridge, signal handling, and listener management now surface bind failures and cleanup paths clearly."],
       ["Modern project detection and packaging", "Tailwind v4, shadcn, plugin manifest access, postinstall behavior, and npm packaging were hardened for current app layouts."],
       ["Plugin bundles become generated artifacts", "The Figma widget source now lives under src/plugin as typed main, UI, and shared modules, while plugin/code.js and plugin/ui.html remain checked-in build outputs for npm packaging and postinstall copy."],
-      ["Bridge compatibility becomes an explicit adapter", "The plugin UI, plugin main thread, and bridge server now share typed bridge envelopes in code while preserving the legacy WebSocket wire format for command, response, and passive bridge events."]
+      ["Bridge compatibility becomes an explicit adapter", "The plugin UI, plugin main thread, and bridge server now share typed bridge envelopes in code while preserving the legacy WebSocket wire format for command, response, and passive bridge events."],
+      ["Operator console optimizes for triage", "The plugin panel now treats jobs and selected nodes as operational surfaces, with presenter-driven summaries, node quick actions, and richer selection diagnostics above raw logs."]
     ],
     changes: [
       "Added the Notes ecosystem release with activation cleanup, recursive-copy handling, and dead-code removal.",
@@ -538,7 +541,9 @@ const releases = [
       "Added a dedicated src/plugin TypeScript source tree for the Figma widget, with typed contracts, modular main and UI code, and a dedicated plugin build pipeline.",
       "Rebuilt the shipped plugin bundles from source during npm run build and added regression coverage for generated plugin/code.js and plugin/ui.html.",
       "Synced changelog surfaces for the plugin V2 foundation push.",
-      "Normalized the widget and bridge protocol with shared bridge contracts, a UI bridge-command adapter, additive session and run metadata, and legacy-wire compatibility for existing engine flows."
+      "Normalized the widget and bridge protocol with shared bridge contracts, a UI bridge-command adapter, additive session and run metadata, and legacy-wire compatibility for existing engine flows.",
+      "Synced changelog surfaces for the widget bridge protocol push.",
+      "Enhanced the operator console with job-overview summaries, per-node quick actions, richer selection state and layout details, and a presenter layer with regression coverage."
     ]
   },
   {

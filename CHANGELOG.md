@@ -65,6 +65,8 @@ This changelog tracks Mémoire itself: every version, commit, and architectural 
 | `7391502` | Add plugin V2 source architecture |
 | `0ab89d0` | Sync changelog for plugin V2 foundation |
 | `c953c7b` | Normalize widget and bridge protocol |
+| `a79c591` | Sync changelog for widget bridge protocol |
+| `8af9a80` | Enhance operator console workflows |
 
 ### Key Design Decisions
 - **Notes Become a Real Extension Surface** — Mémoire now treats Notes as installable skill packs, including workspace `SKILL.md` bundles, built-in notes, and compatibility fixes for activation and copy behavior.
@@ -81,6 +83,7 @@ This changelog tracks Mémoire itself: every version, commit, and architectural 
 - **Modern Project Detection and Packaging** — Tailwind v4, shadcn, plugin manifest access, postinstall behavior, and npm packaging were hardened for current app layouts.
 - **Plugin Bundles Become Generated Artifacts** — The Figma widget source now lives under `src/plugin/` as typed main/UI/shared modules, while `plugin/code.js` and `plugin/ui.html` remain checked-in build outputs for npm packaging and postinstall copy.
 - **Bridge Compatibility Becomes an Explicit Adapter** — The plugin UI, plugin main thread, and bridge server now share typed bridge envelopes in code while preserving the existing legacy WebSocket wire format for `command`, `response`, and passive bridge events.
+- **Operator Console Optimizes for Triage** — The plugin panel now treats jobs and selected nodes as operational surfaces, with presenter-driven summaries, node quick actions, and richer selection diagnostics above raw logs.
 
 ### Changes
 - Added the Notes ecosystem release, including audit fixes, activation cleanup, recursive-copy handling, and dead-code removal
@@ -106,6 +109,8 @@ This changelog tracks Mémoire itself: every version, commit, and architectural 
 - Rebuilt the shipped plugin bundles from source during `npm run build` and added regression coverage for generated `plugin/code.js` and `plugin/ui.html`
 - Synced changelog surfaces for the plugin V2 foundation push
 - Normalized the widget and bridge protocol with shared bridge contracts, a UI bridge-command adapter, additive session/run metadata, and legacy-wire compatibility for existing engine flows
+- Synced changelog surfaces for the widget bridge protocol push
+- Enhanced the operator console with job-overview summaries, per-node quick actions, richer selection state/layout details, and a presenter layer with regression coverage
 
 ## v0.2.0 — 2026-03-26
 
