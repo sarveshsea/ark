@@ -13,23 +13,32 @@ import { exportTokens, generateTailwindExtend } from "../figma/tokens.js";
  */
 export async function writeTokenFiles(
   tokens: DesignToken[],
-  outputDir: string
+  outputDir: string,
+  formats: Set<string> = new Set(["css", "tailwind", "json"])
 ): Promise<{ css: string; tailwind: string; json: string }> {
   await mkdir(outputDir, { recursive: true });
 
-  // 1. CSS custom properties
-  const exported = exportTokens(tokens);
-  const cssPath = join(outputDir, "tokens.css");
-  await writeFile(cssPath, exported.css);
+  let cssPath = "";
+  let tailwindPath = "";
+  let jsonPath = "";
 
-  // 2. Tailwind config extension
-  const tailwindCode = generateTailwindExtend(tokens);
-  const tailwindPath = join(outputDir, "memoire-tokens.ts");
-  await writeFile(tailwindPath, tailwindCode);
+  if (formats.has("css")) {
+    const exported = exportTokens(tokens);
+    cssPath = join(outputDir, "tokens.css");
+    await writeFile(cssPath, exported.css);
+  }
 
-  // 3. Raw JSON
-  const jsonPath = join(outputDir, "tokens.json");
-  await writeFile(jsonPath, JSON.stringify(exported.json, null, 2));
+  if (formats.has("tailwind")) {
+    const tailwindCode = generateTailwindExtend(tokens);
+    tailwindPath = join(outputDir, "memoire-tokens.ts");
+    await writeFile(tailwindPath, tailwindCode);
+  }
+
+  if (formats.has("json")) {
+    const exported = exportTokens(tokens);
+    jsonPath = join(outputDir, "tokens.json");
+    await writeFile(jsonPath, JSON.stringify(exported.json, null, 2));
+  }
 
   return { css: cssPath, tailwind: tailwindPath, json: jsonPath };
 }

@@ -9,6 +9,7 @@ export function registerTokensCommand(program: Command, engine: MemoireEngine) {
     .command("tokens")
     .description("Export design tokens as CSS / Tailwind / JSON")
     .option("-o, --output <dir>", "Output directory", "generated/tokens")
+    .option("-f, --format <formats>", "Comma-separated formats: css,tailwind,json (default: all)")
     .option("--shadcn", "Generate shadcn-compatible token mapping")
     .action(async (opts) => {
       await engine.init();
@@ -20,12 +21,16 @@ export function registerTokensCommand(program: Command, engine: MemoireEngine) {
       }
 
       const outputDir = join(engine.config.projectRoot, opts.output);
-      console.log(`\n  Exporting ${ds.tokens.length} tokens...\n`);
+      const formats: Set<string> = opts.format
+        ? new Set((opts.format as string).split(",").map((f: string) => f.trim().toLowerCase()))
+        : new Set(["css", "tailwind", "json"]);
 
-      const files = await writeTokenFiles(ds.tokens, outputDir);
-      console.log(`  CSS:      ${files.css}`);
-      console.log(`  Tailwind: ${files.tailwind}`);
-      console.log(`  JSON:     ${files.json}`);
+      console.log(`\n  Exporting ${ds.tokens.length} tokens (${[...formats].join(", ")})...\n`);
+
+      const files = await writeTokenFiles(ds.tokens, outputDir, formats);
+      if (files.css) console.log(`  CSS:      ${files.css}`);
+      if (files.tailwind) console.log(`  Tailwind: ${files.tailwind}`);
+      if (files.json) console.log(`  JSON:     ${files.json}`);
 
       if (opts.shadcn) {
         const mapping = generateShadcnTokenMapping(ds.tokens);
