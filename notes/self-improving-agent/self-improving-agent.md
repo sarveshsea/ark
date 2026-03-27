@@ -453,7 +453,7 @@ Enable automatic reminders through agent hooks. This is **opt-in** — you must 
 
 ### Quick Setup (Claude Code / Codex)
 
-Create `.claude/settings.json` in your project:
+Create `.claude/settings.json` in your project and point it at hook scripts you create locally:
 
 ```json
 {
@@ -462,7 +462,7 @@ Create `.claude/settings.json` in your project:
       "matcher": "",
       "hooks": [{
         "type": "command",
-        "command": "./notes/self-improving-agent/scripts/activator.sh"
+        "command": "./.claude/hooks/activator.sh"
       }]
     }]
   }
@@ -480,26 +480,28 @@ This injects a learning evaluation reminder after each prompt (~50-100 tokens ov
       "matcher": "",
       "hooks": [{
         "type": "command",
-        "command": "./notes/self-improving-agent/scripts/activator.sh"
+        "command": "./.claude/hooks/activator.sh"
       }]
     }],
     "PostToolUse": [{
       "matcher": "Bash",
       "hooks": [{
         "type": "command",
-        "command": "./notes/self-improving-agent/scripts/error-detector.sh"
+        "command": "./.claude/hooks/error-detector.sh"
       }]
     }]
   }
 }
 ```
 
-### Available Hook Scripts
+### Example Hook Scripts
 
 | Script | Hook Type | Purpose |
 |--------|-----------|---------|
-| `scripts/activator.sh` | UserPromptSubmit | Reminds to evaluate learnings after tasks |
-| `scripts/error-detector.sh` | PostToolUse (Bash) | Triggers on command errors |
+| `./.claude/hooks/activator.sh` | UserPromptSubmit | Reminds to evaluate learnings after tasks |
+| `./.claude/hooks/error-detector.sh` | PostToolUse (Bash) | Triggers on command errors |
+
+These scripts are not bundled with Mémoire. Create them in your project, then update the paths in your agent hook config.
 
 ## Automatic Skill Extraction
 
