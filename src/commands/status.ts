@@ -66,7 +66,7 @@ export function registerStatusCommand(program: Command, engine: MemoireEngine) {
         console.log(`    Calls:        ${tracker.callCount}`);
         console.log(`    Usage:        ${tracker.summary}`);
       } else {
-        console.log(`    Status:       Claude Code mode (no direct API)`);
+        console.log(`    Status:       Agent CLI mode (no direct API)`);
       }
 
       // Notes

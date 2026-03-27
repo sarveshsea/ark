@@ -7,7 +7,7 @@
 <p align="center">
   AI-native design intelligence engine.<br/>
   Connects to Figma. Pulls your design system. Generates production React code.<br/>
-  Runs autonomously with Claude.
+  Runs autonomously with Codex or Claude.
 </p>
 
 <p align="center">
@@ -47,7 +47,7 @@ npx @sarveshsea/memoire
 
 - Node.js 20+
 - Figma Desktop App (for plugin bridge)
-- Claude Code (optional -- for autonomous agent mode)
+- Codex or Claude Code (optional -- for autonomous agent mode)
 
 ---
 

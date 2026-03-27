@@ -2453,7 +2453,7 @@ body {
       </div>
       <div class="decision">
         <div class="decision-icon">&raquo;</div>
-        <div class="decision-text"><strong>Multi-Agent Native.</strong> Multiple Claude instances connect on ports 9223-9232. Each shows a color-coded box widget in Figma (yellow=working, green=done, red=error).</div>
+        <div class="decision-text"><strong>Multi-Agent Native.</strong> Multiple Codex or Claude instances connect on ports 9223-9232. Each shows a color-coded box widget in Figma (yellow=working, green=done, red=error).</div>
       </div>
       <div class="decision">
         <div class="decision-icon">&raquo;</div>
@@ -2556,7 +2556,7 @@ body {
       </div>
       <div class="decision">
         <div class="decision-icon">&raquo;</div>
-        <div class="decision-text"><strong>Built for Claude.</strong> CLAUDE.md + skills/ directory teach Claude how to operate autonomously. Superagent mode by default.</div>
+        <div class="decision-text"><strong>Built for agent workflows.</strong> CLAUDE.md + skills/ directory teach agents how to operate autonomously. Superagent mode by default.</div>
       </div>
     </div>
 
@@ -2596,7 +2596,7 @@ body {
   <div class="cmd-modal">
     <div class="cmd-header">
       <span class="cmd-icon">&#9670;</span>
-      <input id="cmd-input" class="cmd-input" type="text" placeholder="Ask Claude to modify your design system..." autocomplete="off" spellcheck="false" />
+      <input id="cmd-input" class="cmd-input" type="text" placeholder="Ask the agent to modify your design system..." autocomplete="off" spellcheck="false" />
       <kbd class="cmd-kbd">ESC</kbd>
     </div>
     <div id="cmd-suggestions" class="cmd-suggestions">
