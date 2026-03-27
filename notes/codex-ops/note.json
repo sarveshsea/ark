@@ -1,0 +1,16 @@
+{
+  "name": "codex-ops",
+  "version": "1.0.0",
+  "description": "Codex and Claude operating workflow for Memoire - JSON-first commands, commit hygiene, review loops, memory capture, and safe autonomous repo operation",
+  "category": "connect",
+  "tags": ["codex", "claude", "json", "git", "review", "memory"],
+  "skills": [{
+    "file": "codex-ops.md",
+    "name": "Codex Ops",
+    "activateOn": "always",
+    "freedomLevel": "high"
+  }],
+  "dependencies": [],
+  "createdAt": "2026-03-27T00:00:00.000Z",
+  "updatedAt": "2026-03-27T00:00:00.000Z"
+}
