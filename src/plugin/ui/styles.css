@@ -163,8 +163,8 @@ button {
 }
 
 .content {
-  display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr);
+  display: flex;
+  flex-direction: column;
   gap: 8px;
   padding: 8px;
 }
@@ -272,6 +272,12 @@ button {
   background: var(--bg-panel-strong);
 }
 
+.tool-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  transform: none;
+}
+
 .tabstrip {
   display: flex;
   gap: 2px;
@@ -319,6 +325,11 @@ button {
   flex-direction: column;
   gap: 6px;
   padding: 9px;
+}
+
+.system-card .log-card,
+.system-card .empty-card {
+  background: rgba(255, 255, 255, 0.74);
 }
 
 .job-card,
@@ -496,10 +507,6 @@ button {
 }
 
 @media (max-width: 960px) {
-  .content {
-    grid-template-columns: 1fr;
-  }
-
   .metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

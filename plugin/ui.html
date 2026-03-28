@@ -1128,6 +1128,7 @@ function render() {
   if (!app) {
     return;
   }
+  const hasSelection = state.selection.nodes.length > 0;
   app.innerHTML = `
     <div class="shell">
       <div class="topbar">
@@ -1156,7 +1157,7 @@ function render() {
             <div class="toolbar">
               <button class="tool-btn" data-action="sync">Sync Design System</button>
               <button class="tool-btn" data-action="inspect">Inspect Selection</button>
-              <button class="tool-btn" data-action="capture">Capture Node</button>
+              <button class="tool-btn" data-action="capture" ${hasSelection ? "" : "disabled"}>${hasSelection ? "Capture Node" : "Select to Capture"}</button>
               <button class="tool-btn" data-action="changes">Read Changes</button>
               <button class="tool-btn" data-action="page-tree">Inspect Page Tree</button>
               <button class="tool-btn" data-action="retry">Reconnect</button>
@@ -1187,19 +1188,6 @@ function render() {
             </div>
           </section>
         </div>
-        ${state.logs.length ? `
-          <div class="side-column">
-            <section class="panel">
-              <div class="panel-header">
-                <div class="stack">
-                  <div class="panel-title">Activity Feed</div>
-                  <div class="panel-subtitle">Bridge events, sync summaries, failures.</div>
-                </div>
-              </div>
-              <div class="log-list">${renderLogs()}</div>
-            </section>
-          </div>
-        ` : ""}
       </div>
     </div>
   `;
@@ -1513,6 +1501,17 @@ function renderSystem() {
   } else {
     cards.push(emptyCard("Page tree not loaded", "Use Inspect Page Tree to load a structural snapshot into the control plane."));
   }
+  cards.push(`
+    <article class="system-card">
+      <div class="card-topline">
+        <strong class="card-title">Activity feed</strong>
+        <span class="chip">${state.logs.length ? `${state.logs.length}` : "quiet"}</span>
+      </div>
+      <div class="stack">
+        ${renderLogs()}
+      </div>
+    </article>
+  `);
   return cards.join("");
 }
 function renderLogs() {
@@ -1851,8 +1850,8 @@ button {
 }
 
 .content {
-  display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr);
+  display: flex;
+  flex-direction: column;
   gap: 8px;
   padding: 8px;
 }
@@ -1960,6 +1959,12 @@ button {
   background: var(--bg-panel-strong);
 }
 
+.tool-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  transform: none;
+}
+
 .tabstrip {
   display: flex;
   gap: 2px;
@@ -2007,6 +2012,11 @@ button {
   flex-direction: column;
   gap: 6px;
   padding: 9px;
+}
+
+.system-card .log-card,
+.system-card .empty-card {
+  background: rgba(255, 255, 255, 0.74);
 }
 
 .job-card,
@@ -2184,10 +2194,6 @@ button {
 }
 
 @media (max-width: 960px) {
-  .content {
-    grid-template-columns: 1fr;
-  }
-
   .metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

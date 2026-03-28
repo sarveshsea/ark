@@ -563,6 +563,8 @@ function render(): void {
     return;
   }
 
+  const hasSelection = state.selection.nodes.length > 0;
+
   app.innerHTML = `
     <div class="shell">
       <div class="topbar">
@@ -591,7 +593,7 @@ function render(): void {
             <div class="toolbar">
               <button class="tool-btn" data-action="sync">Sync Design System</button>
               <button class="tool-btn" data-action="inspect">Inspect Selection</button>
-              <button class="tool-btn" data-action="capture">Capture Node</button>
+              <button class="tool-btn" data-action="capture" ${hasSelection ? "" : "disabled"}>${hasSelection ? "Capture Node" : "Select to Capture"}</button>
               <button class="tool-btn" data-action="changes">Read Changes</button>
               <button class="tool-btn" data-action="page-tree">Inspect Page Tree</button>
               <button class="tool-btn" data-action="retry">Reconnect</button>
@@ -622,19 +624,6 @@ function render(): void {
             </div>
           </section>
         </div>
-        ${state.logs.length ? `
-          <div class="side-column">
-            <section class="panel">
-              <div class="panel-header">
-                <div class="stack">
-                  <div class="panel-title">Activity Feed</div>
-                  <div class="panel-subtitle">Bridge events, sync summaries, failures.</div>
-                </div>
-              </div>
-              <div class="log-list">${renderLogs()}</div>
-            </section>
-          </div>
-        ` : ""}
       </div>
     </div>
   `;
@@ -974,6 +963,18 @@ function renderSystem(): string {
   } else {
     cards.push(emptyCard("Page tree not loaded", "Use Inspect Page Tree to load a structural snapshot into the control plane."));
   }
+
+  cards.push(`
+    <article class="system-card">
+      <div class="card-topline">
+        <strong class="card-title">Activity feed</strong>
+        <span class="chip">${state.logs.length ? `${state.logs.length}` : "quiet"}</span>
+      </div>
+      <div class="stack">
+        ${renderLogs()}
+      </div>
+    </article>
+  `);
 
   return cards.join("");
 }
