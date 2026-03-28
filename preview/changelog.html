@@ -390,7 +390,7 @@ a:hover { text-decoration: underline; }
       <a href="changelog.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>Changelog</a>
     </nav>
     <div class="hdr-stats">
-      <span><span class="n" id="stat-commits">94</span> commits</span>
+      <span><span class="n" id="stat-commits">95</span> commits</span>
       <span><span class="n" id="stat-versions">5</span> versions</span>
       <span><span class="n" id="stat-latest">2026-03-27</span> latest</span>
     </div>
@@ -408,7 +408,7 @@ a:hover { text-decoration: underline; }
           <div class="summary-card">
             <span class="summary-kicker">Current release</span>
             <strong class="summary-value">v0.2.1</strong>
-            <div class="summary-caption">66 commits tracked in v0.2.1 from CHANGELOG.md.</div>
+            <div class="summary-caption">67 commits tracked in v0.2.1 from CHANGELOG.md.</div>
           </div>
           <div class="summary-card">
             <span class="summary-kicker">Biggest theme</span>
@@ -707,6 +707,10 @@ const releases = [
       [
         "6818e32",
         "Generate preview changelog from CHANGELOG.md"
+      ],
+      [
+        "f153ffa",
+        "Use local system fonts in widget UI"
       ]
     ],
     "decisions": [
@@ -801,6 +805,10 @@ const releases = [
       [
         "Preview Changelog Is Now Generated from CHANGELOG.md",
         "preview/changelog.html is no longer hand-synced via an embedded release array; the build regenerates it from CHANGELOG.md, and a regression test now fails if the checked-in preview page drifts from the changelog source."
+      ],
+      [
+        "Widget Typography Uses Local System Stacks",
+        "The Figma panel no longer depends on remote Google Fonts, so the embedded webview renders with reliable mono and serif system fonts even when external font loads are blocked."
       ]
     ],
     "changes": [
@@ -848,7 +856,8 @@ const releases = [
       "Added build coverage that asserts the generated widget bundle includes the DOM-ready bootstrap path",
       "Added scripts/build-changelog-preview.mjs to parse CHANGELOG.md, normalize release data, and regenerate preview/changelog.html from the changelog source of truth",
       "Wired npm run build to refresh the preview changelog automatically and added npm run build:changelog for direct regeneration",
-      "Added a regression test that compares the checked-in preview/changelog.html against generated output from CHANGELOG.md, so stale preview changelog data now fails locally"
+      "Added a regression test that compares the checked-in preview/changelog.html against generated output from CHANGELOG.md, so stale preview changelog data now fails locally",
+      "Removed Google Fonts dependencies from the Figma widget UI, switched the operator console to local system mono/serif stacks, and added a build regression check so blocked web fonts do not silently ship again"
     ]
   },
   {
