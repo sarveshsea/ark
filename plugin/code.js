@@ -28,7 +28,7 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
   }
   const BLOCKED_PATTERNS = [/figma\.closePlugin/i, /figma\.root\.remove/i, /while\s*\(\s*true\s*\)/i, /for\s*\(\s*;\s*;\s*\)/i];
   const BLOCKED_KEYWORDS = ["closeplugin", "removepage", "__proto__", "constructor", "prototype", "__defineGetter__", "__defineSetter__"];
-  const BLOCKED_GLOBALS = [/\bFunction\s*\(/, /\bimport\s*\(/, /\brequire\s*\(/, /\bglobalThis\b/, /\bself\b/, /\bwindow\b/];
+  const BLOCKED_GLOBALS = [/\bFunction\s*\(/, /\bimport\s*\(/, /\brequire\s*\(/, /\bglobalThis\b/, /\bself\b/, /\bwindow\b/, /\beval\s*\(/];
   const state = {
     sessionId: createRunId("widget"),
     activeRunId: null,
@@ -592,6 +592,7 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
     if (x !== void 0) node.x = Number(x);
     if (y !== void 0) node.y = Number(y);
     if (width && height && "resize" in node) node.resize(Number(width), Number(height));
+    if (params.fills && "fills" in node) node.fills = params.fills;
     if (parentId) {
       const parent = await figma.getNodeByIdAsync(String(parentId));
       if (parent && "appendChild" in parent) {
@@ -671,10 +672,10 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
     node.remove();
     return { deleted: nodeId };
   }
-  function setSelection(nodeIds) {
+  async function setSelection(nodeIds) {
     const nodes = [];
     for (const id of nodeIds) {
-      const node = figma.getNodeById(id);
+      const node = await figma.getNodeByIdAsync(id);
       if (node && "parent" in node) nodes.push(node);
     }
     figma.currentPage.selection = nodes;

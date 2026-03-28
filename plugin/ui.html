@@ -1239,7 +1239,11 @@ function handleAction(action) {
       }
       state.bridge.ws = null;
       state.bridge.port = null;
-      state.bridge.scanTimer = null;
+      if (state.bridge.scanTimer) {
+        window.clearTimeout(state.bridge.scanTimer);
+        state.bridge.scanTimer = null;
+      }
+      state.bridge.reconnectDelayMs = 1e3;
       scanBridge();
       break;
   }
