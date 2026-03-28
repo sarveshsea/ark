@@ -1,0 +1,16 @@
+{
+  "name": "notion-sync",
+  "version": "1.0.0",
+  "description": "Notion integration for Mémoire — sync research insights, specs, and project context between Notion databases and the Mémoire registry",
+  "category": "connect",
+  "tags": ["notion", "integration", "sync", "research", "specs", "database"],
+  "skills": [{
+    "file": "notion-sync.md",
+    "name": "Notion Sync",
+    "activateOn": "always",
+    "freedomLevel": "high"
+  }],
+  "dependencies": [],
+  "createdAt": "2026-03-28T00:00:00.000Z",
+  "updatedAt": "2026-03-28T00:00:00.000Z"
+}

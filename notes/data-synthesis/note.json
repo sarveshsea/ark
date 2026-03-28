@@ -1,0 +1,16 @@
+{
+  "name": "data-synthesis",
+  "version": "1.0.0",
+  "description": "Qualitative and quantitative data synthesis — affinity mapping, thematic analysis, statistical frameworks, insight triangulation, and research-to-spec pipelines",
+  "category": "research",
+  "tags": ["data-synthesis", "qualitative", "quantitative", "thematic-analysis", "affinity-mapping", "insights"],
+  "skills": [{
+    "file": "data-synthesis.md",
+    "name": "Data Synthesis",
+    "activateOn": "research-to-dashboard",
+    "freedomLevel": "high"
+  }],
+  "dependencies": [],
+  "createdAt": "2026-03-28T00:00:00.000Z",
+  "updatedAt": "2026-03-28T00:00:00.000Z"
+}

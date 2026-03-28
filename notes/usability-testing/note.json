@@ -1,0 +1,16 @@
+{
+  "name": "usability-testing",
+  "version": "1.0.0",
+  "description": "Usability testing frameworks — test planning, task scenarios, moderated and unmoderated protocols, analysis frameworks, and insight synthesis for Mémoire research pipeline",
+  "category": "research",
+  "tags": ["usability", "testing", "ux-research", "task-analysis", "think-aloud", "insights"],
+  "skills": [{
+    "file": "usability-testing.md",
+    "name": "Usability Testing",
+    "activateOn": "research-to-dashboard",
+    "freedomLevel": "high"
+  }],
+  "dependencies": [],
+  "createdAt": "2026-03-28T00:00:00.000Z",
+  "updatedAt": "2026-03-28T00:00:00.000Z"
+}

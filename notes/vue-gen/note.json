@@ -1,0 +1,16 @@
+{
+  "name": "vue-gen",
+  "version": "1.0.0",
+  "description": "Vue 3 Composition API code generation — transforms Mémoire component specs into Vue SFCs with script setup, Tailwind styling, and composable patterns",
+  "category": "generate",
+  "tags": ["vue", "vue3", "composition-api", "sfc", "tailwind", "codegen"],
+  "skills": [{
+    "file": "vue-gen.md",
+    "name": "Vue Generator",
+    "activateOn": "component-creation",
+    "freedomLevel": "high"
+  }],
+  "dependencies": [],
+  "createdAt": "2026-03-28T00:00:00.000Z",
+  "updatedAt": "2026-03-28T00:00:00.000Z"
+}

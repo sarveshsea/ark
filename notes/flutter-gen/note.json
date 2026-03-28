@@ -1,0 +1,16 @@
+{
+  "name": "flutter-gen",
+  "version": "1.0.0",
+  "description": "Flutter and Dart widget generation — transforms Mémoire component specs into Flutter widgets with Material 3, Riverpod state management, and responsive layouts",
+  "category": "generate",
+  "tags": ["flutter", "dart", "material3", "riverpod", "widgets", "codegen"],
+  "skills": [{
+    "file": "flutter-gen.md",
+    "name": "Flutter Generator",
+    "activateOn": "component-creation",
+    "freedomLevel": "high"
+  }],
+  "dependencies": [],
+  "createdAt": "2026-03-28T00:00:00.000Z",
+  "updatedAt": "2026-03-28T00:00:00.000Z"
+}

@@ -1,0 +1,16 @@
+{
+  "name": "token-architecture",
+  "version": "1.0.0",
+  "description": "Design token architecture — multi-tier token systems, semantic naming, theme switching, CSS custom properties, Tailwind mapping, and Figma variable sync",
+  "category": "craft",
+  "tags": ["design-tokens", "theming", "css-variables", "tailwind", "figma-variables", "semantic-tokens"],
+  "skills": [{
+    "file": "token-architecture.md",
+    "name": "Token Architecture",
+    "activateOn": "component-creation",
+    "freedomLevel": "high"
+  }],
+  "dependencies": [],
+  "createdAt": "2026-03-28T00:00:00.000Z",
+  "updatedAt": "2026-03-28T00:00:00.000Z"
+}

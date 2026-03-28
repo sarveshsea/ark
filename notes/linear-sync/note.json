@@ -1,0 +1,16 @@
+{
+  "name": "linear-sync",
+  "version": "1.0.0",
+  "description": "Linear integration for Mémoire — sync design issues, component specs, and project tracking between Linear and the Mémoire registry",
+  "category": "connect",
+  "tags": ["linear", "integration", "issues", "tracking", "project-management", "sync"],
+  "skills": [{
+    "file": "linear-sync.md",
+    "name": "Linear Sync",
+    "activateOn": "always",
+    "freedomLevel": "high"
+  }],
+  "dependencies": [],
+  "createdAt": "2026-03-28T00:00:00.000Z",
+  "updatedAt": "2026-03-28T00:00:00.000Z"
+}
