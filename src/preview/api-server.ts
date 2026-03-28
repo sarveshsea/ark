@@ -128,6 +128,17 @@ export class PreviewApiServer {
             return;
           }
 
+          if (url.pathname === "/api/research") {
+            try {
+              await this.engine.research.load();
+              const store = this.engine.research.getStore();
+              res.end(JSON.stringify(store));
+            } catch {
+              res.end(JSON.stringify({ insights: [], personas: [], themes: [], sources: [] }));
+            }
+            return;
+          }
+
           res.statusCode = 404;
           res.end(JSON.stringify({ error: "Not found" }));
           return;

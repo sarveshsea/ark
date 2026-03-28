@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='6' fill='%230a0a0a'/%3E%3C/svg%3E">
+<title>memoire / research</title>
+<meta name="description" content="Mémoire — AI-native design intelligence engine">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #fafaf9; --bg-card: rgba(255, 255, 255, 0.65); --bg-hover: rgba(0, 0, 0, 0.03);
+  --fg: #0a0a0a; --fg-muted: #8a8a8a; --fg-dim: #b0b0b0; --border: rgba(0, 0, 0, 0.08);
+  --mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+  --serif: 'Cormorant Garamond', 'Georgia', serif;
+  --radius: 2px;
+  --green: #16a34a; --yellow: #ca8a04; --red: #dc2626; --blue: #2563eb;
+}
+body { font-family: var(--mono); font-size: 12px; background: var(--bg); color: var(--fg); line-height: 1.6; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+a { color: var(--fg); text-decoration: none; }
+a:hover { text-decoration: underline; }
+::selection { background: rgba(0, 0, 0, 0.08); }
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #b0b0b0; border-radius: 2px; }
+
+/* ── Nav ─────────────────────────────────────── */
+.hdr { display: flex; align-items: center; padding: 14px 24px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: rgba(250, 250, 249, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 100; }
+.hdr-brand { font-family: var(--serif); font-size: 18px; font-weight: 300; font-style: italic; letter-spacing: 2px; color: var(--fg); margin-right: 32px; white-space: nowrap; }
+.hdr-nav { display: flex; gap: 2px; align-items: center; flex: 1; }
+.hdr-nav a { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: var(--radius); color: var(--fg-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; text-decoration: none; transition: color 0.15s, background 0.15s; }
+.hdr-nav a:hover { color: var(--fg); background: var(--bg-hover); text-decoration: none; }
+.hdr-nav a.active { color: var(--fg); background: rgba(0, 0, 0, 0.05); text-decoration: none; }
+.hdr-nav a svg { width: 14px; height: 14px; opacity: 0.4; }
+.hdr-nav a.active svg { opacity: 0.8; }
+.hdr-stats { display: flex; gap: 16px; margin-left: auto; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg-muted); }
+.hdr-stats .n { color: var(--fg); font-weight: 500; margin-right: 2px; }
+
+/* ── Tabs ────────────────────────────────────── */
+.tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); position: sticky; top: 49px; background: rgba(250, 250, 249, 0.95); backdrop-filter: blur(12px); z-index: 90; padding: 0 24px; }
+.tab { padding: 12px 20px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg-muted); cursor: pointer; border-bottom: 2px solid transparent; background: none; border-top: none; border-left: none; border-right: none; font-family: var(--mono); transition: color 0.15s; }
+.tab:hover { color: var(--fg); }
+.tab.active { color: var(--fg); border-bottom-color: var(--fg); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ── Sub-tabs ────────────────────────────────── */
+.sub-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); position: sticky; top: 98px; background: rgba(250, 250, 249, 0.95); backdrop-filter: blur(8px); z-index: 80; padding: 0; }
+.sub-tab { padding: 10px 16px; font-size: 11px; color: var(--fg-muted); cursor: pointer; border-bottom: 2px solid transparent; background: none; border-top: none; border-left: none; border-right: none; font-family: var(--mono); transition: color 0.15s; }
+.sub-tab:hover { color: var(--fg); }
+.sub-tab.active { color: var(--fg); border-bottom-color: var(--fg); }
+.sub-panel { display: none; }
+.sub-panel.active { display: block; }
+
+/* ── Filter buttons ──────────────────────────── */
+.filters { display: flex; gap: 8px; margin-bottom: 24px; }
+.filter-btn { padding: 5px 14px; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg-muted); cursor: pointer; background: none; border: 1px solid var(--border); border-radius: var(--radius); font-family: var(--mono); transition: all 0.15s; }
+.filter-btn:hover { color: var(--fg); border-color: rgba(0,0,0,0.15); }
+.filter-btn.active { color: var(--fg); border-color: var(--fg); background: rgba(0,0,0,0.03); }
+
+/* ── Main ────────────────────────────────────── */
+.main { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
+
+/* ── Summary Banner ──────────────────────────── */
+.summary { background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--fg); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 32px; font-size: 12px; line-height: 1.7; backdrop-filter: blur(8px); }
+.summary strong { font-weight: 600; }
+.summary span { color: var(--fg-muted); }
+
+/* ── Badge ───────────────────────────────────── */
+.badge { display: inline-block; padding: 2px 8px; border-radius: var(--radius); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+.badge-high { background: rgba(22, 163, 74, 0.1); color: var(--green); }
+.badge-medium { background: rgba(202, 138, 4, 0.1); color: var(--yellow); }
+.badge-low { background: rgba(0, 0, 0, 0.04); color: var(--fg-muted); }
+.badge-yes { background: rgba(22, 163, 74, 0.1); color: var(--green); }
+.badge-no { background: rgba(220, 38, 38, 0.08); color: var(--red); }
+.badge-partial { background: rgba(202, 138, 4, 0.1); color: var(--yellow); }
+.badge-p1 { background: rgba(37, 99, 235, 0.1); color: var(--blue); }
+.badge-p2 { background: rgba(0, 0, 0, 0.04); color: var(--fg-muted); }
+.badge-final { background: rgba(22, 163, 74, 0.1); color: var(--green); }
+.badge-draft { background: rgba(202, 138, 4, 0.1); color: var(--yellow); }
+
+.tag { display: inline-block; padding: 2px 6px; background: rgba(0, 0, 0, 0.04); border-radius: var(--radius); font-size: 10px; color: var(--fg-muted); margin: 2px; }
+
+/* ── Tables ──────────────────────────────────── */
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 12px; }
+th { color: var(--fg-muted); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; font-weight: 400; }
+tr:hover td { background: rgba(0, 0, 0, 0.02); }
+td.center, th.center { text-align: center; }
+
+/* ── Stat row ────────────────────────────────── */
+.stat-row { display: flex; gap: 12px; margin-bottom: 32px; }
+.stat-box { flex: 1; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; text-align: center; backdrop-filter: blur(8px); }
+.stat-box .val { font-size: 28px; font-weight: 500; margin-bottom: 4px; }
+.stat-box .lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg-muted); }
+
+/* ── Confidence bar ──────────────────────────── */
+.conf-bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 8px; background: rgba(0, 0, 0, 0.04); }
+.conf-bar .seg { height: 100%; }
+.conf-bar .seg-high { background: var(--fg); }
+.conf-bar .seg-med { background: var(--fg-muted); }
+.conf-bar .seg-low { background: rgba(0, 0, 0, 0.04); }
+.conf-legend { display: flex; gap: 16px; font-size: 11px; color: var(--fg-muted); margin-bottom: 32px; }
+.conf-legend .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+
+/* ── Insight cards ───────────────────────────── */
+.insight-card { border-bottom: 1px solid var(--border); padding: 20px 0; }
+.insight-card:first-child { padding-top: 0; }
+.insight-num { font-size: 11px; color: var(--fg-muted); margin-right: 12px; }
+.insight-text { font-size: 13px; font-weight: 500; margin-bottom: 8px; }
+.insight-meta { display: flex; align-items: center; gap: 10px; font-size: 11px; color: var(--fg-muted); margin-bottom: 8px; }
+.insight-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+
+/* ── Persona cards ───────────────────────────── */
+.persona-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+@media (max-width: 900px) { .persona-grid { grid-template-columns: 1fr; } }
+.persona { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; backdrop-filter: blur(8px); }
+.persona-header { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+.persona-avatar { width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; background: rgba(0,0,0,0.04); flex-shrink: 0; }
+.persona-name { font-size: 13px; font-weight: 500; }
+.persona-role { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg-muted); }
+.persona-quote { font-size: 11px; color: var(--fg-muted); font-style: italic; padding: 12px 16px; border-left: 2px solid var(--border); margin-bottom: 16px; line-height: 1.7; }
+.persona-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; text-align: center; }
+.persona-stat-val { font-size: 18px; font-weight: 500; }
+.persona-stat-lbl { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg-muted); }
+.persona-section-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg-muted); margin: 14px 0 8px; display: flex; align-items: center; gap: 6px; }
+.persona-section-label svg { width: 12px; height: 12px; opacity: 0.5; }
+.persona-list { font-size: 11px; color: var(--fg-muted); line-height: 1.7; padding-left: 2px; border-left: 2px solid rgba(0,0,0,0.04); }
+.persona-list div { padding: 3px 0 3px 12px; }
+.persona-tools { display: flex; flex-wrap: wrap; gap: 4px; }
+
+/* ── Theme cards ─────────────────────────────── */
+.theme-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+@media (max-width: 900px) { .theme-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) { .theme-grid { grid-template-columns: 1fr; } }
+.theme-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; backdrop-filter: blur(8px); }
+.theme-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.theme-name { font-size: 12px; font-weight: 500; }
+.theme-count { font-size: 10px; color: var(--fg-muted); }
+.theme-desc { font-size: 11px; color: var(--fg-muted); line-height: 1.6; margin-bottom: 12px; }
+.theme-bar { width: 32px; height: 3px; background: var(--fg); border-radius: 2px; }
+
+/* ── Section labels ──────────────────────────── */
+.section-label { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: var(--fg-muted); margin: 32px 0 16px; }
+.section-label:first-child { margin-top: 0; }
+
+/* ── Document content ────────────────────────── */
+.doc-content { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; max-width: 900px; margin: 0 auto; backdrop-filter: blur(8px); }
+.doc-content h2 { font-size: 18px; font-weight: 500; margin-bottom: 8px; font-family: var(--mono); }
+.doc-content h3 { font-size: 14px; font-weight: 500; margin: 24px 0 8px; padding-top: 16px; border-top: 1px solid var(--border); font-family: var(--mono); }
+.doc-content p { font-size: 12px; color: var(--fg-muted); line-height: 1.8; margin-bottom: 12px; }
+.doc-content blockquote { border-left: 3px solid var(--border); padding: 16px 20px; margin: 16px 0; background: rgba(0,0,0,0.02); border-radius: 0 var(--radius) var(--radius) 0; font-size: 12px; line-height: 1.7; }
+.doc-content blockquote strong { font-weight: 600; color: var(--fg); }
+.doc-card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 16px 0; }
+@media (max-width: 768px) { .doc-card-grid { grid-template-columns: 1fr; } }
+.doc-card-grid .mini-card { background: rgba(0,0,0,0.02); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; }
+.doc-card-grid .mini-card strong { font-size: 12px; display: block; margin-bottom: 6px; }
+.doc-card-grid .mini-card span { font-size: 11px; color: var(--fg-muted); line-height: 1.6; }
+
+/* ── Source list ─────────────────────────────── */
+.source-item { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+.source-item:hover { background: rgba(0,0,0,0.02); }
+.source-icon { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--fg-muted); }
+.source-icon svg { width: 18px; height: 18px; }
+.source-name { font-size: 12px; font-weight: 500; flex: 1; }
+.source-cat { font-size: 10px; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* ── Footer ──────────────────────────────────── */
+.footer { padding: 24px; text-align: center; color: var(--fg-muted); font-size: 10px; border-top: 1px solid var(--border); margin-top: 48px; }
+
+/* ── Empty state ─────────────────────────────── */
+.empty-state { text-align: center; padding: 80px 24px; color: var(--fg-muted); }
+.empty-state .empty-icon { margin-bottom: 16px; }
+.empty-state .empty-icon svg { width: 48px; height: 48px; opacity: 0.25; }
+.empty-state .empty-title { font-size: 14px; font-weight: 500; color: var(--fg); margin-bottom: 8px; }
+.empty-state .empty-desc { font-size: 12px; line-height: 1.8; max-width: 500px; margin: 0 auto 24px; }
+.empty-state code { font-size: 11px; background: rgba(0,0,0,0.04); padding: 2px 6px; border-radius: var(--radius); }
+.empty-state .empty-cmds { text-align: left; display: inline-block; }
+.empty-state .empty-cmds div { padding: 4px 0; }
+
+/* ── Sentiment bar ───────────────────────────── */
+.sent-bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 8px; background: rgba(0, 0, 0, 0.04); }
+.sent-bar .seg { height: 100%; }
+.sent-bar .seg-positive { background: var(--green); }
+.sent-bar .seg-negative { background: var(--red); }
+.sent-bar .seg-mixed { background: var(--yellow); }
+.sent-bar .seg-neutral { background: var(--fg-muted); }
+</style>
+</head>
+<body>
+  <header class="hdr">
+    <div class="hdr-brand">m&eacute;moire</div>
+    <nav class="hdr-nav"><a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12l9-8 9 8M5 11v8a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-8"/></svg>Home</a><a href="research.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>Research</a><a href="specs.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M8 7h8M8 11h8M8 15h4"/></svg>Specs</a><a href="design-system.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Systems</a><a href="monitor.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Monitor</a><a href="changelog.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>Changelog</a><a href="portal.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>Portal</a></nav>
+    <div class="hdr-stats" id="hdr-stats">
+      <span><span class="n" id="hdr-insights">--</span> insights</span>
+      <span><span class="n" id="hdr-themes">--</span> themes</span>
+      <span><span class="n" id="hdr-personas">--</span> personas</span>
+    </div>
+  </header>
+
+  <!-- Main Tabs -->
+  <div class="tabs" data-tab-group="research">
+    <button class="tab active" data-tab="overview" onclick="switchTab('research','overview')">Overview</button>
+    <button class="tab" data-tab="insights" onclick="switchTab('research','insights')">Insights</button>
+    <button class="tab" data-tab="personas" onclick="switchTab('research','personas')">Personas</button>
+    <button class="tab" data-tab="themes" onclick="switchTab('research','themes')">Themes</button>
+    <button class="tab" data-tab="sources" onclick="switchTab('research','sources')">Sources</button>
+  </div>
+
+  <div class="main" data-tab-group="research">
+
+    <!-- ══════════════════════════════════════════ OVERVIEW ════ -->
+    <div class="tab-panel active" data-panel="overview" id="panel-overview"></div>
+
+    <!-- ══════════════════════════════════════════ INSIGHTS ════ -->
+    <div class="tab-panel" data-panel="insights" id="panel-insights"></div>
+
+    <!-- ══════════════════════════════════════════ PERSONAS ════ -->
+    <div class="tab-panel" data-panel="personas" id="panel-personas"></div>
+
+    <!-- ══════════════════════════════════════════ THEMES ══════ -->
+    <div class="tab-panel" data-panel="themes" id="panel-themes"></div>
+
+    <!-- ══════════════════════════════════════════ SOURCES ═════ -->
+    <div class="tab-panel" data-panel="sources" id="panel-sources"></div>
+
+    <div class="footer" id="footer">memoire research</div>
+  </div>
+
+<script>
+/* ── Tab switching ──────────────────────────────── */
+function switchTab(group, tabName) {
+  document.querySelectorAll('.tabs[data-tab-group="' + group + '"] .tab').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelectorAll('.main[data-tab-group="' + group + '"] .tab-panel').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelector('.tabs[data-tab-group="' + group + '"] .tab[data-tab="' + tabName + '"]').classList.add('active');
+  document.querySelector('.main[data-tab-group="' + group + '"] .tab-panel[data-panel="' + tabName + '"]').classList.add('active');
+}
+
+function filterInsights(level, btn) {
+  document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  document.querySelectorAll('.insight-card').forEach(function(card) {
+    if (level === 'all' || card.dataset.conf === level) {
+      card.style.display = '';
+    } else {
+      card.style.display = 'none';
+    }
+  });
+}
+
+/* ── SVG icons ──────────────────────────────────── */
+var ICONS = {
+  file: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M8 7h8M8 11h8M8 15h4"/></svg>',
+  transcript: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>',
+  web: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>',
+  stickies: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 3v18M3 12h18"/></svg>',
+  goals: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>',
+  pain: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 9v4M12 17h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
+  behaviors: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>'
+};
+
+function sourceIcon(type) {
+  if (type === 'transcript') return ICONS.transcript;
+  if (type === 'web') return ICONS.web;
+  if (type === 'figjam-stickies') return ICONS.stickies;
+  return ICONS.file;
+}
+
+function esc(str) {
+  var d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+function initials(name) {
+  return name.split(/\s+/).map(function(w) { return w[0]; }).join('').toUpperCase().slice(0, 2);
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  var d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+/* ── Render functions ───────────────────────────── */
+
+function renderEmpty() {
+  var html = '<div class="empty-state">' +
+    '<div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg></div>' +
+    '<div class="empty-title">No research data yet</div>' +
+    '<div class="empty-desc">Run one of these commands to start collecting research insights:</div>' +
+    '<div class="empty-cmds">' +
+    '<div><code>memi research from-file data.xlsx</code></div>' +
+    '<div><code>memi research from-transcript interview.txt</code></div>' +
+    '<div><code>memi research web "topic" --urls ...</code></div>' +
+    '</div></div>';
+  document.getElementById('panel-overview').innerHTML = html;
+  document.getElementById('panel-insights').innerHTML = html;
+  document.getElementById('panel-personas').innerHTML = html;
+  document.getElementById('panel-themes').innerHTML = html;
+  document.getElementById('panel-sources').innerHTML = html;
+}
+
+function renderOverview(data) {
+  var insights = data.insights || [];
+  var themes = data.themes || [];
+  var personas = data.personas || [];
+  var sources = data.sources || [];
+
+  var high = 0, medium = 0, low = 0;
+  var sentPos = 0, sentNeg = 0, sentMix = 0, sentNeu = 0;
+  var allTags = [];
+
+  insights.forEach(function(ins) {
+    if (ins.confidence === 'high') high++;
+    else if (ins.confidence === 'medium') medium++;
+    else low++;
+    var tags = ins.tags || [];
+    allTags = allTags.concat(tags);
+    tags.forEach(function(t) {
+      var tl = t.toLowerCase();
+      if (tl === 'positive') sentPos++;
+      else if (tl === 'negative') sentNeg++;
+      else if (tl === 'mixed') sentMix++;
+      else if (tl === 'neutral') sentNeu++;
+    });
+  });
+
+  var total = insights.length;
+  var highPct = total ? Math.round((high / total) * 100) : 0;
+  var medPct = total ? Math.round((medium / total) * 100) : 0;
+  var lowPct = total ? 100 - highPct - medPct : 0;
+
+  var html = '';
+
+  // Summary
+  html += '<div class="summary"><strong>' + total + ' validated insight' + (total !== 1 ? 's' : '') +
+    ' across ' + sources.length + ' source' + (sources.length !== 1 ? 's' : '') +
+    ', ' + highPct + '% high confidence.</strong> ' +
+    '<span>' + themes.length + ' theme' + (themes.length !== 1 ? 's' : '') +
+    ' identified, ' + personas.length + ' persona' + (personas.length !== 1 ? 's' : '') + ' synthesized.</span></div>';
+
+  // Stat row
+  html += '<div class="stat-row">' +
+    '<div class="stat-box"><div class="val">' + total + '</div><div class="lbl">Insights</div></div>' +
+    '<div class="stat-box"><div class="val">' + themes.length + '</div><div class="lbl">Themes</div></div>' +
+    '<div class="stat-box"><div class="val">' + personas.length + '</div><div class="lbl">Personas</div></div>' +
+    '<div class="stat-box"><div class="val">' + sources.length + '</div><div class="lbl">Sources</div></div>' +
+    '<div class="stat-box"><div class="val">' + high + '</div><div class="lbl">High Confidence</div></div>' +
+    '<div class="stat-box"><div class="val">' + new Set(allTags).size + '</div><div class="lbl">Tags</div></div>' +
+    '</div>';
+
+  // Confidence distribution
+  html += '<div class="section-label">Confidence Distribution</div>' +
+    '<div class="conf-bar">' +
+    '<div class="seg seg-high" style="width:' + highPct + '%;"></div>' +
+    '<div class="seg seg-med" style="width:' + medPct + '%;"></div>' +
+    '<div class="seg seg-low" style="width:' + lowPct + '%;"></div>' +
+    '</div>' +
+    '<div class="conf-legend">' +
+    '<span><span class="dot" style="background:var(--fg);"></span> High (' + high + ')</span>' +
+    '<span><span class="dot" style="background:var(--fg-muted);"></span> Medium (' + medium + ')</span>' +
+    '<span><span class="dot" style="background:rgba(0,0,0,0.08);"></span> Low (' + low + ')</span>' +
+    '</div>';
+
+  // Sentiment bar (only if any sentiment tags present)
+  var sentTotal = sentPos + sentNeg + sentMix + sentNeu;
+  if (sentTotal > 0) {
+    var posPct = Math.round((sentPos / sentTotal) * 100);
+    var negPct = Math.round((sentNeg / sentTotal) * 100);
+    var mixPct = Math.round((sentMix / sentTotal) * 100);
+    var neuPct = 100 - posPct - negPct - mixPct;
+
+    html += '<div class="section-label">Sentiment Distribution</div>' +
+      '<div class="sent-bar">' +
+      '<div class="seg seg-positive" style="width:' + posPct + '%;"></div>' +
+      '<div class="seg seg-negative" style="width:' + negPct + '%;"></div>' +
+      '<div class="seg seg-mixed" style="width:' + mixPct + '%;"></div>' +
+      '<div class="seg seg-neutral" style="width:' + neuPct + '%;"></div>' +
+      '</div>' +
+      '<div class="conf-legend">' +
+      '<span><span class="dot" style="background:var(--green);"></span> Positive (' + sentPos + ')</span>' +
+      '<span><span class="dot" style="background:var(--red);"></span> Negative (' + sentNeg + ')</span>' +
+      '<span><span class="dot" style="background:var(--yellow);"></span> Mixed (' + sentMix + ')</span>' +
+      '<span><span class="dot" style="background:var(--fg-muted);"></span> Neutral (' + sentNeu + ')</span>' +
+      '</div>';
+  }
+
+  // Top 5 high-confidence findings
+  var topFindings = insights.filter(function(i) { return i.confidence === 'high'; }).slice(0, 5);
+  if (topFindings.length > 0) {
+    html += '<div class="section-label">Top Findings</div>' +
+      '<table><thead><tr><th>Finding</th><th>Confidence</th><th>Source</th></tr></thead><tbody>';
+    topFindings.forEach(function(ins) {
+      html += '<tr><td>' + esc(ins.finding) + '</td>' +
+        '<td><span class="badge badge-' + ins.confidence + '">' + esc(ins.confidence) + '</span></td>' +
+        '<td>' + esc(ins.source || '') + '</td></tr>';
+    });
+    html += '</tbody></table>';
+  }
+
+  document.getElementById('panel-overview').innerHTML = html;
+}
+
+function renderInsights(data) {
+  var insights = data.insights || [];
+  var high = 0, medium = 0, low = 0;
+  insights.forEach(function(ins) {
+    if (ins.confidence === 'high') high++;
+    else if (ins.confidence === 'medium') medium++;
+    else low++;
+  });
+
+  var html = '';
+
+  // Summary
+  html += '<div class="summary"><strong>' + insights.length + ' validated insight' + (insights.length !== 1 ? 's' : '') +
+    ', ' + (insights.length ? Math.round((high / insights.length) * 100) : 0) + '% high confidence.</strong> ' +
+    '<span>Filter by confidence level to focus on the most reliable findings.</span></div>';
+
+  // Filters
+  html += '<div class="filters">' +
+    '<button class="filter-btn active" onclick="filterInsights(\'all\',this)">All (' + insights.length + ')</button>' +
+    '<button class="filter-btn" onclick="filterInsights(\'high\',this)">High (' + high + ')</button>' +
+    '<button class="filter-btn" onclick="filterInsights(\'medium\',this)">Medium (' + medium + ')</button>' +
+    '<button class="filter-btn" onclick="filterInsights(\'low\',this)">Low (' + low + ')</button>' +
+    '</div>';
+
+  // Insight cards
+  html += '<div id="insights-list">';
+  insights.forEach(function(ins, i) {
+    html += '<div class="insight-card" data-conf="' + esc(ins.confidence || 'low') + '">' +
+      '<div class="insight-text"><span class="insight-num">' + (i + 1) + '.</span>' + esc(ins.finding) + '</div>' +
+      '<div class="insight-meta">' + esc(ins.source || '') + ' <span class="badge badge-' + (ins.confidence || 'low') + '">' + esc(ins.confidence || 'low') + '</span></div>' +
+      '<div class="insight-tags">';
+    (ins.tags || []).forEach(function(tag) {
+      html += '<span class="tag">' + esc(tag) + '</span>';
+    });
+    html += '</div></div>';
+  });
+  html += '</div>';
+
+  document.getElementById('panel-insights').innerHTML = html;
+}
+
+function renderPersonas(data) {
+  var personas = data.personas || [];
+
+  if (personas.length === 0) {
+    document.getElementById('panel-personas').innerHTML =
+      '<div class="empty-state">' +
+      '<div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>' +
+      '<div class="empty-title">No personas yet</div>' +
+      '<div class="empty-desc">Run <code>memi research synthesize</code> to generate personas from your research insights.</div>' +
+      '</div>';
+    return;
+  }
+
+  var html = '<div class="persona-grid">';
+  personas.forEach(function(p) {
+    html += '<div class="persona">';
+    html += '<div class="persona-header">' +
+      '<div class="persona-avatar">' + esc(initials(p.name)) + '</div>' +
+      '<div><div class="persona-name">' + esc(p.name) + '</div>' +
+      '<div class="persona-role">' + esc(p.role || '') + '</div></div></div>';
+
+    if (p.quote) {
+      html += '<div class="persona-quote">"' + esc(p.quote) + '"</div>';
+    }
+
+    // Goals
+    if (p.goals && p.goals.length) {
+      html += '<div class="persona-section-label">' + ICONS.goals + ' Goals</div>' +
+        '<div class="persona-list">';
+      p.goals.forEach(function(g) { html += '<div>' + esc(g) + '</div>'; });
+      html += '</div>';
+    }
+
+    // Pain Points
+    if (p.painPoints && p.painPoints.length) {
+      html += '<div class="persona-section-label">' + ICONS.pain + ' Pain Points</div>' +
+        '<div class="persona-list">';
+      p.painPoints.forEach(function(pp) { html += '<div>' + esc(pp) + '</div>'; });
+      html += '</div>';
+    }
+
+    // Behaviors
+    if (p.behaviors && p.behaviors.length) {
+      html += '<div class="persona-section-label">' + ICONS.behaviors + ' Behaviors</div>' +
+        '<div class="persona-list">';
+      p.behaviors.forEach(function(b) { html += '<div>' + esc(b) + '</div>'; });
+      html += '</div>';
+    }
+
+    // Source
+    if (p.source) {
+      html += '<div class="persona-section-label">Source</div>' +
+        '<div class="persona-tools"><span class="tag">' + esc(p.source) + '</span></div>';
+    }
+
+    html += '</div>';
+  });
+  html += '</div>';
+
+  document.getElementById('panel-personas').innerHTML = html;
+}
+
+function renderThemes(data) {
+  var themes = data.themes || [];
+
+  if (themes.length === 0) {
+    document.getElementById('panel-themes').innerHTML =
+      '<div class="empty-state">' +
+      '<div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div>' +
+      '<div class="empty-title">No themes yet</div>' +
+      '<div class="empty-desc">Themes are generated when insights are synthesized. Run <code>memi research synthesize</code>.</div>' +
+      '</div>';
+    return;
+  }
+
+  var maxFreq = Math.max.apply(null, themes.map(function(t) { return t.frequency || 0; }));
+
+  var html = '<div class="summary"><strong>' + themes.length + ' theme' + (themes.length !== 1 ? 's' : '') +
+    ' identified across research insights.</strong> <span>Themes group related findings to reveal patterns.</span></div>';
+
+  html += '<div class="theme-grid">';
+  themes.forEach(function(t) {
+    var barWidth = maxFreq > 0 ? Math.max(8, Math.round(((t.frequency || 0) / maxFreq) * 48)) : 8;
+    var insightCount = (t.insights || []).length || t.frequency || 0;
+    html += '<div class="theme-card">' +
+      '<div class="theme-header"><span class="theme-name">' + esc(t.name) + '</span>' +
+      '<span class="theme-count">' + insightCount + ' insight' + (insightCount !== 1 ? 's' : '') + '</span></div>' +
+      '<div class="theme-desc">' + esc(t.description || '') + '</div>' +
+      '<div class="theme-bar" style="width:' + barWidth + 'px;"></div>' +
+      '</div>';
+  });
+  html += '</div>';
+
+  document.getElementById('panel-themes').innerHTML = html;
+}
+
+function renderSources(data) {
+  var sources = data.sources || [];
+
+  if (sources.length === 0) {
+    document.getElementById('panel-sources').innerHTML =
+      '<div class="empty-state">' +
+      '<div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M8 7h8M8 11h8M8 15h4"/></svg></div>' +
+      '<div class="empty-title">No sources yet</div>' +
+      '<div class="empty-desc">Sources are tracked automatically when you process research data.</div>' +
+      '</div>';
+    return;
+  }
+
+  var html = '<div class="summary"><strong>' + sources.length + ' source' + (sources.length !== 1 ? 's' : '') +
+    ' processed.</strong> <span>Each source contributes insights to the research corpus.</span></div>';
+
+  html += '<div class="section-label">Processed Sources</div>';
+  sources.forEach(function(s) {
+    html += '<div class="source-item">' +
+      '<div class="source-icon">' + sourceIcon(s.type || 'excel') + '</div>' +
+      '<div class="source-name">' + esc(s.name) + '</div>' +
+      '<div class="source-cat">' + esc(s.type || '') + (s.processedAt ? ' -- ' + formatDate(s.processedAt) : '') + '</div>' +
+      '</div>';
+  });
+
+  document.getElementById('panel-sources').innerHTML = html;
+}
+
+function updateHeader(data) {
+  var insights = data.insights || [];
+  var themes = data.themes || [];
+  var personas = data.personas || [];
+  document.getElementById('hdr-insights').textContent = insights.length;
+  document.getElementById('hdr-themes').textContent = themes.length;
+  document.getElementById('hdr-personas').textContent = personas.length;
+}
+
+function updateFooter(data) {
+  var insights = data.insights || [];
+  var sources = data.sources || [];
+  document.getElementById('footer').textContent = 'memoire research -- ' + insights.length + ' insight' + (insights.length !== 1 ? 's' : '') + ' from ' + sources.length + ' source' + (sources.length !== 1 ? 's' : '');
+}
+
+/* ── Init ───────────────────────────────────────── */
+(function() {
+  fetch('/api/research')
+    .then(function(res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    })
+    .then(function(data) {
+      var insights = data.insights || [];
+
+      if (insights.length === 0 && !(data.themes || []).length && !(data.personas || []).length && !(data.sources || []).length) {
+        renderEmpty();
+        updateHeader(data);
+        updateFooter(data);
+        return;
+      }
+
+      renderOverview(data);
+      renderInsights(data);
+      renderPersonas(data);
+      renderThemes(data);
+      renderSources(data);
+      updateHeader(data);
+      updateFooter(data);
+    })
+    .catch(function(err) {
+      console.error('Failed to load research data:', err);
+      renderEmpty();
+    });
+})();
+</script>
+</body>
+</html>

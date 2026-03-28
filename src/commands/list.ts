@@ -47,13 +47,13 @@ async function collectList(engine: MemoireEngine, type: string): Promise<ListPay
     case "components":
       return {
         type: "components",
-        items: ds.components.map((c) => ({ name: c.name, type: c.type })),
+        items: ds.components.map((c) => ({ name: c.name, key: c.key })),
         count: ds.components.length,
       };
     case "styles":
       return {
         type: "styles",
-        items: ds.styles.map((s) => ({ name: s.name, type: s.styleType })),
+        items: ds.styles.map((s) => ({ name: s.name, type: s.type })),
         count: ds.styles.length,
       };
     default:

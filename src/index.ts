@@ -60,7 +60,9 @@ const program = new Command();
 program
   .name("memoire")
   .description("AI-Native Design Intelligence Engine")
-  .version("0.2.0");
+  .version(
+    (await import("../package.json", { with: { type: "json" } })).default.version
+  );
 
 // Create engine instance (shared across commands)
 const engine = new MemoireEngine({
