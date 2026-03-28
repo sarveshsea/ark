@@ -377,14 +377,28 @@ export class MemoireWsServer extends EventEmitter {
       });
     });
 
-    // Health check ping every 30s — stored as instance var for proper cleanup
+    // Health check ping every 60s — stored as instance var for proper cleanup
     this.healthInterval = setInterval(() => {
-      for (const client of this.clients.values()) {
-        if (client.ws.readyState === WebSocket.OPEN) {
-          client.ws.ping();
+      const now = new Date();
+      for (const [clientId, client] of this.clients.entries()) {
+        if (client.ws.readyState !== WebSocket.OPEN) {
+          // Clean up stale connections
+          this.clients.delete(clientId);
+          this.rateLimits.delete(clientId);
+          continue;
         }
+        // Drop clients that haven't responded to a ping in over 90s
+        const silentMs = now.getTime() - client.lastPing.getTime();
+        if (silentMs > 90_000) {
+          log.warn({ clientId, silentMs }, "Client unresponsive — closing");
+          client.ws.close(1000, "Ping timeout");
+          this.clients.delete(clientId);
+          this.rateLimits.delete(clientId);
+          continue;
+        }
+        client.ws.ping();
       }
-    }, 30000);
+    }, 60000);
   }
 
   private handleMessage(clientId: string, msg: BridgeEnvelope): void {

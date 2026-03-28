@@ -122,7 +122,7 @@ const state: UiState = {
     portsTried: [],
     stage: "offline",
     name: "",
-    reconnectDelayMs: 1000,
+    reconnectDelayMs: 2000,
     latencyMs: null,
     lastPingSentAt: 0,
     scanTimer: null,
@@ -151,14 +151,14 @@ function bootstrap(): void {
   render();
   bindPluginMessages();
   sendToMain({ channel: WIDGET_V2_CHANNEL, source: "ui", type: "ping" });
-  window.setTimeout(scanBridge, 120);
+  window.setTimeout(scanBridge, 200);
   window.setInterval(() => {
     sendToMain({ channel: WIDGET_V2_CHANNEL, source: "ui", type: "ping" });
     if (state.bridge.ws && state.bridge.ws.readyState === WebSocket.OPEN) {
       state.bridge.lastPingSentAt = Date.now();
       state.bridge.ws.send(JSON.stringify({ type: "ping" }));
     }
-  }, 10000);
+  }, 30000);
 }
 
 function bindPluginMessages(): void {
@@ -261,6 +261,7 @@ function tryNextPort(port: number): void {
   state.bridge.portsTried.push(port);
   const ws = new WebSocket(`ws://localhost:${port}`);
   let settled = false;
+  let opened = false;
 
   const timeout = window.setTimeout(() => {
     if (settled) return;
@@ -271,9 +272,10 @@ function tryNextPort(port: number): void {
       // ignore
     }
     tryNextPort(port + 1);
-  }, 1200);
+  }, 2500);
 
   ws.onopen = () => {
+    opened = true;
     render();
   };
 
@@ -312,7 +314,13 @@ function tryNextPort(port: number): void {
     if (!settled) {
       settled = true;
       window.clearTimeout(timeout);
-      tryNextPort(port + 1);
+      // Only try next port if we never got a proper open
+      if (!opened) {
+        tryNextPort(port + 1);
+      } else {
+        // Opened but closed before identify — server rejected or wrong service
+        tryNextPort(port + 1);
+      }
       return;
     }
     if (state.bridge.ws === ws) {
@@ -320,7 +328,7 @@ function tryNextPort(port: number): void {
       state.bridge.port = null;
       state.jobs = disconnectActiveJobs(state.jobs);
       setBridgeStage("reconnecting");
-      addLog("warn", "Bridge disconnected");
+      addLog("warn", "Bridge disconnected — reconnecting");
       render();
       scheduleReconnect();
     }
@@ -331,7 +339,7 @@ function adoptBridge(ws: WebSocket, port: number, payload: { name?: string }): v
   state.bridge.ws = ws;
   state.bridge.port = port;
   state.bridge.name = payload.name || "Mémoire";
-  state.bridge.reconnectDelayMs = 1000;
+  state.bridge.reconnectDelayMs = 2000;
   setBridgeStage("connected");
   addLog("success", `Bridge connected on :${port}`);
   forwardToBridge({
@@ -352,7 +360,8 @@ function scheduleReconnect(): void {
     state.bridge.scanTimer = null;
     scanBridge();
   }, delay);
-  state.bridge.reconnectDelayMs = Math.min(delay * 2, 16000);
+  // Gentler backoff: 2s → 4s → 8s → 12s → 15s (cap)
+  state.bridge.reconnectDelayMs = Math.min(delay * 1.5, 15000);
 }
 
 function setBridgeStage(stage: UiState["bridge"]["stage"]): void {
@@ -681,7 +690,7 @@ function handleAction(action: string): void {
         window.clearTimeout(state.bridge.scanTimer);
         state.bridge.scanTimer = null;
       }
-      state.bridge.reconnectDelayMs = 1000;
+      state.bridge.reconnectDelayMs = 2000;
       scanBridge();
       break;
     default:

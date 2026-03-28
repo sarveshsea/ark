@@ -736,7 +736,7 @@ const state = {
     portsTried: [],
     stage: "offline",
     name: "",
-    reconnectDelayMs: 1e3,
+    reconnectDelayMs: 2e3,
     latencyMs: null,
     lastPingSentAt: 0,
     scanTimer: null
@@ -760,14 +760,14 @@ function bootstrap() {
   render();
   bindPluginMessages();
   sendToMain({ channel: WIDGET_V2_CHANNEL, source: "ui", type: "ping" });
-  window.setTimeout(scanBridge, 120);
+  window.setTimeout(scanBridge, 200);
   window.setInterval(() => {
     sendToMain({ channel: WIDGET_V2_CHANNEL, source: "ui", type: "ping" });
     if (state.bridge.ws && state.bridge.ws.readyState === WebSocket.OPEN) {
       state.bridge.lastPingSentAt = Date.now();
       state.bridge.ws.send(JSON.stringify({ type: "ping" }));
     }
-  }, 1e4);
+  }, 3e4);
 }
 function bindPluginMessages() {
   window.onmessage = (event) => {
@@ -863,6 +863,7 @@ function tryNextPort(port) {
   state.bridge.portsTried.push(port);
   const ws = new WebSocket(`ws://localhost:${port}`);
   let settled = false;
+  let opened = false;
   const timeout = window.setTimeout(() => {
     if (settled) return;
     settled = true;
@@ -871,8 +872,9 @@ function tryNextPort(port) {
     } catch (e) {
     }
     tryNextPort(port + 1);
-  }, 1200);
+  }, 2500);
   ws.onopen = () => {
+    opened = true;
     render();
   };
   ws.onmessage = (event) => {
@@ -905,7 +907,11 @@ function tryNextPort(port) {
     if (!settled) {
       settled = true;
       window.clearTimeout(timeout);
-      tryNextPort(port + 1);
+      if (!opened) {
+        tryNextPort(port + 1);
+      } else {
+        tryNextPort(port + 1);
+      }
       return;
     }
     if (state.bridge.ws === ws) {
@@ -913,7 +919,7 @@ function tryNextPort(port) {
       state.bridge.port = null;
       state.jobs = disconnectActiveJobs(state.jobs);
       setBridgeStage("reconnecting");
-      addLog("warn", "Bridge disconnected");
+      addLog("warn", "Bridge disconnected — reconnecting");
       render();
       scheduleReconnect();
     }
@@ -923,7 +929,7 @@ function adoptBridge(ws, port, payload) {
   state.bridge.ws = ws;
   state.bridge.port = port;
   state.bridge.name = payload.name || "Mémoire";
-  state.bridge.reconnectDelayMs = 1e3;
+  state.bridge.reconnectDelayMs = 2e3;
   setBridgeStage("connected");
   addLog("success", `Bridge connected on :${port}`);
   forwardToBridge({
@@ -943,7 +949,7 @@ function scheduleReconnect() {
     state.bridge.scanTimer = null;
     scanBridge();
   }, delay);
-  state.bridge.reconnectDelayMs = Math.min(delay * 2, 16e3);
+  state.bridge.reconnectDelayMs = Math.min(delay * 1.5, 15e3);
 }
 function setBridgeStage(stage) {
   state.bridge.stage = stage;
@@ -1240,7 +1246,7 @@ function handleAction(action) {
         window.clearTimeout(state.bridge.scanTimer);
         state.bridge.scanTimer = null;
       }
-      state.bridge.reconnectDelayMs = 1e3;
+      state.bridge.reconnectDelayMs = 2e3;
       scanBridge();
       break;
   }
@@ -1687,37 +1693,36 @@ function escapeHtml(value) {
 </script>
   <style>
 :root {
-  --bg: #1a1816;
-  --bg-elevated: #211f1c;
-  --bg-card: #272420;
-  --bg-card-hover: #2e2b27;
-  --bg-inset: #141210;
-  --fg: #e8e0d4;
-  --fg-secondary: #a89e90;
-  --fg-dim: #6b6358;
-  --fg-faint: #49433c;
-  --border: rgba(232, 224, 212, 0.07);
-  --border-strong: rgba(232, 224, 212, 0.12);
-  --border-active: rgba(232, 224, 212, 0.20);
+  --bg: #faf8f5;
+  --bg-elevated: #ffffff;
+  --bg-card: #f5f2ed;
+  --bg-card-hover: #efeae4;
+  --bg-inset: #ece8e1;
+  --fg: #1a1816;
+  --fg-secondary: #5c554c;
+  --fg-dim: #8a8279;
+  --fg-faint: #b5aea5;
+  --border: rgba(26, 24, 22, 0.08);
+  --border-strong: rgba(26, 24, 22, 0.14);
+  --border-active: rgba(26, 24, 22, 0.22);
   --accent: #c9622f;
-  --accent-soft: rgba(201, 98, 47, 0.15);
-  --accent-glow: rgba(201, 98, 47, 0.06);
-  --green: #5a9e6f;
-  --green-soft: rgba(90, 158, 111, 0.12);
-  --green-strong: rgba(90, 158, 111, 0.22);
-  --yellow: #c4a24e;
-  --yellow-soft: rgba(196, 162, 78, 0.12);
-  --yellow-strong: rgba(196, 162, 78, 0.22);
-  --red: #c45454;
-  --red-soft: rgba(196, 84, 84, 0.12);
-  --red-strong: rgba(196, 84, 84, 0.22);
-  --blue: #5a8ec4;
-  --blue-soft: rgba(90, 142, 196, 0.12);
+  --accent-soft: rgba(201, 98, 47, 0.10);
+  --accent-glow: rgba(201, 98, 47, 0.05);
+  --green: #2d7a4f;
+  --green-soft: rgba(45, 122, 79, 0.08);
+  --green-strong: rgba(45, 122, 79, 0.18);
+  --yellow: #9b7420;
+  --yellow-soft: rgba(155, 116, 32, 0.08);
+  --yellow-strong: rgba(155, 116, 32, 0.18);
+  --red: #b84040;
+  --red-soft: rgba(184, 64, 64, 0.08);
+  --red-strong: rgba(184, 64, 64, 0.18);
+  --blue: #3d6eb5;
+  --blue-soft: rgba(61, 110, 181, 0.08);
   --mono: "SF Mono", ui-monospace, "SFMono-Regular", "Cascadia Code", "Fira Code", Menlo, Monaco, Consolas, monospace;
   --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, ui-serif, serif;
   --sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  --radius: 6px;
-  --radius-lg: 10px;
+  --radius: 5px;
   --transition: 120ms ease;
 }
 
@@ -1775,7 +1780,7 @@ pre {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 12px 16px;
+  padding: 10px 16px;
   border-bottom: 1px solid var(--border-strong);
   background: var(--bg-elevated);
   position: sticky;
@@ -1794,7 +1799,7 @@ pre {
   height: 10px;
   border-radius: 999px;
   background: var(--accent);
-  box-shadow: 0 0 8px var(--accent-soft), 0 0 20px var(--accent-glow);
+  box-shadow: 0 0 0 3px var(--accent-soft);
   flex-shrink: 0;
 }
 
@@ -1806,10 +1811,10 @@ pre {
 
 .brand-name {
   font-family: var(--serif);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 400;
   font-style: italic;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
   line-height: 1.1;
   color: var(--fg);
 }
@@ -1832,9 +1837,9 @@ pre {
 
 .status-pill {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 500;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -1862,7 +1867,7 @@ pre {
 }
 
 .status-pill.connected::before {
-  box-shadow: 0 0 6px var(--green-soft);
+  box-shadow: 0 0 4px var(--green-soft);
 }
 
 .status-pill.scanning,
@@ -1883,14 +1888,14 @@ pre {
 .content {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 0;
   padding: 0;
 }
 
 .main-column {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 0;
 }
 
 /* ── Metrics bar ───────────────────────────── */
@@ -1913,13 +1918,13 @@ pre {
   font-size: 9px;
   text-transform: uppercase;
   letter-spacing: 1.5px;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 
 .metric-value {
   font-family: var(--mono);
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 600;
   line-height: 1.2;
   color: var(--fg);
   overflow: hidden;
@@ -1932,8 +1937,8 @@ pre {
 .toolbar {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  padding: 10px 14px;
+  gap: 5px;
+  padding: 8px 14px 10px;
   background: var(--bg-elevated);
   border-top: 1px solid var(--border);
 }
@@ -1947,7 +1952,7 @@ pre {
   border-radius: var(--radius);
   background: var(--bg-card);
   color: var(--fg-secondary);
-  padding: 6px 12px;
+  padding: 5px 10px;
   cursor: pointer;
   transition: all var(--transition);
   white-space: nowrap;
@@ -1971,13 +1976,13 @@ pre {
 
 .tool-btn.primary {
   background: var(--accent-soft);
-  border-color: rgba(201, 98, 47, 0.25);
+  border-color: rgba(201, 98, 47, 0.20);
   color: var(--accent);
 }
 
 .tool-btn.primary:hover {
-  background: rgba(201, 98, 47, 0.22);
-  border-color: rgba(201, 98, 47, 0.35);
+  background: rgba(201, 98, 47, 0.16);
+  border-color: rgba(201, 98, 47, 0.30);
 }
 
 /* ── Panel ─────────────────────────────────── */
@@ -1985,6 +1990,7 @@ pre {
 .panel {
   background: var(--bg-elevated);
   overflow: hidden;
+  border-bottom: 1px solid var(--border);
 }
 
 .panel-header {
@@ -1992,21 +1998,21 @@ pre {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 12px 14px 10px;
+  padding: 10px 14px 8px;
 }
 
 .panel-title {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 1.5px;
-  color: var(--fg-secondary);
+  letter-spacing: 2px;
+  color: var(--fg-dim);
 }
 
 .panel-subtitle {
   font-family: var(--mono);
-  color: var(--fg-dim);
+  color: var(--fg-faint);
   font-size: 9px;
   letter-spacing: 0.5px;
 }
@@ -2021,16 +2027,16 @@ pre {
 }
 
 .tab {
-  padding: 8px 16px;
+  padding: 7px 14px;
   border: none;
   border-bottom: 2px solid transparent;
   background: transparent;
-  color: var(--fg-dim);
+  color: var(--fg-faint);
   cursor: pointer;
   text-transform: uppercase;
   letter-spacing: 1.5px;
-  font-size: 10px;
-  font-weight: 500;
+  font-size: 9px;
+  font-weight: 600;
   transition: all var(--transition);
 }
 
@@ -2060,8 +2066,8 @@ pre {
 .log-list {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 6px;
+  gap: 4px;
+  padding: 8px;
 }
 
 .job-card,
@@ -2071,7 +2077,7 @@ pre {
 .empty-card {
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  background: var(--bg-card);
+  background: var(--bg-elevated);
   padding: 10px 12px;
   transition: border-color var(--transition);
 }
@@ -2083,27 +2089,27 @@ pre {
 }
 
 .job-card.running {
-  border-left: 2px solid var(--yellow);
-  background: linear-gradient(90deg, var(--yellow-soft), transparent 60%);
+  border-left: 3px solid var(--yellow);
+  background: var(--yellow-soft);
 }
 
 .job-card.completed {
-  border-left: 2px solid var(--green);
-  background: linear-gradient(90deg, var(--green-soft), transparent 60%);
+  border-left: 3px solid var(--green);
+  background: var(--green-soft);
 }
 
 .job-card.disconnected {
-  border-left: 2px solid var(--blue);
-  background: linear-gradient(90deg, var(--blue-soft), transparent 60%);
+  border-left: 3px solid var(--blue);
+  background: var(--blue-soft);
 }
 
 .job-card.failed {
-  border-left: 2px solid var(--red);
-  background: linear-gradient(90deg, var(--red-soft), transparent 60%);
+  border-left: 3px solid var(--red);
+  background: var(--red-soft);
 }
 
 .job-card.queued {
-  border-left: 2px solid var(--fg-dim);
+  border-left: 3px solid var(--fg-faint);
 }
 
 /* ── Jobs overview ─────────────────────────── */
@@ -2119,7 +2125,7 @@ pre {
 }
 
 .summary-metric {
-  background: var(--bg-inset);
+  background: var(--bg-card);
   padding: 8px 10px;
 }
 
@@ -2128,7 +2134,7 @@ pre {
 }
 
 .summary-metric .metric-value {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   margin-bottom: 2px;
 }
@@ -2248,7 +2254,7 @@ pre {
   width: 100%;
   border-radius: var(--radius);
   border: 1px solid var(--border);
-  background: var(--bg-inset);
+  background: var(--bg-card);
   overflow: hidden;
 }
 
@@ -2270,10 +2276,10 @@ pre {
   font-family: var(--mono);
   display: inline-flex;
   align-items: center;
-  padding: 2px 8px;
+  padding: 2px 7px;
   border-radius: var(--radius);
   border: 1px solid var(--border-strong);
-  background: var(--bg-inset);
+  background: var(--bg-card);
   font-size: 9px;
   font-weight: 500;
   letter-spacing: 0.5px;
@@ -2288,19 +2294,19 @@ pre {
 }
 
 .log-card.success {
-  border-left: 2px solid var(--green);
+  border-left: 3px solid var(--green);
 }
 
 .log-card.warn {
-  border-left: 2px solid var(--yellow);
+  border-left: 3px solid var(--yellow);
 }
 
 .log-card.error {
-  border-left: 2px solid var(--red);
+  border-left: 3px solid var(--red);
 }
 
 .log-card.info {
-  border-left: 2px solid var(--fg-dim);
+  border-left: 3px solid var(--fg-faint);
 }
 
 .log-card pre {
@@ -2322,7 +2328,7 @@ pre {
   padding: 24px 16px;
   background: transparent;
   border-style: dashed;
-  border-color: var(--border);
+  border-color: var(--border-strong);
 }
 
 .empty-card .card-title {
@@ -2360,8 +2366,8 @@ pre {
 /* ── Scrollbar ─────────────────────────────── */
 
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
