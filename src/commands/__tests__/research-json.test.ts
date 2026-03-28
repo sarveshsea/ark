@@ -1,6 +1,12 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Command } from "commander";
 import { registerResearchCommand } from "../research.js";
+
+// Mock existsSync so the from-file command doesn't bail on missing fixtures
+vi.mock("fs", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("fs")>();
+  return { ...actual, existsSync: vi.fn(() => true) };
+});
 
 afterEach(() => {
   vi.restoreAllMocks();
