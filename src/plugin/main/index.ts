@@ -37,6 +37,19 @@ interface PluginState {
   connection: WidgetConnectionState;
 }
 
+/** Race a promise against a timeout — prevents indefinite hangs on font loads etc. */
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout>;
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => {
+      timer = setTimeout(() => reject(new Error(`Timeout: ${label} after ${ms}ms`)), ms);
+    }),
+  ]).finally(() => clearTimeout(timer));
+}
+
+const FONT_TIMEOUT_MS = 5000;
+
 const BLOCKED_PATTERNS = [/figma\.closePlugin/i, /figma\.root\.remove/i, /while\s*\(\s*true\s*\)/i, /for\s*\(\s*;\s*;\s*\)/i];
 const BLOCKED_KEYWORDS = ["closeplugin", "removepage", "__proto__", "constructor", "prototype", "__defineGetter__", "__defineSetter__"];
 const BLOCKED_GLOBALS = [/\bFunction\s*\(/, /\bimport\s*\(/, /\brequire\s*\(/, /\bglobalThis\b/, /\bself\b/, /\bwindow\b/, /\beval\s*\(/];
@@ -647,7 +660,7 @@ async function createNode(params: Record<string, unknown>): Promise<unknown> {
       break;
     case "TEXT":
       node = figma.createText();
-      await figma.loadFontAsync({ family: "Inter", style: "Regular" });
+      await withTimeout(figma.loadFontAsync({ family: "Inter", style: "Regular" }), FONT_TIMEOUT_MS, "loadFont Inter/Regular");
       node.characters = String(params.text || "");
       break;
     case "ELLIPSE":
@@ -730,7 +743,7 @@ async function loadTextNodeFonts(node: any): Promise<void> {
   if (!characters.length) {
     const fontName = node.fontName;
     if (fontName && fontName !== figma.mixed) {
-      await figma.loadFontAsync(fontName);
+      await withTimeout(figma.loadFontAsync(fontName), FONT_TIMEOUT_MS, `loadFont ${fontName.family}/${fontName.style}`);
     }
     return;
   }
@@ -740,7 +753,7 @@ async function loadTextNodeFonts(node: any): Promise<void> {
     if (!font || font === figma.mixed) continue;
     uniqueFonts.set(`${font.family}::${font.style}`, font);
   }
-  await Promise.all(Array.from(uniqueFonts.values()).map((font) => figma.loadFontAsync(font)));
+  await Promise.all(Array.from(uniqueFonts.values()).map((font) => withTimeout(figma.loadFontAsync(font), FONT_TIMEOUT_MS, `loadFont ${font.family}/${font.style}`)));
 }
 
 async function deleteNode(nodeId: string): Promise<unknown> {

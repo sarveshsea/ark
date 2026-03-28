@@ -7,6 +7,8 @@
 
 import type { Command } from "commander";
 import type { MemoireEngine } from "../engine/core.js";
+import ora from "ora";
+import { ui } from "../tui/format.js";
 
 export interface GoPayload {
   status: "completed" | "partial" | "failed";
@@ -41,66 +43,74 @@ export function registerGoCommand(program: Command, engine: MemoireEngine) {
         preview: { started: false, skipped: false },
       };
 
-      if (!json) console.log("\n  Mémoire — starting full pipeline\n");
+      if (!json) console.log(ui.brand("FULL PIPELINE"));
 
       // 1. Initialize
+      const initSpinner = !json ? ora({ text: "Initializing...", indent: 2, color: "cyan" }).start() : null;
       await engine.init();
       steps.init = true;
-      if (!json) console.log("");
+      initSpinner?.stop();
+      if (!json) console.log(ui.ok("Project initialized"));
 
       // 2. Connect to Figma (skip if --no-figma)
       if (opts.figma === false) {
         steps.figma.skipped = true;
-        if (!json) console.log("  · Skipping Figma connection (offline mode)\n");
+        if (!json) console.log(ui.skip("Figma connection (offline mode)"));
       } else if (!engine.figma.isConnected) {
         try {
           const port = await engine.connectFigma();
           if (!json) {
-            console.log(`\n  Waiting for Figma plugin to connect on port ${port}...`);
-            console.log("  Open the Mémoire plugin in Figma Desktop.\n");
+            console.log(ui.active(`Waiting for Figma plugin on port ${port}...`));
+            console.log("    Open the Memoire plugin in Figma Desktop.");
           }
           await waitForConnection(engine, 120000);
           steps.figma.connected = true;
+          if (!json) console.log(ui.ok("Figma connected"));
         } catch (err) {
           steps.figma.error = err instanceof Error ? err.message : String(err);
+          if (!json) console.log(ui.warn("Figma: " + steps.figma.error));
         }
       } else {
         steps.figma.connected = true;
+        if (!json) console.log(ui.ok("Figma already connected"));
       }
 
       // 3. Pull design system (only if Figma connected)
       if (opts.figma !== false && engine.figma.isConnected) {
-        if (!json) console.log("");
+        const pullSpinner = !json ? ora({ text: "Pulling design system...", indent: 2, color: "cyan" }).start() : null;
         await engine.pullDesignSystem();
         const ds = engine.registry.designSystem;
         steps.pull = { completed: true, tokens: ds.tokens.length, components: ds.components.length };
+        pullSpinner?.stop();
+        if (!json) console.log(ui.ok(`Pulled ${ds.tokens.length} tokens, ${ds.components.length} components`));
       }
 
       // 4. Generate code from all specs
       if (opts.generate !== false) {
-        if (!json) console.log("");
         const specs = await engine.registry.getAllSpecs();
         let generated = 0;
         let failed = 0;
+
+        if (!json) {
+          console.log(ui.section("CODEGEN"));
+        }
 
         for (const spec of specs) {
           if (spec.type === "design" || spec.type === "ia") continue;
           try {
             await engine.generateFromSpec(spec.name);
             generated++;
+            if (!json) console.log(ui.ok(spec.name));
           } catch (err) {
             failed++;
-            if (!json) console.log(`  ! Could not generate ${spec.name}: ${err instanceof Error ? err.message : String(err)}`);
+            if (!json) console.log(ui.warn(spec.name + ui.dim("  " + (err instanceof Error ? err.message : String(err)))));
           }
         }
 
         steps.generate = { completed: true, skipped: false, generated, failed };
-
-        if (!json && generated > 0) {
-          console.log(`\n  + Generated code for ${generated} specs\n`);
-        }
       } else {
         steps.generate.skipped = true;
+        if (!json) console.log(ui.skip("Code generation"));
       }
 
       // 5. Start preview
@@ -111,10 +121,13 @@ export function registerGoCommand(program: Command, engine: MemoireEngine) {
         await preview.buildGallery(engine.registry);
         preview.start();
         steps.preview = { started: true, skipped: false, port: previewPort };
-        console.log(`\n  Preview running at http://localhost:${previewPort}`);
+
+        console.log();
+        console.log(ui.ok(`Preview running at http://localhost:${previewPort}`));
 
         const cleanup = () => {
-          console.log("\n  Shutting down...");
+          console.log();
+          console.log(ui.dim("  Shutting down..."));
           preview.stop();
           if (opts.figma !== false) {
             engine.figma.disconnect();
@@ -139,7 +152,12 @@ export function registerGoCommand(program: Command, engine: MemoireEngine) {
         return;
       }
 
-      console.log("  Pipeline complete. Memoire is live.\n");
+      console.log();
+      console.log(ui.rule());
+      console.log();
+      const elapsed = ((Date.now() - start) / 1000).toFixed(1);
+      console.log(ui.ready("LIVE") + ui.dim(`  ${elapsed}s`));
+      console.log();
     });
 }
 

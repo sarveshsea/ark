@@ -114,6 +114,12 @@ export class FigmaBridge extends EventEmitter {
     // Forward server events
     this.server.on("client-connected", (client) => {
       this.emit("plugin-connected", client);
+      // Auto-resync selection after reconnect so caches are repopulated
+      setTimeout(() => {
+        this.server.sendCommand("getSelection", {}, 10000)
+          .then((sel) => this.emit("selection", sel))
+          .catch(() => { /* plugin may not be ready yet — ignore */ });
+      }, 500);
     });
 
     this.server.on("client-disconnected", () => {

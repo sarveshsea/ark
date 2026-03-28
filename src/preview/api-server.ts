@@ -5,7 +5,7 @@
  * The server pushes `{ type: "reload", reason }` when specs or code change.
  */
 
-import { createServer } from "http";
+import { createServer, type IncomingMessage, type ServerResponse } from "http";
 import { readFile } from "fs/promises";
 import { join, extname } from "path";
 import { WebSocketServer, WebSocket } from "ws";
@@ -53,6 +53,7 @@ export class PreviewApiServer {
   private onFigmaPluginConnected: (() => void) | null = null;
   private onFigmaPluginDisconnected: (() => void) | null = null;
   private widgetState = new PreviewWidgetStateCache();
+  private sseClients = new Set<ServerResponse>();
 
   constructor(engine: MemoireEngine, staticDir: string, port = 3030) {
     this.engine = engine;
@@ -139,8 +140,55 @@ export class PreviewApiServer {
             return;
           }
 
+          // POST /api/action — dispatch actions to Figma bridge
+          if (url.pathname === "/api/action" && req.method === "POST") {
+            const body = await readRequestBody(req);
+            try {
+              const { action } = JSON.parse(body);
+              const result = await this.dispatchAction(action);
+              res.end(JSON.stringify({ ok: true, action, result }));
+            } catch (err) {
+              res.statusCode = 400;
+              res.end(JSON.stringify({ ok: false, error: (err as Error).message }));
+            }
+            return;
+          }
+
+          // Handle CORS preflight for POST endpoints
+          if (req.method === "OPTIONS") {
+            res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+            res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+            res.statusCode = 204;
+            res.end();
+            return;
+          }
+
           res.statusCode = 404;
           res.end(JSON.stringify({ error: "Not found" }));
+          return;
+        }
+
+        // SSE /events — real-time event stream for monitor.html
+        if (url.pathname === "/events") {
+          res.setHeader("Content-Type", "text/event-stream");
+          res.setHeader("Cache-Control", "no-cache");
+          res.setHeader("Connection", "keep-alive");
+          res.setHeader("Access-Control-Allow-Origin", "*");
+
+          // Send initial state
+          const initPayload = {
+            type: "init",
+            data: {
+              status: this.buildWidgetStatusPayload(),
+              recentEvents: [],
+            },
+          };
+          res.write(`data: ${JSON.stringify(initPayload)}\n\n`);
+          this.sseClients.add(res);
+
+          req.on("close", () => {
+            this.sseClients.delete(res);
+          });
           return;
         }
 
@@ -160,11 +208,12 @@ export class PreviewApiServer {
         }
       });
 
-      // Listen for engine events that should trigger browser reload
+      // Listen for engine events that should trigger browser reload + SSE
       this.onEngineEvent = (evt: MemoireEvent) => {
         if (evt.source === "codegen" || evt.source === "auto-spec") {
           this.notifyReload(evt.message);
         }
+        this.broadcastSSE("engine-event", { type: evt.type, source: evt.source, message: evt.message });
       };
       this.engine.on("event", this.onEngineEvent);
       this.attachFigmaListeners();
@@ -237,6 +286,10 @@ export class PreviewApiServer {
     this.detachFigmaListeners();
     for (const ws of this.liveClients) ws.close();
     this.liveClients.clear();
+    for (const res of this.sseClients) {
+      if (!res.writableEnded) res.end();
+    }
+    this.sseClients.clear();
     this.wss?.close();
     this.server?.close();
   }
@@ -248,9 +301,11 @@ export class PreviewApiServer {
     };
     this.onFigmaSelection = (selection) => {
       this.widgetState.updateSelection(selection as Parameters<PreviewWidgetStateCache["updateSelection"]>[0]);
+      this.broadcastSSE("selection", selection);
     };
     this.onFigmaJobStatus = (job) => {
       this.widgetState.upsertJob(job as Parameters<PreviewWidgetStateCache["upsertJob"]>[0]);
+      this.broadcastSSE("job-status", job);
     };
     this.onFigmaAgentStatus = (agent) => {
       this.widgetState.upsertAgent(agent as Parameters<PreviewWidgetStateCache["upsertAgent"]>[0]);
@@ -281,6 +336,7 @@ export class PreviewApiServer {
         }),
         stage: "connected",
       });
+      this.broadcastSSE("plugin-connected", { port: this.engine.figma.wsServer.activePort });
     };
     this.onFigmaPluginDisconnected = () => {
       const current = this.widgetState.getConnection();
@@ -292,6 +348,8 @@ export class PreviewApiServer {
           reconnectDelayMs: current.reconnectDelayMs,
         });
       }
+      this.widgetState.markDisconnected();
+      this.broadcastSSE("plugin-disconnected", {});
     };
 
     figma.on("connection-state", this.onFigmaConnectionState);
@@ -328,4 +386,45 @@ export class PreviewApiServer {
     const bridge = this.engine.figma.wsServer.getStatus();
     return this.widgetState.snapshot(bridge);
   }
+
+  /** Broadcast an SSE event to all connected monitor clients. */
+  private broadcastSSE(type: string, data: unknown): void {
+    if (this.sseClients.size === 0) return;
+    const payload = JSON.stringify({ type, data, ts: Date.now() });
+    for (const res of this.sseClients) {
+      if (!res.writableEnded) {
+        res.write(`data: ${payload}\n\n`);
+      }
+    }
+  }
+
+  /** Map action names from monitor.html to bridge commands. */
+  private async dispatchAction(action: string): Promise<unknown> {
+    const bridge = this.engine.figma;
+    switch (action) {
+      case "inspect":
+        return bridge.getSelection();
+      case "pull-tokens":
+        return bridge.wsServer.sendCommand("getVariables", {}, 60000);
+      case "pull-components":
+        return bridge.wsServer.sendCommand("getComponents", {}, 60000);
+      case "page-tree":
+        return bridge.getPageTree();
+      case "stickies":
+        return bridge.extractStickies();
+      case "full-sync":
+        return bridge.extractDesignSystem();
+      default:
+        throw new Error(`Unknown action: ${action}`);
+    }
+  }
+}
+
+function readRequestBody(req: IncomingMessage): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    req.on("data", (chunk: Buffer) => chunks.push(chunk));
+    req.on("end", () => resolve(Buffer.concat(chunks).toString("utf-8")));
+    req.on("error", reject);
+  });
 }

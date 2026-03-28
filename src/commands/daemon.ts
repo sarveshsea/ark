@@ -4,6 +4,7 @@ import { PreviewApiServer } from "../preview/api-server.js";
 
 import { readFile, writeFile, unlink, mkdir } from "fs/promises";
 import { join, basename } from "path";
+import { ui } from "../tui/format.js";
 
 interface DaemonStatus {
   pid: number;
@@ -105,9 +106,11 @@ export function registerDaemonCommand(program: Command, engine: MemoireEngine): 
       // Check if a daemon is already running
       const existing = await readStatus(engine);
       if (existing && isProcessAlive(existing.pid)) {
-        console.log(`\n  Memoire daemon is already running (PID ${existing.pid})`);
-        console.log(`    Preview:   http://localhost:${existing.port}`);
-        console.log(`    Figma:     port ${existing.figmaPort}\n`);
+        console.log();
+        console.log(ui.warn("Daemon already running (PID " + existing.pid + ")"));
+        console.log(ui.dots("Preview", `http://localhost:${existing.port}`));
+        console.log(ui.dots("Figma", `port ${existing.figmaPort}`));
+        console.log();
         return;
       }
 
@@ -155,27 +158,29 @@ export function registerDaemonCommand(program: Command, engine: MemoireEngine): 
       await writeFile(statusPath(engine), JSON.stringify(status, null, 2));
 
       // 4. Log running state
-      console.log(`
-  ┌──────────────────────────────────────────────────┐
-  |  MEMOIRE DAEMON — PID ${String(process.pid).padEnd(27)}|
-  |                                                  |
-  |  Preview:   http://localhost:${String(actualPreviewPort).padEnd(20)}|
-  |  Figma:     port ${String(figmaPort).padEnd(31)}|
-  |                                                  |
-  |  Stop with: memi daemon stop                     |
-  └──────────────────────────────────────────────────┘
-`);
+      console.log();
+      console.log(ui.box(`DAEMON — PID ${process.pid}`, [
+        "",
+        `Preview:   http://localhost:${actualPreviewPort}`,
+        `Figma:     port ${figmaPort}`,
+        "",
+        "Stop with: memi daemon stop",
+        "",
+      ]));
+
 
       // 5. Set up graceful shutdown handlers
       const shutdown = async () => {
-        console.log("\n  Shutting down Memoire daemon...");
+        console.log();
+        console.log(ui.active("Shutting down daemon..."));
         try {
           engine.figma.disconnect();
         } catch {
           // Already disconnected
         }
         await cleanupFiles(engine);
-        console.log("  Memoire daemon stopped.\n");
+        console.log(ui.ok("Daemon stopped"));
+        console.log();
         process.exit(0);
       };
 
@@ -184,14 +189,15 @@ export function registerDaemonCommand(program: Command, engine: MemoireEngine): 
 
       // 7. Listen for Figma plugin events
       engine.figma.on("plugin-connected", (client: { file: string; editor: string }) => {
-        console.log(`  + Figma connected: ${client.file} (${client.editor})`);
+        console.log(ui.ok(`Figma connected: ${client.file} (${client.editor})`));
       });
 
       engine.figma.on("plugin-disconnected", () => {
-        console.log("  - Figma plugin disconnected");
+        console.log(ui.warn("Figma plugin disconnected"));
       });
 
-      console.log("  Daemon running. Waiting for Figma plugin...\n");
+      console.log(ui.active("Daemon running. Waiting for Figma plugin..."));
+      console.log();
 
       // Keep the process alive — the servers hold open handles, but
       // we also set an interval as a safety net to prevent exit.
@@ -261,7 +267,9 @@ export function registerDaemonCommand(program: Command, engine: MemoireEngine): 
           return;
         }
 
-        console.log("\n  Memoire daemon: stopped (no status file)\n");
+        console.log();
+        console.log(ui.pending("Daemon stopped " + ui.dim("(no status file)")));
+        console.log();
         return;
       }
 
@@ -284,10 +292,12 @@ export function registerDaemonCommand(program: Command, engine: MemoireEngine): 
           return;
         }
 
-        console.log(`\n  Memoire daemon: stopped (stale — PID ${status.pid} is not running)`);
-        console.log("  Cleaning up stale files...");
+        console.log();
+        console.log(ui.warn(`Daemon stale — PID ${status.pid} is not running`));
+        console.log(ui.active("Cleaning up stale files..."));
         await cleanupFiles(engine);
-        console.log("  Done.\n");
+        console.log(ui.ok("Cleaned"));
+        console.log();
         return;
       }
 
@@ -302,15 +312,15 @@ export function registerDaemonCommand(program: Command, engine: MemoireEngine): 
       }
 
       const runningUptimeSeconds = uptimeSeconds ?? 0;
-      console.log(`
-  Memoire daemon: running
-    PID:        ${status.pid}
-    Uptime:     ${formatUptime(runningUptimeSeconds)}
-    Started:    ${status.startedAt}
-    Preview:    http://localhost:${status.port}
-    Figma:      port ${status.figmaPort}
-    Figma link: ${figmaConnected ? "connected" : "waiting for plugin"}
-`);
+      console.log(ui.brand("DAEMON"));
+      console.log(ui.ok("Running"));
+      console.log(ui.dots("PID", String(status.pid)));
+      console.log(ui.dots("Uptime", formatUptime(runningUptimeSeconds)));
+      console.log(ui.dots("Started", status.startedAt));
+      console.log(ui.dots("Preview", `http://localhost:${status.port}`));
+      console.log(ui.dots("Figma", `port ${status.figmaPort}`));
+      console.log(ui.dots("Figma link", figmaConnected ? ui.green("connected") : ui.dim("waiting")));
+      console.log();
     });
 
   // ── daemon restart ────────────────────────────────────────────

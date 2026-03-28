@@ -80,6 +80,8 @@ export class MemoireWsServer extends EventEmitter {
     timeout: ReturnType<typeof setTimeout>;
     clientId: string;
   }>();
+  /** Tracks in-flight idempotent reads to prevent duplicate requests. method → commandId */
+  private inFlightMethods = new Map<string, string>();
   private commandId = 0;
 
   constructor(config: MemoireWsServerConfig = {}) {
@@ -155,6 +157,12 @@ export class MemoireWsServer extends EventEmitter {
     }
   }
 
+  /** Idempotent read commands that should be deduplicated when already in-flight. */
+  private static readonly DEDUP_METHODS = new Set([
+    "getSelection", "getVariables", "getComponents", "getStyles",
+    "getStickies", "getChanges", "getPageList", "getPageTree", "captureScreenshot",
+  ]);
+
   /**
    * Send a command to the first connected Figma plugin and wait for response.
    */
@@ -168,11 +176,21 @@ export class MemoireWsServer extends EventEmitter {
       throw new Error("No Figma plugin connected");
     }
 
+    // Dedup idempotent reads — if the same method is already in-flight, reject duplicate
+    if (MemoireWsServer.DEDUP_METHODS.has(method) && this.inFlightMethods.has(method)) {
+      throw new Error(`Command already in-flight: ${method}`);
+    }
+
     const id = String(++this.commandId);
+
+    if (MemoireWsServer.DEDUP_METHODS.has(method)) {
+      this.inFlightMethods.set(method, id);
+    }
 
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
         this.pendingCommands.delete(id);
+        this.inFlightMethods.delete(method);
         reject(new Error(`Command timed out: ${method}`));
       }, timeout);
 
@@ -181,6 +199,7 @@ export class MemoireWsServer extends EventEmitter {
       if (client.ws.readyState !== WebSocket.OPEN) {
         clearTimeout(timer);
         this.pendingCommands.delete(id);
+        this.inFlightMethods.delete(method);
         reject(new Error("Plugin connection not open"));
         return;
       }
@@ -196,6 +215,7 @@ export class MemoireWsServer extends EventEmitter {
       } catch (err) {
         clearTimeout(timer);
         this.pendingCommands.delete(id);
+        this.inFlightMethods.delete(method);
         reject(new Error(`Failed to send command ${method}: ${(err as Error).message}`));
       }
     });
@@ -377,6 +397,10 @@ export class MemoireWsServer extends EventEmitter {
             clearTimeout(pending.timeout);
             pending.reject(new Error("Figma plugin disconnected"));
             this.pendingCommands.delete(id);
+            // Clean up dedup tracking for this command
+            for (const [method, cmdId] of this.inFlightMethods.entries()) {
+              if (cmdId === id) this.inFlightMethods.delete(method);
+            }
           }
         }
 
@@ -417,6 +441,9 @@ export class MemoireWsServer extends EventEmitter {
               clearTimeout(pending.timeout);
               pending.reject(new Error("Plugin unresponsive — ping timeout"));
               this.pendingCommands.delete(id);
+              for (const [method, cmdId] of this.inFlightMethods.entries()) {
+                if (cmdId === id) this.inFlightMethods.delete(method);
+              }
             }
           }
           this.emitEvent("warn", `Plugin ${clientId} unresponsive — disconnected`);
@@ -461,11 +488,12 @@ export class MemoireWsServer extends EventEmitter {
         break;
 
       case "response": {
-        // Response to a command we sent
+        // Response to a command we sent — verify it came from the same client
         const pending = this.pendingCommands.get(msg.id);
-        if (pending) {
+        if (pending && pending.clientId === clientId) {
           clearTimeout(pending.timeout);
           this.pendingCommands.delete(msg.id);
+          this.inFlightMethods.delete(msg.id);
           if (msg.error) {
             pending.reject(new Error(msg.error));
           } else {

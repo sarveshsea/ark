@@ -33,7 +33,7 @@ describe("init idempotence", () => {
 
     expect(engine.registry.saveSpec).not.toHaveBeenCalled();
     expect(engine.generateFromSpec).not.toHaveBeenCalled();
-    expect(logs.some((line) => line.includes("Starter specs already present. Skipping regeneration."))).toBe(true);
+    expect(logs.some((line) => line.includes("Starter specs already present"))).toBe(true);
   });
 
   it("only generates starter specs created in the current run", async () => {

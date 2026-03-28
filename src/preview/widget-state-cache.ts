@@ -55,6 +55,7 @@ export class PreviewWidgetStateCache {
   private updatedAt = Date.now();
 
   updateConnection(connection: WidgetConnectionState): void {
+    if (!connection?.stage) return;
     this.connection = connection;
     this.touch();
   }
@@ -65,17 +66,20 @@ export class PreviewWidgetStateCache {
   }
 
   upsertJob(job: WidgetJob): void {
+    if (!job?.id || !job?.status) return;
     this.jobs.set(job.id, job);
     this.touch();
   }
 
   upsertAgent(agent: AgentBoxState): void {
+    if (!agent?.runId || !agent?.taskId || !agent?.role) return;
     const key = `${agent.runId}:${agent.taskId}:${agent.role}`;
     this.agents.set(key, agent);
     this.touch();
   }
 
   mergeSync(sync: WidgetSyncSummary): void {
+    if (!sync) return;
     this.sync = {
       tokens: sync.tokens || this.sync?.tokens || 0,
       components: sync.components || this.sync?.components || 0,
@@ -87,6 +91,22 @@ export class PreviewWidgetStateCache {
 
   updateHeal(heal: WidgetHealSummary): void {
     this.heal = heal;
+    this.touch();
+  }
+
+  /** Transition running jobs → disconnected and busy agents → error on plugin disconnect. */
+  markDisconnected(): void {
+    const now = Date.now();
+    for (const [id, job] of this.jobs) {
+      if (job.status === "running") {
+        this.jobs.set(id, { ...job, status: "disconnected", updatedAt: now });
+      }
+    }
+    for (const [key, agent] of this.agents) {
+      if (agent.status === "busy") {
+        this.agents.set(key, { ...agent, status: "error", error: "Plugin disconnected" });
+      }
+    }
     this.touch();
   }
 

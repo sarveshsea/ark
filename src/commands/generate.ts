@@ -1,5 +1,6 @@
 import type { Command } from "commander";
 import type { MemoireEngine } from "../engine/core.js";
+import { ui } from "../tui/format.js";
 
 export interface GeneratePayload {
   mode: "single" | "all";
@@ -61,13 +62,16 @@ export function registerGenerateCommand(program: Command, engine: MemoireEngine)
             if (opts.json) {
               console.log(JSON.stringify(payload, null, 2));
             } else {
-              console.log("\n  No specs found. Create one first.\n");
+              console.log();
+            console.log(ui.pending("No specs found. Run " + ui.bold("memi spec component Name") + " first."));
+            console.log();
             }
             return;
           }
 
           if (!opts.json) {
-            console.log(`\n  Generating ${specs.length} specs...\n`);
+            console.log(ui.brand("GENERATE"));
+            console.log(ui.section("CODEGEN"));
           }
 
           const results: GenerateResultPayload[] = [];
@@ -93,7 +97,7 @@ export function registerGenerateCommand(program: Command, engine: MemoireEngine)
               });
 
               if (!opts.json) {
-                console.error(`  ✖ ${spec.name}: ${msg}`);
+                console.log(ui.fail(spec.name + ui.dim("  " + msg)));
               }
             }
           }
@@ -115,7 +119,11 @@ export function registerGenerateCommand(program: Command, engine: MemoireEngine)
             return;
           }
 
-          console.log(`\n  Done. Generated files in generated/${payload.summary.failed > 0 ? ` (${payload.summary.failed} errors)` : ""}\n`);
+          console.log();
+          console.log(ui.rule());
+          console.log();
+          console.log(ui.ready("DONE") + ui.dim(`  ${payload.summary.generated} generated` + (payload.summary.failed > 0 ? `, ${payload.summary.failed} failed` : "")));
+          console.log();
           return;
         }
 
@@ -146,7 +154,9 @@ export function registerGenerateCommand(program: Command, engine: MemoireEngine)
           return;
         }
 
-        console.log(`\n  Generated: ${entryFile}\n`);
+        console.log();
+        console.log(ui.ok(entryFile));
+        console.log();
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
 
@@ -173,7 +183,9 @@ export function registerGenerateCommand(program: Command, engine: MemoireEngine)
           return;
         }
 
-        console.error(`\n  ✖ ${msg}\n`);
+        console.log();
+        console.log(ui.fail(msg));
+        console.log();
         process.exit(1);
       }
     });

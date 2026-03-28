@@ -7,6 +7,7 @@ import type { Command } from "commander";
 import type { MemoireEngine } from "../engine/core.js";
 import { readdir, readFile, writeFile, mkdir, access } from "fs/promises";
 import { join, relative } from "path";
+import { ui } from "../tui/format.js";
 
 type ExportKind = "components" | "pages" | "dataviz" | "other";
 type ExportStatus = "would-write" | "written" | "skipped" | "failed";
@@ -74,7 +75,9 @@ export function registerExportCommand(program: Command, engine: MemoireEngine) {
             return;
           }
 
-          console.log("\n  x Could not detect project context. Run `memi init` first.\n");
+          console.log();
+          console.log(ui.fail("Could not detect project context. Run " + ui.bold("memi init") + " first."));
+          console.log();
           return;
         }
 
@@ -95,13 +98,17 @@ export function registerExportCommand(program: Command, engine: MemoireEngine) {
           if (opts.json) {
             console.log(JSON.stringify(payload, null, 2));
           } else {
-            console.log("\n  · No generated files found. Run `memi generate` or `memi go` first.\n");
+            console.log();
+            console.log(ui.pending("No generated files found. Run " + ui.bold("memi generate") + " first."));
+            console.log();
           }
           return;
         }
 
         if (!opts.json) {
-          console.log(`\n  Exporting ${files.length} files to project destinations\n`);
+          console.log(ui.brand("EXPORT"));
+          console.log(ui.dots("Files", String(files.length)));
+          console.log(ui.section("FILES"));
         }
 
         const exports: ExportResultPayload[] = [];
@@ -128,7 +135,7 @@ export function registerExportCommand(program: Command, engine: MemoireEngine) {
               reason: null,
             });
             if (!opts.json) {
-              console.log(`  · ${relPath} → ${destinationRelative}`);
+              console.log(ui.pending(relPath + ui.dim(" > " + destinationRelative)));
             }
             written++;
             continue;
@@ -146,7 +153,7 @@ export function registerExportCommand(program: Command, engine: MemoireEngine) {
                 reason: "exists",
               });
               if (!opts.json) {
-                console.log(`  ! Skipping ${relPath} (exists, use --force to overwrite)`);
+                console.log(ui.skip(relPath + ui.dim("  exists, use --force")));
               }
               skipped++;
               continue;
@@ -168,7 +175,7 @@ export function registerExportCommand(program: Command, engine: MemoireEngine) {
               reason: null,
             });
             if (!opts.json) {
-              console.log(`  + ${relPath}`);
+              console.log(ui.ok(relPath));
             }
             written++;
           } catch (err) {
@@ -182,7 +189,7 @@ export function registerExportCommand(program: Command, engine: MemoireEngine) {
               reason: message,
             });
             if (!opts.json) {
-              console.error(`  x ${relPath}: ${message}`);
+              console.log(ui.fail(relPath + ui.dim("  " + message)));
             }
             failed++;
           }
@@ -207,11 +214,18 @@ export function registerExportCommand(program: Command, engine: MemoireEngine) {
           return;
         }
 
+        console.log();
+        console.log(ui.rule());
+        console.log();
         if (opts.dryRun) {
-          console.log(`\n  Dry run: would export ${written} files\n`);
+          console.log(ui.ready("DRY RUN") + ui.dim(`  would export ${written} files`));
         } else {
-          console.log(`\n  + Exported ${written} files${skipped > 0 ? `, skipped ${skipped}` : ""}${failed > 0 ? `, failed ${failed}` : ""}\n`);
+          const parts = [`${written} exported`];
+          if (skipped > 0) parts.push(`${skipped} skipped`);
+          if (failed > 0) parts.push(`${failed} failed`);
+          console.log(ui.ready("DONE") + ui.dim("  " + parts.join(", ")));
         }
+        console.log();
       } catch (err) {
         if (opts.json) {
           const message = err instanceof Error ? err.message : String(err);

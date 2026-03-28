@@ -4,6 +4,8 @@ import type { ComponentSpec, DataVizSpec, PageSpec } from "../specs/types.js";
 import { writeFile, mkdir } from "fs/promises";
 import { existsSync } from "fs";
 import { join } from "path";
+import ora from "ora";
+import { ui } from "../tui/format.js";
 
 export function registerInitCommand(program: Command, engine: MemoireEngine) {
   program
@@ -12,66 +14,61 @@ export function registerInitCommand(program: Command, engine: MemoireEngine) {
     .action(async () => {
       const root = engine.config.projectRoot;
 
-      console.log(`
-  ╔══════════════════════════════════════════════════╗
-  ║                                                  ║
-  ║            Welcome to Mémoire                        ║
-  ║     AI-Native Design Intelligence Engine         ║
-  ║                                                  ║
-  ╚══════════════════════════════════════════════════╝
-`);
+      // ── Brand ───────────────────────────────────────
+      console.log(ui.brand("AI-Native Design Intelligence Engine"));
 
-      // Step 1: Detect project
-      console.log("  Step 1/5: Detecting your project...\n");
+      // ── Detect ──────────────────────────────────────
+      const detect = ora({ text: "Detecting project...", indent: 2, color: "cyan" }).start();
       await engine.init();
       const project = engine.project;
 
-      console.log(`    Framework:  ${project?.framework ?? "not detected"}`);
-      console.log(`    Language:   ${project?.language ?? "unknown"}`);
-      console.log(`    Tailwind:   ${project?.styling.tailwind ? "yes" : "not yet"}`);
-      console.log(`    shadcn/ui:  ${project?.shadcn.installed ? `yes (${project.shadcn.components.length} components)` : "not yet"}`);
+      const parts: string[] = [];
+      if (project?.framework) parts.push(project.framework);
+      if (project?.language) parts.push(project.language);
+      if (project?.styling.tailwind) parts.push("tailwind");
+      if (project?.shadcn.installed) parts.push(`shadcn (${project.shadcn.components.length})`);
 
-      // Step 2: API Keys guide
-      console.log(`\n  Step 2/5: API Keys & Connections\n`);
-      console.log(`    Mémoire connects to these services. Here's how to set them up:\n`);
-      console.log(`    FIGMA_TOKEN (required for Figma sync)`);
-      console.log(`    ─────────────────────────────────────`);
-      console.log(`    1. Open Figma → Settings → Account`);
-      console.log(`    2. Scroll to "Personal Access Tokens"`);
-      console.log(`    3. Click "Generate new token"`);
-      console.log(`    4. Name it "Memoire", copy the token`);
-      console.log(`    5. Add to your shell: export FIGMA_TOKEN="figd_xxxxx"`);
-      console.log(``);
-      console.log(`    FIGMA_FILE_KEY (optional, for default file)`);
-      console.log(`    ─────────────────────────────────────────`);
-      console.log(`    From your Figma URL: figma.com/design/[THIS_PART]/...`);
-      console.log(`    export FIGMA_FILE_KEY="abc123def456"`);
+      detect.stop();
+      console.log(ui.dots("DETECT", parts.length > 0 ? parts.join(" + ") : "no framework detected"));
 
-      // Step 3: Setup directory structure
-      console.log(`\n  Step 3/5: Setting up project structure...\n`);
+      // ── Keys guide ──────────────────────────────────
+      console.log(ui.section("KEYS"));
+      console.log();
+      console.log(ui.dots("FIGMA_TOKEN", "required for sync"));
+      console.log(ui.instructions([
+        '1. Open Figma > Settings > Account',
+        '2. Scroll to "Personal Access Tokens"',
+        '3. Generate new token named "Memoire"',
+        '4. export FIGMA_TOKEN="figd_xxxxx"',
+      ]));
+      console.log();
+      console.log(ui.dots("FIGMA_FILE_KEY", "optional default"));
+      console.log("  From URL: figma.com/design/[THIS_PART]/...");
+      console.log('  export FIGMA_FILE_KEY="abc123def456"');
 
-      const dirs = [
-        "specs/components",
-        "specs/pages",
-        "specs/dataviz",
-        "specs/design",
-        "specs/ia",
-        "research/reports",
-        "generated/components",
-        "generated/pages",
-        "generated/dataviz",
-        "prototype",
-        ".memoire",
-        ".memoire/notes",
+      // ── Structure ───────────────────────────────────
+      console.log(ui.section("STRUCTURE"));
+
+      const dirGroups: [string, string[]][] = [
+        ["specs/", ["components", "pages", "dataviz", "design", "ia"]],
+        ["research/", ["reports"]],
+        ["generated/", ["components", "pages", "dataviz"]],
+        ["prototype/", []],
+        [".memoire/", ["notes"]],
       ];
 
-      for (const dir of dirs) {
-        await mkdir(join(root, dir), { recursive: true });
-        console.log(`    Created: ${dir}/`);
+      for (const [parent, children] of dirGroups) {
+        const fullChildren = children.map((c) => parent + c);
+        const allPaths = [parent, ...fullChildren];
+        for (const dir of allPaths) {
+          await mkdir(join(root, dir), { recursive: true });
+        }
+        const desc = children.length > 0 ? ui.dim("  " + children.join(", ")) : "";
+        console.log(ui.ok(parent + desc));
       }
 
-      // Step 4: Create starter specs
-      console.log(`\n  Step 4/5: Creating starter dashboard specs...\n`);
+      // ── Starter specs ───────────────────────────────
+      console.log(ui.section("SPECS"));
       const createdSpecs: string[] = [];
 
       const metricCard: ComponentSpec = {
@@ -98,11 +95,11 @@ export function registerInitCommand(program: Command, engine: MemoireEngine) {
         updatedAt: new Date().toISOString(),
       };
       if (await engine.registry.getSpec(metricCard.name)) {
-        console.log("    Retained spec: MetricCard (already exists)");
+        console.log(ui.skip("MetricCard" + ui.dim("  already exists")));
       } else {
         await engine.registry.saveSpec(metricCard);
         createdSpecs.push(metricCard.name);
-        console.log("    Created spec: MetricCard (component)");
+        console.log(ui.ok("MetricCard" + ui.dim("  component")));
       }
 
       const activityChart: DataVizSpec = {
@@ -133,11 +130,11 @@ export function registerInitCommand(program: Command, engine: MemoireEngine) {
         updatedAt: new Date().toISOString(),
       };
       if (await engine.registry.getSpec(activityChart.name)) {
-        console.log("    Retained spec: ActivityChart (already exists)");
+        console.log(ui.skip("ActivityChart" + ui.dim("  already exists")));
       } else {
         await engine.registry.saveSpec(activityChart);
         createdSpecs.push(activityChart.name);
-        console.log("    Created spec: ActivityChart (dataviz)");
+        console.log(ui.ok("ActivityChart" + ui.dim("  dataviz")));
       }
 
       const dashboard: PageSpec = {
@@ -158,85 +155,68 @@ export function registerInitCommand(program: Command, engine: MemoireEngine) {
         updatedAt: new Date().toISOString(),
       };
       if (await engine.registry.getSpec(dashboard.name)) {
-        console.log("    Retained spec: Dashboard (already exists)");
+        console.log(ui.skip("Dashboard" + ui.dim("  already exists")));
       } else {
         await engine.registry.saveSpec(dashboard);
         createdSpecs.push(dashboard.name);
-        console.log("    Created spec: Dashboard (page)");
+        console.log(ui.ok("Dashboard" + ui.dim("  page")));
       }
 
-      // Step 5: Generate and build
-      console.log(`\n  Step 5/5: Generating code from starter specs...\n`);
+      // ── Codegen ─────────────────────────────────────
+      console.log(ui.section("CODEGEN"));
 
       if (createdSpecs.length === 0) {
-        console.log("    Starter specs already present. Skipping regeneration.");
+        console.log(ui.skip("Starter specs already present"));
       } else {
         for (const specName of createdSpecs) {
+          const gen = ora({ text: specName, indent: 2, color: "cyan" }).start();
           try {
             await engine.generateFromSpec(specName);
+            gen.stop();
+            console.log(ui.ok(specName));
           } catch (err) {
+            gen.stop();
             const msg = err instanceof Error ? err.message : String(err);
-            console.log(`    Skipped ${specName}: ${msg}`);
+            console.log(ui.warn(specName + ui.dim("  " + msg)));
           }
         }
       }
 
-      // Write onboarding complete marker
+      // ── Onboarding marker ───────────────────────────
       await writeFile(
         join(root, ".memoire", "onboarded.json"),
         JSON.stringify({ completedAt: new Date().toISOString(), version: "0.1.0" })
       );
 
-      console.log(`
-  ╔══════════════════════════════════════════════════╗
-  ║                                                  ║
-  ║            Mémoire is ready!                         ║
-  ║                                                  ║
-  ╚══════════════════════════════════════════════════╝
+      // ── Ready ───────────────────────────────────────
+      console.log();
+      console.log(ui.rule());
+      console.log();
+      console.log(ui.ready("READY"));
+      console.log("  " + createdSpecs.length + " specs created" + ui.dim(" · ") + "shadcn components generated");
+      console.log("  Research directory ready for data");
 
-  Your project now has:
-    3 starter specs (MetricCard, ActivityChart, Dashboard)
-    Generated shadcn components in generated/
-    Research directory ready for data
+      // Plugin info
+      const home = process.env.HOME || process.env.USERPROFILE || "";
+      const homePlugin = join(home, ".memoire", "plugin", "manifest.json");
+      const localPlugin = join(root, "plugin", "manifest.json");
+      const pluginPath = existsSync(homePlugin) ? homePlugin : localPlugin;
 
-  Figma Plugin:${(() => {
-        const home = process.env.HOME || process.env.USERPROFILE || "";
-        const homePlugin = join(home, ".memoire", "plugin", "manifest.json");
-        const localPlugin = join(root, "plugin", "manifest.json");
-        const pluginPath = existsSync(homePlugin) ? homePlugin : localPlugin;
-        return `
-    Import in Figma: Plugins → Development → Import from manifest
-    Path: ${pluginPath}
-    (macOS: Cmd+Shift+G in file picker to paste the path)`;
-      })()}
+      console.log();
+      console.log(ui.dots("Plugin", pluginPath));
+      console.log("  Import in Figma: Plugins > Development > Import from manifest");
 
-  Next steps (one at a time):
-
-    STEP 1 — Connect to Figma (guided):
- *   memi connect
-       (walks you through token setup, file key, and plugin install)
-
-    STEP 2 — Pull your design system:
- *   memi pull
-
-    STEP 3 — Extract information architecture:
- *   memi ia extract MyApp
-
-    STEP 4 — Launch the dashboard:
- *   memi dashboard
-
-    STEP 5 — Create more specs:
- *   memi spec component MyComponent
- *   memi spec page MyPage
- *   memi spec dataviz MyChart
- *   memi spec design MyDesign
- *   memi ia create MySitemap
-
-    STEP 6 — Generate code:
- *   memi generate
-
-  Run \`memi status\` anytime to check progress.
-  Run \`memi --help\` to see all commands.
-`);
+      // Next steps
+      console.log(ui.section("NEXT"));
+      console.log(ui.guide("memi connect", "guided Figma setup"));
+      console.log(ui.guide("memi pull", "sync design system"));
+      console.log(ui.guide("memi ia extract app", "extract page tree"));
+      console.log(ui.guide("memi dashboard", "launch dashboard"));
+      console.log(ui.guide("memi spec component Name", "create a spec"));
+      console.log(ui.guide("memi generate", "generate code"));
+      console.log();
+      console.log("  " + ui.dim("memi status") + "    " + ui.dim("check progress"));
+      console.log("  " + ui.dim("memi --help") + "    " + ui.dim("all commands"));
+      console.log();
     });
 }

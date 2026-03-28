@@ -5,7 +5,9 @@ import type { BridgeClient } from "../figma/ws-server.js";
 import { readFile, writeFile } from "fs/promises";
 import { join } from "path";
 import { createInterface } from "readline";
+import chalk from "chalk";
 import { resolvePluginHealth, type PluginInstallHealth } from "../plugin/install-info.js";
+import { ui } from "../tui/format.js";
 
 type ConfigSource = "process" | ".env.local" | ".env" | "missing";
 
@@ -70,12 +72,12 @@ interface ConnectJsonPayload {
   };
 }
 
-/** Prompt for a single line of input */
+/** Prompt with ▸ indicator */
 function ask(question: string, defaultVal?: string): Promise<string> {
   const rl = createInterface({ input: process.stdin, output: process.stdout });
-  const suffix = defaultVal ? ` (${defaultVal})` : "";
+  const suffix = defaultVal ? chalk.dim(` (${defaultVal})`) : "";
   return new Promise((resolve) => {
-    rl.question(`  ${question}${suffix}: `, (answer) => {
+    rl.question(`  ${ui.promptPrefix()} ${question}${suffix}: `, (answer) => {
       rl.close();
       resolve(answer.trim() || defaultVal || "");
     });
@@ -192,13 +194,13 @@ function buildPluginNextSteps(plugin: PluginInstallHealth): string[] {
 function describePluginHealth(plugin: PluginInstallHealth): string {
   switch (plugin.health) {
     case "current":
-      return "current home install";
+      return "current";
     case "stale-home-copy":
-      return "stale home install";
+      return "stale";
     case "local-only":
-      return "local bundle only";
+      return "local only";
     case "missing-assets":
-      return "missing bundle assets";
+      return "missing assets";
     case "symlink-risk":
       return "symlink risk";
     default:
@@ -266,58 +268,56 @@ export function registerConnectCommand(program: Command, engine: MemoireEngine) 
         return;
       }
 
-      // ── Step 1: Check for Figma token ──────────────────
+      // ── Guided setup (first time) ─────────────────
       if (!token.value && !opts.skipSetup) {
-        console.log(`
-  ┌─────────────────────────────────────────────────┐
-  │  FIGMA MEMOIRE - CONNECTION SETUP                │
-  │  Let's get you connected step by step.          │
-  └─────────────────────────────────────────────────┘
-`);
+        console.log(ui.brand("CONNECTION SETUP"));
 
-        console.log("  STEP 1 / 3 - Figma Personal Access Token\n");
-        console.log("  You need a Figma token so Memoire can read your designs.\n");
-        console.log("  How to get one:");
-        console.log("    1. Open Figma Desktop (or figma.com)");
-        console.log("    2. Click your avatar -> Settings");
-        console.log("    3. Scroll to 'Personal access tokens'");
-        console.log("    4. Click 'Generate new token'");
-        console.log("    5. Name it 'Memoire'");
-        console.log("    6. Copy the token (starts with figd_...)\n");
+        // ── Token ─────────────────────────────────────
+        console.log(ui.section("TOKEN"));
+        console.log("  Figma Personal Access Token");
+        console.log();
+        console.log(ui.instructions([
+          "1. Open Figma > Settings > Account",
+          '2. Scroll to "Personal Access Tokens"',
+          '3. Generate new token named "Memoire"',
+          "4. Token starts with figd_...",
+        ]));
+        console.log();
 
-        const inputToken = await ask("Paste your Figma token here");
+        const inputToken = await ask("Paste your token");
 
         if (!inputToken) {
-          console.log("\n  No token provided. You can set it later:");
-          console.log("    export FIGMA_TOKEN=\"figd_xxxxx\"");
-          console.log("  Or re-run: memi connect\n");
+          console.log();
+          console.log(ui.warn("No token provided"));
+          console.log('  Set later: export FIGMA_TOKEN="figd_xxxxx"');
+          console.log("  Or re-run: memi connect");
+          console.log();
           process.exit(0);
         }
 
         // Validate token format
         if (!inputToken.startsWith("figd_") && inputToken.length < 10) {
-          console.log("\n  Warning: Token doesn't look like a Figma token (usually starts with figd_).");
+          console.log();
+          console.log(ui.warn("Token doesn't look like a Figma token (usually starts with figd_)"));
           const proceed = await ask("Continue anyway? (y/n)", "y");
           if (proceed.toLowerCase() !== "y") {
             process.exit(0);
           }
         }
 
-        // Save to .env.local
         await setEnvVar(root, "FIGMA_TOKEN", inputToken);
-        console.log("\n  Saved to .env.local\n");
-
-        // Also set in current process so the bridge can use it
+        console.log(ui.ok("Saved to .env.local"));
         process.env.FIGMA_TOKEN = inputToken;
 
-        // ── Step 2: File key (optional) ───────────────────
-        console.log("  STEP 2 / 3 - Default Figma File (optional)\n");
-        console.log("  If you have one main design file, paste its URL or file key.");
-        console.log("  This lets `memi pull` work without specifying a file each time.\n");
-        console.log("  Example URL: figma.com/design/abc123def/MyProject");
-        console.log("  Example key: abc123def\n");
+        // ── File key ──────────────────────────────────
+        console.log(ui.section("FILE"));
+        console.log("  Default Figma File " + ui.dim("(optional)"));
+        console.log();
+        console.log("  Paste URL or file key. Enter to skip.");
+        console.log("  " + ui.dim("Example: figma.com/design/abc123def/MyProject"));
+        console.log();
 
-        const fileInput = await ask("Figma file URL or key (Enter to skip)");
+        const fileInput = await ask("Figma file URL or key");
 
         if (fileInput) {
           const urlMatch = fileInput.match(/figma\.com\/(?:design|file)\/([^/]+)/);
@@ -325,44 +325,43 @@ export function registerConnectCommand(program: Command, engine: MemoireEngine) 
 
           await setEnvVar(root, "FIGMA_FILE_KEY", resolvedFileKey);
           process.env.FIGMA_FILE_KEY = resolvedFileKey;
-          console.log(`\n  File key saved: ${resolvedFileKey}\n`);
+          console.log(ui.ok("File key saved: " + resolvedFileKey));
         } else {
-          console.log("  Skipped - you can add this later in .env.local\n");
+          console.log(ui.skip("Skipped — add later in .env.local"));
         }
 
-        // ── Step 3: Install plugin ────────────────────────
-        console.log("  STEP 3 / 3 - Install the Memoire Control Plane\n");
-        console.log("  The widget runs inside Figma and talks to Memoire over WebSocket.\n");
-
-        if (plugin.source === "local" && plugin.symlinked) {
-          console.log("  Warning: plugin/manifest.json is a symlink - Figma may reject it.");
-          console.log("  Run `npm install -g @sarveshsea/memoire` again to copy the plugin to ~/.memoire/plugin/\n");
-        }
-
-        console.log(`  Bundle health: ${describePluginHealth(plugin)}`);
-        console.log(`  Widget V2: ${plugin.widgetVersion ?? "unknown"} / package ${plugin.packageVersion ?? "unknown"}`);
-        if (plugin.builtAt) {
-          console.log(`  Built at: ${plugin.builtAt}`);
-        }
-        console.log(`  Install path: ${plugin.installPath}`);
-        console.log(`  Bundle assets: ${plugin.bundle.ready ? "ready" : "missing"}`);
+        // ── Plugin ────────────────────────────────────
+        console.log(ui.section("PLUGIN"));
+        console.log("  Memoire Control Plane");
         console.log();
 
-        console.log("  To install it:");
-        console.log("    1. Open Figma Desktop");
-        console.log("    2. Go to Plugins -> Development -> Import plugin from manifest");
-        console.log(`    3. Select: ${plugin.manifestPath}`);
-        console.log("       (In macOS file picker: Cmd+Shift+G, then paste the path)");
-        console.log("    4. If Figma reports that the main file must not be a symlink, re-import from ~/.memoire/plugin/manifest.json");
-        console.log("    5. The plugin will appear under Plugins -> Development -> Memoire\n");
+        if (plugin.source === "local" && plugin.symlinked) {
+          console.log(ui.warn("manifest.json is a symlink — Figma may reject it"));
+          console.log("  Run " + ui.bold("npm install -g @sarveshsea/memoire") + " to fix");
+          console.log();
+        }
+
+        console.log(ui.dots("Health", describePluginHealth(plugin)));
+        console.log(ui.dots("Widget", `v${plugin.widgetVersion ?? "?"} / ${plugin.packageVersion ?? "?"}`));
+        console.log(ui.dots("Install", plugin.installPath));
+        console.log(ui.dots("Bundle", plugin.bundle.ready ? ui.green("ready") : ui.red("missing")));
+        console.log();
+
+        console.log(ui.instructions([
+          "1. Open Figma Desktop",
+          "2. Plugins > Development > Import manifest",
+          `3. Select: ${plugin.manifestPath}`,
+          "4. Cmd+Shift+G to paste path in file picker",
+        ]));
+        console.log();
 
         const ready = await ask("Press Enter when ready to connect...");
         void ready;
-
         console.log();
       } else if (token.value) {
         if (!json) {
-          console.log(`\n  Figma token found ${token.value.startsWith("figd_") ? "(figd_...)" : "(configured)"}`);
+          console.log(ui.brand("CONNECT"));
+          console.log(ui.ok("Figma token found " + ui.dim(token.value.startsWith("figd_") ? "(figd_...)" : "(configured)")));
         }
         if (!process.env.FIGMA_TOKEN) {
           process.env.FIGMA_TOKEN = token.value;
@@ -373,9 +372,10 @@ export function registerConnectCommand(program: Command, engine: MemoireEngine) 
         process.env.FIGMA_FILE_KEY = fileKey.value;
       }
 
-      // ── Start the bridge server ─────────────────────────
+      // ── Bridge ──────────────────────────────────────
       if (!json) {
-        console.log("  Starting Memoire bridge server...\n");
+        console.log(ui.section("BRIDGE"));
+        console.log(ui.active("Starting bridge server..."));
       }
 
       try {
@@ -404,55 +404,60 @@ export function registerConnectCommand(program: Command, engine: MemoireEngine) 
           return;
         }
 
-        console.log(`  ┌──────────────────────────────────────────────┐`);
-        console.log(`  │  MEMOIRE CONTROL PLANE - PORT ${String(port).padEnd(15)}│`);
-        console.log(`  │                                              │`);
-        console.log(`  │  In Figma:                                   │`);
-        console.log(`  │    Plugins -> Development -> Memoire -> Run    │`);
-        console.log(`  │    Open the Control Plane on port ${String(port).padEnd(9)}│`);
-        console.log(`  │                                              │`);
-        console.log(`  │  Once connected, you can:                    │`);
-        console.log(`  │    memi pull           Sync design tokens    │`);
-        console.log(`  │    memi ia extract app Extract page tree     │`);
-        console.log(`  │    memi sync           Full pipeline         │`);
-        console.log(`  └──────────────────────────────────────────────┘\n`);
-        console.log(`  Widget V2: ${plugin.widgetVersion ?? "unknown"} / package ${plugin.packageVersion ?? "unknown"}`);
-        console.log(`  Install source: ${plugin.source} (${describePluginHealth(plugin)})`);
-        console.log(`  Manifest: ${plugin.manifestPath}\n`);
+        // ── Bridge info box ─────────────────────────────
+        console.log();
+        console.log(ui.box(`PORT ${port}`, [
+          "",
+          "In Figma:",
+          "Plugins > Development > Memoire > Run",
+          "",
+          "Once connected:",
+          ...formatGuideLines([
+            ["memi pull", "sync design tokens"],
+            ["memi ia extract app", "extract page tree"],
+            ["memi sync", "full pipeline"],
+          ]),
+          "",
+        ]));
 
+        console.log(ui.dots("Widget", `v${plugin.widgetVersion ?? "?"} / ${plugin.packageVersion ?? "?"}`));
+        console.log(ui.dots("Source", `${plugin.source} (${describePluginHealth(plugin)})`));
+        console.log(ui.dots("Manifest", plugin.manifestPath));
+
+        // ── Event handlers ──────────────────────────────
         engine.figma.on("plugin-connected", (client: BridgeClient) => {
-          console.log(`  + Connected: ${client.file} (${client.editor})`);
-          console.log("    Ready - run `memi pull` or `memi ia extract <name>` in another terminal.\n");
+          console.log();
+          console.log(ui.ok(`Connected: ${client.file} (${client.editor})`));
+          console.log("    Run " + ui.bold("memi pull") + " or " + ui.bold("memi ia extract <name>"));
+          console.log();
         });
 
         engine.figma.on("plugin-disconnected", () => {
           const remaining = engine.figma.wsServer.connectedClients.length;
-          console.log(`  - Plugin disconnected (${remaining} remaining)`);
+          console.log(ui.warn(`Plugin disconnected (${remaining} remaining)`));
         });
 
         engine.figma.on("chat", (data: { text: string; from: string; file: string }) => {
-          console.log(`  [chat] ${data.from}: ${data.text}`);
+          console.log("  " + ui.dim(`[chat] ${data.from}: ${data.text}`));
         });
 
         engine.figma.on("action-result", (data: { action: string; result?: unknown; error?: string }) => {
-          const ts = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
           if (data.error) {
-            console.log(`  ${ts}  x ACTION ${data.action} - ${data.error}`);
+            console.log(ui.event("x", data.action, data.error));
           } else {
             const size = data.result ? JSON.stringify(data.result).length : 0;
             const sizeLabel = size > 1024 ? `${(size / 1024).toFixed(1)}KB` : `${size}B`;
-            console.log(`  ${ts}  + ACTION ${data.action} - ${sizeLabel}`);
+            console.log(ui.event("+", data.action, sizeLabel));
           }
         });
 
         engine.figma.on("sync-data", (data: { part: string; result?: unknown; error?: string }) => {
-          const ts = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
           if (data.error) {
-            console.log(`  ${ts}  x SYNC ${data.part} - ${data.error}`);
+            console.log(ui.event("x", data.part, data.error));
           } else {
             const size = data.result ? JSON.stringify(data.result).length : 0;
             const sizeLabel = size > 1024 ? `${(size / 1024).toFixed(1)}KB` : `${size}B`;
-            console.log(`  ${ts}  + SYNC ${data.part} - ${sizeLabel}`);
+            console.log(ui.event("+", data.part, sizeLabel));
           }
         });
 
@@ -460,12 +465,12 @@ export function registerConnectCommand(program: Command, engine: MemoireEngine) 
           const nodes = (data as { nodes?: { name: string }[] })?.nodes || [];
           if (nodes.length > 0) {
             const names = nodes.map((n) => n.name).join(", ");
-            console.log(`  .  SELECTION ${nodes.length} node${nodes.length > 1 ? "s" : ""} - ${names}`);
+            console.log(ui.event("·", "SELECTION", `${nodes.length} node${nodes.length > 1 ? "s" : ""} — ${names}`));
           }
         });
 
         engine.figma.on("page-changed", (data: { page?: string }) => {
-          console.log(`  .  PAGE -> ${data.page || "unknown"}`);
+          console.log(ui.event("·", "PAGE", data.page || "unknown"));
         });
 
         process.once("SIGINT", () => {
@@ -473,7 +478,9 @@ export function registerConnectCommand(program: Command, engine: MemoireEngine) 
           process.exit(0);
         });
 
-        console.log("  Waiting for Figma plugin... (Ctrl+C to stop)\n");
+        console.log();
+        console.log(ui.active("Waiting for Figma plugin... " + ui.dim("(Ctrl+C to stop)")));
+        console.log();
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
 
@@ -502,8 +509,20 @@ export function registerConnectCommand(program: Command, engine: MemoireEngine) 
           return;
         }
 
-        console.error(`\n  Failed: ${message}\n`);
+        console.log();
+        console.log(ui.fail(message));
+        console.log();
         process.exit(1);
       }
     });
+}
+
+/** Format guide pairs for use inside a box (no leading indent) */
+function formatGuideLines(pairs: [string, string][]): string[] {
+  const maxCmd = Math.max(...pairs.map(([c]) => c.length));
+  return pairs.map(([cmd, desc]) => {
+    const padded = cmd.padEnd(maxCmd + 1);
+    const dots = chalk.dim("·".repeat(Math.max(2, 40 - padded.length - desc.length)));
+    return `${padded} ${dots} ${chalk.dim(desc)}`;
+  });
 }

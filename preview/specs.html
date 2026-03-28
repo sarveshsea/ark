@@ -188,5 +188,6 @@ tr:hover td { background: rgba(0, 0, 0, 0.02); }
     main.querySelector('[data-panel="' + tab + '"]').classList.add('active');
   }
   </script>
+<script>(function(){var w;function c(){w=new WebSocket('ws://'+location.host);w.onmessage=function(e){try{if(JSON.parse(e.data).type==='reload')location.reload()}catch(x){}};w.onclose=function(){setTimeout(c,3000)};w.onerror=function(){w.close()}}c()})()</script>
 </body>
 </html>

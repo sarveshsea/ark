@@ -237,7 +237,7 @@ a:hover { text-decoration: underline; }
   let eventCount = 0;
   let autoScroll = true;
   let connectedAt = null;
-  let dashboardPort = 3333;
+  let dashboardPort = window.location.port || 3333;
   let bridgeStatus = null;
 
   // --- DOM refs ---
@@ -279,7 +279,7 @@ a:hover { text-decoration: underline; }
     $connDot.className = 'conn-dot connecting';
     $connLabel.textContent = 'Connecting to dashboard...';
 
-    sse = new EventSource('http://localhost:' + dashboardPort + '/events');
+    sse = new EventSource('/events');
 
     sse.onopen = function() {
       connectedAt = Date.now();
@@ -305,12 +305,7 @@ a:hover { text-decoration: underline; }
       $sUptime.textContent = '--';
 
       sse.close();
-      // Try next port or retry
-      setTimeout(function() {
-        dashboardPort++;
-        if (dashboardPort > 3399) dashboardPort = 3333;
-        connect();
-      }, 2000);
+      setTimeout(function() { connect(); }, 3000);
     };
   }
 
@@ -444,7 +439,7 @@ a:hover { text-decoration: underline; }
       btn.classList.add('running');
       btn.disabled = true;
 
-      fetch('http://localhost:' + dashboardPort + '/api/action', {
+      fetch('/api/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: action })
@@ -483,7 +478,7 @@ a:hover { text-decoration: underline; }
 
   // --- Fetch status ---
   function fetchStatus() {
-    fetch('http://localhost:' + dashboardPort + '/api/status')
+    fetch('/api/status')
       .then(function(r) { return r.json(); })
       .then(function(status) {
         bridgeStatus = status;

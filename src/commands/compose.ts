@@ -19,6 +19,7 @@ import type { MemoireEngine } from "../engine/core.js";
 import { AgentOrchestrator, classifyIntent } from "../agents/index.js";
 import type { AgentPlan, SubTask } from "../agents/index.js";
 import { hasAI, getTracker } from "../ai/index.js";
+import { ui } from "../tui/format.js";
 
 export interface ComposePayload {
   intent: string;
@@ -135,30 +136,35 @@ export function registerComposeCommand(program: Command, engine: MemoireEngine) 
           return;
         }
 
-        console.log(`\n  Intent: "${intent}"`);
-        console.log(`  Category: ${category}`);
-        console.log(`  AI: ${payload.ai.apiKey ? "enabled (API key set)" : "heuristic mode"}`);
-        console.log(`\n  Executing...`);
-        console.log(`\n  ────────────────────────────────`);
-        console.log(`  Status: ${result.status}`);
-        console.log(`  Tasks: ${result.completedTasks}/${result.totalTasks} completed`);
-        console.log(`  Mutations: ${result.mutations.length}`);
-        console.log(`  Figma synced: ${result.figmaSynced ? "yes" : "no"}`);
-        console.log(`  Time: ${(elapsedMs / 1000).toFixed(1)}s`);
+        console.log(ui.brand("COMPOSE"));
+        console.log(ui.dots("Intent", `"${intent}"`));
+        console.log(ui.dots("Category", category));
+        console.log(ui.dots("AI", payload.ai.apiKey ? ui.green("enabled") : ui.dim("heuristic")));
+
+        console.log();
+        console.log(ui.rule());
+        console.log();
+        console.log(ui.dots("Status", result.status));
+        console.log(ui.dots("Tasks", `${result.completedTasks}/${result.totalTasks}  ${ui.progress(result.completedTasks, result.totalTasks, 12)}`));
+        console.log(ui.dots("Mutations", String(result.mutations.length)));
+        console.log(ui.dots("Figma synced", result.figmaSynced ? ui.green("yes") : "no"));
+        console.log(ui.dots("Time", `${(elapsedMs / 1000).toFixed(1)}s`));
 
         if (result.mutations.length > 0) {
-          console.log(`\n  Changes:`);
+          console.log(ui.section("CHANGES"));
           for (const m of result.mutations) {
-            console.log(`    ${mutationIcon(m.type)} ${m.target}: ${m.detail}`);
+            console.log(`  ${mutationIcon(m.type)} ${ui.bold(m.target)}: ${m.detail}`);
           }
         }
 
         if (payload.ai.calls > 0) {
-          console.log(`\n  AI Usage: ${payload.ai.usage ?? "unknown"}`);
+          console.log();
+          console.log(ui.dots("AI Usage", payload.ai.usage ?? "unknown"));
         }
 
         if (opts.dryRun) {
-          console.log(`\n  (dry run — no changes applied)`);
+          console.log();
+          console.log(ui.pending("Dry run — no changes applied"));
         }
 
         console.log();

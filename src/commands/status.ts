@@ -1,6 +1,7 @@
 import type { Command } from "commander";
 import type { MemoireEngine } from "../engine/core.js";
 import { hasAI, getTracker } from "../ai/index.js";
+import { ui } from "../tui/format.js";
 
 export interface StatusPayload {
   project: {
@@ -126,50 +127,54 @@ export async function collectStatus(engine: MemoireEngine): Promise<StatusPayloa
   };
 }
 
-function printStatus(payload: StatusPayload): void {
-  console.log("\n  ┌─────────────────────────────────────────┐");
-  console.log("  │            Memoire Project Status            │");
-  console.log("  └─────────────────────────────────────────┘\n");
+function printStatus(p: StatusPayload): void {
+  console.log(ui.brand("STATUS"));
 
-  console.log("  Project");
-  console.log(`    Framework:    ${payload.project.framework}`);
-  console.log(`    Language:     ${payload.project.language}`);
-  console.log(`    Tailwind:     ${payload.project.tailwind ? "yes" : "no"}`);
-  console.log(`    shadcn:       ${payload.project.shadcnInstalled ? `yes (${payload.project.shadcnComponents} components)` : "no"}`);
+  // ── Project ───────────────────────────────────────
+  console.log(ui.section("PROJECT"));
+  console.log(ui.dots("Framework", p.project.framework));
+  console.log(ui.dots("Language", p.project.language));
+  console.log(ui.dots("Tailwind", p.project.tailwind ? (p.project.tailwindVersion ?? "yes") : "no"));
+  console.log(ui.dots("shadcn", p.project.shadcnInstalled ? `yes (${p.project.shadcnComponents})` : "no"));
 
-  console.log("\n  Figma");
-  console.log(`    Connected:    ${payload.figma.connected ? "yes" : "no"}`);
-  console.log(`    Tokens:       ${payload.figma.tokens}`);
-  console.log(`    Components:   ${payload.figma.components}`);
-  console.log(`    Styles:       ${payload.figma.styles}`);
-  console.log(`    Last sync:    ${payload.figma.lastSync}`);
+  // ── Figma ─────────────────────────────────────────
+  console.log(ui.section("FIGMA"));
+  console.log(ui.dots("Connected", p.figma.connected ? ui.green("yes") : "no"));
+  console.log(ui.dots("Tokens", String(p.figma.tokens)));
+  console.log(ui.dots("Components", String(p.figma.components)));
+  console.log(ui.dots("Styles", String(p.figma.styles)));
+  console.log(ui.dots("Last sync", p.figma.lastSync || ui.dim("never")));
 
-  console.log("\n  Specs");
-  console.log(`    Components:   ${payload.specs.components}`);
-  console.log(`    Pages:        ${payload.specs.pages}`);
-  console.log(`    DataViz:      ${payload.specs.dataviz}`);
-  console.log(`    Generated:    ${payload.specs.generated}/${payload.specs.total}`);
+  // ── Specs ─────────────────────────────────────────
+  console.log(ui.section("SPECS"));
+  console.log(ui.dots("Components", String(p.specs.components)));
+  console.log(ui.dots("Pages", String(p.specs.pages)));
+  console.log(ui.dots("DataViz", String(p.specs.dataviz)));
+  console.log(ui.dots("Generated", `${p.specs.generated} / ${p.specs.total}  ${ui.progress(p.specs.generated, p.specs.total, 12)}`));
 
-  console.log("\n  Research");
-  console.log(`    Insights:     ${payload.research.insights}`);
-  console.log(`    Themes:       ${payload.research.themes}`);
-  console.log(`    Sources:      ${payload.research.sources}`);
-  if (payload.research.highConfidence > 0) {
-    console.log(`    High conf:    ${payload.research.highConfidence}`);
+  // ── Research ──────────────────────────────────────
+  console.log(ui.section("RESEARCH"));
+  console.log(ui.dots("Insights", String(p.research.insights)));
+  console.log(ui.dots("Themes", String(p.research.themes)));
+  console.log(ui.dots("Sources", String(p.research.sources)));
+  if (p.research.highConfidence > 0) {
+    console.log(ui.dots("High confidence", String(p.research.highConfidence)));
   }
 
-  console.log("\n  AI");
-  console.log(`    API key:      ${payload.ai.apiKey ? "set" : "not set"}`);
-  if (payload.ai.usage) {
-    console.log(`    Calls:        ${payload.ai.calls}`);
-    console.log(`    Usage:        ${payload.ai.usage}`);
+  // ── AI ────────────────────────────────────────────
+  console.log(ui.section("AI"));
+  console.log(ui.dots("API key", p.ai.apiKey ? ui.green("set") : ui.dim("not set")));
+  if (p.ai.usage) {
+    console.log(ui.dots("Calls", String(p.ai.calls)));
+    console.log(ui.dots("Usage", p.ai.usage));
   } else {
-    console.log("    Status:       Agent CLI mode (no direct API)");
+    console.log(ui.dots("Mode", ui.dim("agent-cli")));
   }
 
-  console.log("\n  Notes");
-  console.log(`    Built-in:     ${payload.notes.builtIn}`);
-  console.log(`    Installed:    ${payload.notes.installed}`);
-  console.log(`    Total:        ${payload.notes.total}`);
+  // ── Notes ─────────────────────────────────────────
+  console.log(ui.section("NOTES"));
+  console.log(ui.dots("Built-in", String(p.notes.builtIn)));
+  console.log(ui.dots("Installed", String(p.notes.installed)));
+  console.log(ui.dots("Total", String(p.notes.total)));
   console.log();
 }
