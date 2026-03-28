@@ -208,6 +208,16 @@ export class CanvasHealer {
           }
         }
 
+        // 4. Centering issue — single-child auto-layout not centered
+        if ("layoutMode" in n && n.layoutMode !== "NONE" && n.children && n.children.length === 1) {
+          if (n.primaryAxisAlignItems !== "CENTER" && n.counterAxisAlignItems !== "CENTER") {
+            if (n.name && (n.name.toLowerCase().includes("center") || n.name.toLowerCase().includes("hero") || n.name.toLowerCase().includes("wrapper"))) {
+              issues.push({ type: "centering-issue", nodeId: id, nodeName: name,
+                description: name + " looks like a centering container but neither axis is centered" });
+            }
+          }
+        }
+
         // 5. Floating elements — child outside parent bounds
         if (n.parent && "width" in n.parent && "x" in n) {
           const relX = n.x;
@@ -296,6 +306,9 @@ export class CanvasHealer {
 
       case "shadow-blend-mode":
         return `const n = await figma.getNodeByIdAsync("${id}"); if (n && "effects" in n) { n.effects = n.effects.map(e => e.type === "DROP_SHADOW" ? { ...e, blendMode: "NORMAL" } : e); }`;
+
+      case "centering-issue":
+        return `const n = await figma.getNodeByIdAsync("${id}"); if (n && "primaryAxisAlignItems" in n) { n.primaryAxisAlignItems = "CENTER"; n.counterAxisAlignItems = "CENTER"; }`;
 
       case "floating-element":
         // Move back inside parent bounds
