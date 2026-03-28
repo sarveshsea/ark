@@ -1,8 +1,9 @@
 import type { WidgetHealSummary, WidgetJob, WidgetSyncSummary } from "../shared/contracts.js";
+import { findIndexBy, uniqueStrings } from "../shared/compat.js";
 
 export function upsertJobState(jobs: WidgetJob[], job: WidgetJob, maxJobs: number): WidgetJob[] {
   const next = [...jobs];
-  const existing = next.findIndex((candidate) => candidate.id === job.id);
+  const existing = findIndexBy(next, (candidate) => candidate.id === job.id);
   if (existing >= 0) {
     next[existing] = job;
   } else {
@@ -85,5 +86,5 @@ export function reduceHealEvent(
 }
 
 function unique(values: string[]): string[] {
-  return Array.from(new Set(values));
+  return uniqueStrings(values);
 }

@@ -19,6 +19,9 @@ var __spreadValues = (a, b) => {
 var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 (function() {
   "use strict";
+  function stringIncludes(value, search) {
+    return value.indexOf(search) !== -1;
+  }
   const WIDGET_V2_CHANNEL = "memoire.widget.v2";
   function createRunId(prefix = "run") {
     return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
@@ -400,7 +403,7 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
     }
     const normalized = code.toLowerCase().replace(/[\s'"`+\[\]]/g, "");
     for (const keyword of BLOCKED_KEYWORDS) {
-      if (normalized.includes(keyword)) {
+      if (stringIncludes(normalized, keyword)) {
         return { safe: false, reason: `Contains blocked keyword: ${keyword}` };
       }
     }

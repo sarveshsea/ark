@@ -1,4 +1,5 @@
 import type { WidgetJob, WidgetSelectionNodeSnapshot } from "../shared/contracts.js";
+import { findFirst, padStart2 } from "../shared/compat.js";
 
 export interface JobsOverview {
   active: WidgetJob[];
@@ -23,8 +24,8 @@ export interface SelectionNodeFacts {
 
 export function buildJobsOverview(jobs: WidgetJob[]): JobsOverview {
   const active = jobs.filter((job) => job.status === "running" || job.status === "queued");
-  const latestFailure = jobs.find((job) => job.status === "failed") ?? null;
-  const latestCompleted = jobs.find((job) => job.status === "completed") ?? null;
+  const latestFailure = findFirst(jobs, (job) => job.status === "failed");
+  const latestCompleted = findFirst(jobs, (job) => job.status === "completed");
 
   return {
     active,
@@ -97,6 +98,6 @@ export function formatElapsedTime(job: WidgetJob, now = Date.now()): string {
 }
 
 function rgbToHex(color: { r: number; g: number; b: number; a?: number }): string {
-  const values = [color.r, color.g, color.b].map((value) => Math.round(value * 255).toString(16).padStart(2, "0"));
+  const values = [color.r, color.g, color.b].map((value) => padStart2(Math.round(value * 255).toString(16)));
   return `#${values.join("")}`;
 }

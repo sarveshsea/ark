@@ -60,6 +60,48 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
     fetch(link.href, fetchOpts);
   }
 })();
+function arrayIncludes(values, target) {
+  for (let index = 0; index < values.length; index += 1) {
+    if (values[index] === target) {
+      return true;
+    }
+  }
+  return false;
+}
+function findFirst(values, predicate) {
+  for (let index = 0; index < values.length; index += 1) {
+    const value = values[index];
+    if (predicate(value, index)) {
+      return value;
+    }
+  }
+  return null;
+}
+function findIndexBy(values, predicate) {
+  for (let index = 0; index < values.length; index += 1) {
+    if (predicate(values[index], index)) {
+      return index;
+    }
+  }
+  return -1;
+}
+function padStart2(value) {
+  const text = String(value);
+  return text.length >= 2 ? text : `0${text}`;
+}
+function uniqueStrings(values) {
+  const seen = /* @__PURE__ */ Object.create(null);
+  const result = [];
+  for (let index = 0; index < values.length; index += 1) {
+    const value = values[index];
+    if (seen[value]) {
+      continue;
+    }
+    seen[value] = true;
+    result.push(value);
+  }
+  return result;
+}
 const WIDGET_V2_CHANNEL = "memoire.widget.v2";
 const WIDGET_COMMAND_NAMES = [
   "execute",
@@ -89,7 +131,7 @@ function createRunId(prefix = "run") {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 function isWidgetCommandName(value) {
-  return typeof value === "string" && WIDGET_COMMAND_NAMES.includes(value);
+  return typeof value === "string" && arrayIncludes(WIDGET_COMMAND_NAMES, value);
 }
 const BRIDGE_V2_CHANNEL = "memoire.bridge.v2";
 function isBridgeEnvelope(value) {
@@ -500,10 +542,9 @@ function summarizeSyncResult(part, result, error) {
   return summary;
 }
 function buildJobsOverview(jobs) {
-  var _a, _b;
   const active = jobs.filter((job) => job.status === "running" || job.status === "queued");
-  const latestFailure = (_a = jobs.find((job) => job.status === "failed")) != null ? _a : null;
-  const latestCompleted = (_b = jobs.find((job) => job.status === "completed")) != null ? _b : null;
+  const latestFailure = findFirst(jobs, (job) => job.status === "failed");
+  const latestCompleted = findFirst(jobs, (job) => job.status === "completed");
   return {
     active,
     completedCount: jobs.filter((job) => job.status === "completed").length,
@@ -570,12 +611,12 @@ function formatElapsedTime(job, now = Date.now()) {
   return `${minutes}m ${remainder}s`;
 }
 function rgbToHex(color) {
-  const values = [color.r, color.g, color.b].map((value) => Math.round(value * 255).toString(16).padStart(2, "0"));
+  const values = [color.r, color.g, color.b].map((value) => padStart2(Math.round(value * 255).toString(16)));
   return `#${values.join("")}`;
 }
 function upsertJobState(jobs, job, maxJobs) {
   const next = [...jobs];
-  const existing = next.findIndex((candidate) => candidate.id === job.id);
+  const existing = findIndexBy(next, (candidate) => candidate.id === job.id);
   if (existing >= 0) {
     next[existing] = job;
   } else {
@@ -640,7 +681,7 @@ function reduceHealEvent(current, message, source) {
   return current;
 }
 function unique(values) {
-  return Array.from(new Set(values));
+  return uniqueStrings(values);
 }
 const PORT_START = 9223;
 const PORT_END = 9232;
@@ -650,6 +691,10 @@ const MAX_AGENT_STATUSES = 48;
 const pendingBridgeRequests = /* @__PURE__ */ new Map();
 let app = null;
 let bootstrapped = false;
+const bootstrapOnReady = () => {
+  document.removeEventListener("DOMContentLoaded", bootstrapOnReady);
+  bootstrap();
+};
 const emptyConnection = {
   stage: "offline",
   port: null,
@@ -705,7 +750,7 @@ function bootstrap() {
   const root = document.getElementById("app");
   if (!root) {
     if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", bootstrap, { once: true });
+      document.addEventListener("DOMContentLoaded", bootstrapOnReady);
       return;
     }
     throw new Error("Plugin root element not found");
@@ -1059,7 +1104,7 @@ function upsertJob(job) {
 }
 function upsertAgentStatus(status) {
   const next = [...state.agentStatuses];
-  const existing = next.findIndex((candidate) => getAgentStatusKey(candidate) === getAgentStatusKey(status));
+  const existing = findIndexBy(next, (candidate) => getAgentStatusKey(candidate) === getAgentStatusKey(status));
   if (existing >= 0) {
     next[existing] = status;
   } else {
@@ -1213,7 +1258,7 @@ function handleAction(action) {
 }
 function handleNodeAction(action, nodeId) {
   var _a;
-  const node = state.selection.nodes.find((candidate) => candidate.id === nodeId);
+  const node = findFirst(state.selection.nodes, (candidate) => candidate.id === nodeId);
   if (!node) {
     addLog("warn", "Selection node is no longer available", { nodeId });
     render();
@@ -1603,12 +1648,38 @@ function formatBounds(node) {
 }
 async function copyToClipboard(value, successMessage, detail) {
   try {
-    await navigator.clipboard.writeText(value);
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+      await navigator.clipboard.writeText(value);
+    } else if (!copyToClipboardFallback(value)) {
+      throw new Error("Clipboard API unavailable");
+    }
     addLog("success", successMessage, detail);
   } catch (error) {
     addLog("warn", "Clipboard write failed", error instanceof Error ? error.message : String(error));
   }
   render();
+}
+function copyToClipboardFallback(value) {
+  if (!document.body) {
+    return false;
+  }
+  const textarea = document.createElement("textarea");
+  textarea.value = value;
+  textarea.setAttribute("readonly", "true");
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
+  textarea.style.pointerEvents = "none";
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+  textarea.setSelectionRange(0, textarea.value.length);
+  try {
+    return document.execCommand("copy");
+  } catch (e) {
+    return false;
+  } finally {
+    document.body.removeChild(textarea);
+  }
 }
 function escapeHtml(value) {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");

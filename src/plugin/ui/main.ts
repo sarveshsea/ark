@@ -15,6 +15,7 @@ import {
   type WidgetUiEnvelope,
   type WidgetMainEnvelope,
 } from "../shared/contracts.js";
+import { findFirst, findIndexBy } from "../shared/compat.js";
 import {
   createBridgeResponseEnvelope,
   normalizeBridgeMessage,
@@ -73,6 +74,10 @@ const pendingBridgeRequests = new Map<string, PendingBridgeRequest>();
 
 let app: HTMLDivElement | null = null;
 let bootstrapped = false;
+const bootstrapOnReady = () => {
+  document.removeEventListener("DOMContentLoaded", bootstrapOnReady);
+  bootstrap();
+};
 
 const emptyConnection: WidgetConnectionState = {
   stage: "offline",
@@ -134,7 +139,7 @@ function bootstrap(): void {
   const root = document.getElementById("app");
   if (!root) {
     if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", bootstrap, { once: true });
+      document.addEventListener("DOMContentLoaded", bootstrapOnReady);
       return;
     }
     throw new Error("Plugin root element not found");
@@ -531,7 +536,7 @@ function upsertJob(job: WidgetJob): void {
 
 function upsertAgentStatus(status: AgentBoxState): void {
   const next = [...state.agentStatuses];
-  const existing = next.findIndex((candidate) => getAgentStatusKey(candidate) === getAgentStatusKey(status));
+  const existing = findIndexBy(next, (candidate) => getAgentStatusKey(candidate) === getAgentStatusKey(status));
   if (existing >= 0) {
     next[existing] = status;
   } else {
@@ -695,7 +700,7 @@ function handleAction(action: string): void {
 }
 
 function handleNodeAction(action: string, nodeId: string): void {
-  const node = state.selection.nodes.find((candidate) => candidate.id === nodeId);
+  const node = findFirst(state.selection.nodes, (candidate) => candidate.id === nodeId);
   if (!node) {
     addLog("warn", "Selection node is no longer available", { nodeId });
     render();
@@ -1123,12 +1128,42 @@ function formatBounds(node: WidgetSelectionNodeSnapshot): string {
 
 async function copyToClipboard(value: string, successMessage: string, detail: Record<string, unknown>): Promise<void> {
   try {
-    await navigator.clipboard.writeText(value);
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+      await navigator.clipboard.writeText(value);
+    } else if (!copyToClipboardFallback(value)) {
+      throw new Error("Clipboard API unavailable");
+    }
     addLog("success", successMessage, detail);
   } catch (error) {
     addLog("warn", "Clipboard write failed", error instanceof Error ? error.message : String(error));
   }
   render();
+}
+
+function copyToClipboardFallback(value: string): boolean {
+  if (!document.body) {
+    return false;
+  }
+
+  const textarea = document.createElement("textarea");
+  textarea.value = value;
+  textarea.setAttribute("readonly", "true");
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
+  textarea.style.pointerEvents = "none";
+
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+  textarea.setSelectionRange(0, textarea.value.length);
+
+  try {
+    return document.execCommand("copy");
+  } catch {
+    return false;
+  } finally {
+    document.body.removeChild(textarea);
+  }
 }
 
 function escapeHtml(value: string): string {

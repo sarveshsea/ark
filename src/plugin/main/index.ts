@@ -15,6 +15,7 @@ import {
   type WidgetUiEnvelope,
   type WidgetCommandName,
 } from "../shared/contracts.js";
+import { stringIncludes } from "../shared/compat.js";
 
 interface PluginState {
   sessionId: string;
@@ -455,7 +456,7 @@ function isCodeSafe(code: string): { safe: boolean; reason: string | null } {
   }
   const normalized = code.toLowerCase().replace(/[\s'"`+\[\]]/g, "");
   for (const keyword of BLOCKED_KEYWORDS) {
-    if (normalized.includes(keyword)) {
+    if (stringIncludes(normalized, keyword)) {
       return { safe: false, reason: `Contains blocked keyword: ${keyword}` };
     }
   }

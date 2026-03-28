@@ -1,3 +1,5 @@
+import { padStart2 } from "./compat.js";
+
 export function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
@@ -22,11 +24,11 @@ export function formatDuration(startedAt: number, finishedAt?: number | null): s
   if (seconds < 60) return `${seconds}s`;
   const minutes = Math.floor(seconds / 60);
   const remainder = seconds % 60;
-  return `${minutes}m ${String(remainder).padStart(2, "0")}s`;
+  return `${minutes}m ${padStart2(remainder)}s`;
 }
 
 export function rgbaToHex(color: { r: number; g: number; b: number }): string {
   return `#${[color.r, color.g, color.b]
-    .map((channel) => Math.round(channel * 255).toString(16).padStart(2, "0"))
+    .map((channel) => padStart2(Math.round(channel * 255).toString(16)))
     .join("")}`;
 }

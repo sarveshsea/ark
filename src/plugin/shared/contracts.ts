@@ -1,3 +1,5 @@
+import { arrayIncludes } from "./compat.js";
+
 export const WIDGET_V2_CHANNEL = "memoire.widget.v2";
 
 export const WIDGET_COMMAND_NAMES = [
@@ -284,5 +286,5 @@ export function createRunId(prefix = "run"): string {
 }
 
 export function isWidgetCommandName(value: unknown): value is WidgetCommandName {
-  return typeof value === "string" && WIDGET_COMMAND_NAMES.includes(value as WidgetCommandName);
+  return typeof value === "string" && arrayIncludes(WIDGET_COMMAND_NAMES, value as WidgetCommandName);
 }

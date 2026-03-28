@@ -23,7 +23,8 @@ describe("plugin build pipeline", () => {
       expect(html).toContain("Jobs");
       expect(html).toContain("Selection");
       expect(html).toContain("System");
-      expect(html).toContain('document.addEventListener("DOMContentLoaded", bootstrap, { once: true })');
+      expect(html).toContain('document.addEventListener("DOMContentLoaded", bootstrapOnReady);');
+      expect(html).toContain('document.removeEventListener("DOMContentLoaded", bootstrapOnReady);');
       expect(html).not.toContain("min-height: 100vh");
       expect(html).toContain("min-height: 160px");
       expect(html).toContain("grid-template-columns: repeat(3, minmax(0, 1fr));");
@@ -39,6 +40,14 @@ describe("plugin build pipeline", () => {
       expect(code).not.toContain("?.");
       expect(html).not.toContain("??");
       expect(html).not.toContain("?.");
+      expect(code).not.toContain(".includes(");
+      expect(code).not.toContain(".find(");
+      expect(code).not.toContain(".findIndex(");
+      expect(code).not.toContain(".padStart(");
+      expect(html).not.toContain(".includes(");
+      expect(html).not.toContain(".find(");
+      expect(html).not.toContain(".findIndex(");
+      expect(html).not.toContain(".padStart(");
       expect(hasRawObjectSpread(code)).toBe(false);
       expect(hasRawObjectSpread(html)).toBe(false);
       expect(meta).toContain('"widgetVersion": "2"');
