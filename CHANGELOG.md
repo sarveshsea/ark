@@ -80,6 +80,7 @@ This changelog tracks Mémoire itself: every version, commit, and architectural 
 | `f153ffa` | Use local system fonts in widget UI |
 | `dc41507` | Strengthen widget typography hierarchy |
 | `fda8782` | Strengthen widget typography hierarchy |
+| `06c9112` | Strengthen widget typography hierarchy |
 
 ### Key Design Decisions
 - **Notes Become a Real Extension Surface** — Mémoire now treats Notes as installable skill packs, including workspace `SKILL.md` bundles, built-in notes, and compatibility fixes for activation and copy behavior.
@@ -158,6 +159,7 @@ This changelog tracks Mémoire itself: every version, commit, and architectural 
 - Removed Google Fonts dependencies from the Figma widget UI, switched the operator console to local system mono/serif stacks, and added a build regression check so blocked web fonts do not silently ship again
 - Strengthened the widget typography hierarchy by enlarging brand and section titles, increasing metric-value emphasis, and using a clearer sans treatment for tabs and operator controls
 - Reworked the widget type hierarchy so operator copy and controls use a stronger sans stack, brand and section heads keep serif emphasis, and telemetry labels stay mono instead of flattening the whole panel into one weak font treatment
+- Tightened the widget typography pass with a larger base text size, stronger control weights, clearer status pills, and better subtitle/chip readability inside the Figma panel
 
 ## v0.2.0 — 2026-03-26
 

@@ -390,7 +390,7 @@ a:hover { text-decoration: underline; }
       <a href="changelog.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>Changelog</a>
     </nav>
     <div class="hdr-stats">
-      <span><span class="n" id="stat-commits">97</span> commits</span>
+      <span><span class="n" id="stat-commits">98</span> commits</span>
       <span><span class="n" id="stat-versions">5</span> versions</span>
       <span><span class="n" id="stat-latest">2026-03-27</span> latest</span>
     </div>
@@ -408,7 +408,7 @@ a:hover { text-decoration: underline; }
           <div class="summary-card">
             <span class="summary-kicker">Current release</span>
             <strong class="summary-value">v0.2.1</strong>
-            <div class="summary-caption">69 commits tracked in v0.2.1 from CHANGELOG.md.</div>
+            <div class="summary-caption">70 commits tracked in v0.2.1 from CHANGELOG.md.</div>
           </div>
           <div class="summary-card">
             <span class="summary-kicker">Biggest theme</span>
@@ -719,6 +719,10 @@ const releases = [
       [
         "fda8782",
         "Strengthen widget typography hierarchy"
+      ],
+      [
+        "06c9112",
+        "Strengthen widget typography hierarchy"
       ]
     ],
     "decisions": [
@@ -875,7 +879,8 @@ const releases = [
       "Added a regression test that compares the checked-in preview/changelog.html against generated output from CHANGELOG.md, so stale preview changelog data now fails locally",
       "Removed Google Fonts dependencies from the Figma widget UI, switched the operator console to local system mono/serif stacks, and added a build regression check so blocked web fonts do not silently ship again",
       "Strengthened the widget typography hierarchy by enlarging brand and section titles, increasing metric-value emphasis, and using a clearer sans treatment for tabs and operator controls",
-      "Reworked the widget type hierarchy so operator copy and controls use a stronger sans stack, brand and section heads keep serif emphasis, and telemetry labels stay mono instead of flattening the whole panel into one weak font treatment"
+      "Reworked the widget type hierarchy so operator copy and controls use a stronger sans stack, brand and section heads keep serif emphasis, and telemetry labels stay mono instead of flattening the whole panel into one weak font treatment",
+      "Tightened the widget typography pass with a larger base text size, stronger control weights, clearer status pills, and better subtitle/chip readability inside the Figma panel"
     ]
   },
   {
