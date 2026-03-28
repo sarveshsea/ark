@@ -27,6 +27,8 @@ describe("plugin build pipeline", () => {
       expect(html).not.toContain("fonts.gstatic.com");
       expect(html).not.toContain("JetBrains Mono");
       expect(html).not.toContain("Cormorant Garamond");
+      expect(html).toContain("ui-sans-serif");
+      expect(html).toContain("ui-monospace");
       expect(html).not.toContain('src="/assets/');
       expect(html).not.toContain('href="/assets/');
       expect(code).not.toContain("??");

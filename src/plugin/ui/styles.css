@@ -98,8 +98,9 @@ button {
 
 .brand-name {
   font-family: var(--serif);
-  font-size: 21px;
-  letter-spacing: 1px;
+  font-size: 23px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
   font-style: italic;
   line-height: 1;
 }
@@ -194,8 +195,8 @@ button {
 
 .panel-title {
   font-family: var(--serif);
-  font-size: 21px;
-  font-weight: 500;
+  font-size: 23px;
+  font-weight: 600;
   line-height: 1;
   letter-spacing: 0.2px;
 }
@@ -233,7 +234,7 @@ button {
 .metric-value {
   font-family: var(--sans);
   margin-top: 6px;
-  font-size: 17px;
+  font-size: 20px;
   font-weight: 600;
   line-height: 1.15;
   letter-spacing: -0.02em;
@@ -284,8 +285,8 @@ button {
   color: var(--fg-dim);
   cursor: pointer;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
-  font-size: 11px;
+  letter-spacing: 1px;
+  font-size: 11.5px;
   font-weight: 600;
 }
 
