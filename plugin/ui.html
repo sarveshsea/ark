@@ -1624,6 +1624,7 @@ function escapeHtml(value) {
   --border: rgba(17, 17, 17, 0.08);
   --border-strong: rgba(17, 17, 17, 0.15);
   --shadow: 0 16px 42px rgba(17, 17, 17, 0.08);
+  --sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --mono: ui-monospace, "SFMono-Regular", "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
   --serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --green: #257b4b;
@@ -1650,7 +1651,7 @@ body {
 }
 
 body {
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 11px;
   color: var(--fg);
   background:
@@ -1711,17 +1712,18 @@ button {
 
 .brand-name {
   font-family: var(--serif);
-  font-size: 18px;
-  letter-spacing: 1.8px;
+  font-size: 21px;
+  letter-spacing: 1px;
   font-style: italic;
   line-height: 1;
 }
 
 .brand-sub {
+  font-family: var(--mono);
   color: var(--fg-muted);
-  font-size: 10px;
+  font-size: 9px;
   text-transform: uppercase;
-  letter-spacing: 1.1px;
+  letter-spacing: 1.4px;
 }
 
 .status-cluster {
@@ -1731,6 +1733,9 @@ button {
 }
 
 .status-pill {
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 500;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -1802,16 +1807,18 @@ button {
 
 .panel-title {
   font-family: var(--serif);
-  font-size: 18px;
+  font-size: 21px;
+  font-weight: 500;
   line-height: 1;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.2px;
 }
 
 .panel-subtitle {
+  font-family: var(--mono);
   color: var(--fg-muted);
-  font-size: 10px;
+  font-size: 9px;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.3px;
 }
 
 .metrics {
@@ -1829,6 +1836,7 @@ button {
 }
 
 .metric-label {
+  font-family: var(--mono);
   color: var(--fg-dim);
   font-size: 9px;
   text-transform: uppercase;
@@ -1836,8 +1844,11 @@ button {
 }
 
 .metric-value {
+  font-family: var(--sans);
   margin-top: 6px;
-  font-size: 18px;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.15;
 }
 
 .toolbar {
@@ -1848,6 +1859,10 @@ button {
 }
 
 .tool-btn {
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1px;
   border: 1px solid var(--border);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.64);
@@ -1870,6 +1885,7 @@ button {
 }
 
 .tab {
+  font-family: var(--sans);
   flex: 1;
   padding: 10px 12px;
   border: 1px solid transparent;
@@ -1880,8 +1896,9 @@ button {
   color: var(--fg-dim);
   cursor: pointer;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  font-size: 10px;
+  letter-spacing: 0.8px;
+  font-size: 11px;
+  font-weight: 600;
 }
 
 .tab.active {
@@ -1983,7 +2000,9 @@ button {
 }
 
 .card-title {
-  font-size: 12px;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .muted {
@@ -2012,6 +2031,7 @@ button {
 }
 
 .kv-key {
+  font-family: var(--mono);
   color: var(--fg-dim);
   text-transform: uppercase;
   letter-spacing: 0.8px;
@@ -2039,6 +2059,7 @@ button {
 }
 
 .chip {
+  font-family: var(--sans);
   display: inline-flex;
   align-items: center;
   padding: 4px 8px;
@@ -2046,6 +2067,7 @@ button {
   border: 1px solid var(--border);
   background: rgba(255, 255, 255, 0.72);
   font-size: 10px;
+  font-weight: 500;
 }
 
 .log-card.success {
