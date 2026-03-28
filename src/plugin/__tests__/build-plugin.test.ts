@@ -18,7 +18,7 @@ describe("plugin build pipeline", () => {
 
       expect(code).toContain("figma.showUI");
       expect(code).toContain("height: 600");
-      expect(html).toContain("Operator Console");
+      expect(html).toContain("Operator");
       expect(html).toContain("<script>");
       expect(html).toContain("Jobs");
       expect(html).toContain("Selection");
@@ -27,7 +27,6 @@ describe("plugin build pipeline", () => {
       expect(html).toContain('document.removeEventListener("DOMContentLoaded", bootstrapOnReady);');
       expect(html).not.toContain("min-height: 100vh");
       expect(html).toContain("min-height: 160px");
-      expect(html).toContain("grid-template-columns: repeat(3, minmax(0, 1fr));");
       expect(html).not.toContain("fonts.googleapis.com");
       expect(html).not.toContain("fonts.gstatic.com");
       expect(html).not.toContain("JetBrains Mono");
@@ -49,7 +48,6 @@ describe("plugin build pipeline", () => {
       expect(html).not.toContain(".find(");
       expect(html).not.toContain(".findIndex(");
       expect(html).not.toContain(".padStart(");
-      expect(html).toContain('content ${state.logs.length ? "has-side-column" : "single-column"}');
       expect(hasRawObjectSpread(code)).toBe(false);
       expect(hasRawObjectSpread(html)).toBe(false);
       expect(meta).toContain('"widgetVersion": "2"');

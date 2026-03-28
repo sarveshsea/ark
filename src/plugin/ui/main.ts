@@ -572,7 +572,7 @@ function render(): void {
           <div class="brand-mark"></div>
           <div class="brand-copy">
             <div class="brand-name">memoire</div>
-            <div class="brand-sub">Figma control plane / agent operator</div>
+            <div class="brand-sub">control plane</div>
           </div>
         </div>
         <div class="status-cluster">
@@ -581,31 +581,28 @@ function render(): void {
           </div>
         </div>
       </div>
-      <div class="content ${state.logs.length ? "has-side-column" : "single-column"}">
+      <div class="content">
         <div class="main-column">
           <section class="panel">
             <div class="metrics">
-              ${metric("File", state.connection.fileName || "No file")}
-              ${metric("Page", state.connection.pageName || "No page")}
+              ${metric("File", state.connection.fileName || "--")}
+              ${metric("Page", state.connection.pageName || "--")}
               ${metric("Port", state.connection.port ? `:${state.connection.port}` : "--")}
               ${metric("Latency", state.connection.latencyMs ? `${state.connection.latencyMs}ms` : "--")}
             </div>
             <div class="toolbar">
-              <button class="tool-btn" data-action="sync">Sync Design System</button>
-              <button class="tool-btn" data-action="inspect">Inspect Selection</button>
-              <button class="tool-btn" data-action="capture" ${hasSelection ? "" : "disabled"}>${hasSelection ? "Capture Node" : "Select to Capture"}</button>
-              <button class="tool-btn" data-action="changes">Read Changes</button>
-              <button class="tool-btn" data-action="page-tree">Inspect Page Tree</button>
-              <button class="tool-btn" data-action="retry">Reconnect</button>
+              <button class="tool-btn primary" data-action="sync">sync</button>
+              <button class="tool-btn" data-action="inspect">inspect</button>
+              <button class="tool-btn" data-action="capture" ${hasSelection ? "" : "disabled"}>capture</button>
+              <button class="tool-btn" data-action="changes">changes</button>
+              <button class="tool-btn" data-action="page-tree">tree</button>
+              <button class="tool-btn" data-action="retry">reconnect</button>
             </div>
           </section>
 
           <section class="panel">
             <div class="panel-header">
-              <div class="stack">
-                <div class="panel-title">Operator Console</div>
-                <div class="panel-subtitle">Jobs first. Selection and system on demand.</div>
-              </div>
+              <div class="panel-title">Operator</div>
               <div class="muted mono">${escapeHtml(new Date().toLocaleTimeString())}</div>
             </div>
             <div class="tabstrip">
@@ -726,7 +723,7 @@ function handleNodeAction(action: string, nodeId: string): void {
 function renderJobs(): string {
   const overview = buildJobsOverview(state.jobs);
   if (!state.jobs.length) {
-    return emptyCard("No tracked jobs yet", "Run sync, inspect selection, or capture a node to populate the operator timeline.");
+    return emptyCard("No jobs", "Run sync or inspect to begin.");
   }
 
   const cards: string[] = [];
@@ -844,7 +841,7 @@ function renderSelection(): string {
   }
 
   if (!state.selection.nodes.length) {
-    cards.push(emptyCard("Nothing selected", "Select a node in Figma to inspect layout, component metadata, styles, and IDs."));
+    cards.push(emptyCard("Nothing selected", "Select a node to inspect."));
     return cards.join("");
   }
 
@@ -917,8 +914,8 @@ function renderSystem(): string {
     `);
   } else {
     cards.push(emptyCard(
-      "Agent status unavailable",
-      "Agent run and task state will appear here when the orchestrator publishes updates through the bridge.",
+      "No agent activity",
+      "Status appears when orchestrator runs.",
     ));
   }
 
@@ -965,7 +962,7 @@ function renderSystem(): string {
       </article>
     `);
   } else {
-    cards.push(emptyCard("Page tree not loaded", "Use Inspect Page Tree to load a structural snapshot into the control plane."));
+    cards.push(emptyCard("Page tree not loaded", "Run tree to load."));
   }
 
   cards.push(`
@@ -985,7 +982,7 @@ function renderSystem(): string {
 
 function renderLogs(): string {
   if (!state.logs.length) {
-    return emptyCard("No activity yet", "Bridge and plugin events will appear here as jobs run and connection state changes.");
+    return emptyCard("Quiet", "Events log here as they happen.");
   }
   return state.logs
     .map((entry) => `
