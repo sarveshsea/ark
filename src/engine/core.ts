@@ -196,27 +196,32 @@ export class MemoireEngine extends EventEmitter {
     const port = await this.connectFigma();
     if (this.figma.isConnected) return;
 
-    // Wait for a plugin to connect
+    // Wait for a plugin to connect — register listener BEFORE checking state
+    // to prevent the race where connection happens between check and listen
     console.log(`  · Waiting for Figma plugin on port ${port}...`);
     await new Promise<void>((resolve, reject) => {
+      const onConnect = () => {
+        clearTimeout(timer);
+        console.log(`  + Figma plugin connected on port ${port}`);
+        resolve();
+      };
+
       const timer = setTimeout(() => {
+        this.figma.removeListener("plugin-connected", onConnect);
         reject(new Error(
           `No Figma plugin connected within ${timeoutMs / 1000}s. ` +
           `Open the Mémoire plugin in Figma — it auto-discovers port ${port}.`
         ));
       }, timeoutMs);
 
-      if (this.figma.isConnected) {
-        clearTimeout(timer);
-        resolve();
-        return;
-      }
+      this.figma.once("plugin-connected", onConnect);
 
-      this.figma.once("plugin-connected", () => {
+      // Check again after registering the listener (covers the race)
+      if (this.figma.isConnected) {
+        this.figma.removeListener("plugin-connected", onConnect);
         clearTimeout(timer);
-        console.log(`  + Figma plugin connected on port ${port}`);
         resolve();
-      });
+      }
     });
   }
 
