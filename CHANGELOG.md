@@ -78,10 +78,9 @@ This changelog tracks Mémoire itself: every version, commit, and architectural 
 | `3ea17d5` | Fix blank widget panel bootstrap |
 | `6818e32` | Generate preview changelog from CHANGELOG.md |
 | `f153ffa` | Use local system fonts in widget UI |
-| `dc41507` | Strengthen widget typography hierarchy |
 | `fda8782` | Strengthen widget typography hierarchy |
 | `06c9112` | Strengthen widget typography hierarchy |
-| `15be77e` | Compress widget layout and reduce panel height |
+| `01cf9a9` | Compress widget layout and reduce panel height |
 
 ### Key Design Decisions
 - **Notes Become a Real Extension Surface** — Mémoire now treats Notes as installable skill packs, including workspace `SKILL.md` bundles, built-in notes, and compatibility fixes for activation and copy behavior.
