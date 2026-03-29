@@ -33,6 +33,15 @@
     "title": "Dashboard",
     "description": "Overview of key metrics"
   },
+  "accessibility": {
+    "landmarks": true,
+    "skipLink": true,
+    "headingHierarchy": true,
+    "pageTitle": "Dashboard — Overview of key metrics",
+    "language": "en",
+    "consistentNav": true,
+    "consistentHelp": true
+  },
   "tags": [
     "dashboard"
   ],

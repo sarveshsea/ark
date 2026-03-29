@@ -1,9 +1,9 @@
 {
   "name": "accessibility-audit",
-  "version": "1.0.0",
-  "description": "WCAG 2.2 compliance auditing — automated checks, manual test plans, screen reader validation, color contrast analysis",
+  "version": "2.0.0",
+  "description": "WCAG 2.2 compliance auditing — color contrast, keyboard nav, screen reader, focus management, touch targets, cognitive accessibility, motion sensitivity, forms, automated testing integration",
   "category": "research",
-  "tags": ["accessibility", "wcag", "a11y", "screen-reader", "color-contrast", "aria"],
+  "tags": ["accessibility", "wcag", "a11y", "screen-reader", "color-contrast", "keyboard-nav", "aria", "cognitive", "focus-management", "touch-targets", "reduced-motion", "forms"],
   "skills": [{
     "file": "accessibility-audit.md",
     "name": "Accessibility Audit",
@@ -12,5 +12,5 @@
   }],
   "dependencies": [],
   "createdAt": "2026-03-26T00:00:00.000Z",
-  "updatedAt": "2026-03-26T00:00:00.000Z"
+  "updatedAt": "2026-03-28T00:00:00.000Z"
 }

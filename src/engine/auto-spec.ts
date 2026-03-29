@@ -101,6 +101,57 @@ function sanitizeSpecName(name: string): string {
     .join("");
 }
 
+// ── Accessibility defaults inference ─────────────────────────
+
+const INTERACTIVE_PATTERNS = /button|link|input|select|checkbox|radio|switch|toggle|slider|menu|tab|dialog|modal|drawer|dropdown|combobox|popover|tooltip|accordion/i;
+const NAVIGATION_PATTERNS = /nav|menu|tab|sidebar|breadcrumb|pagination|stepper/i;
+const FORM_PATTERNS = /input|select|checkbox|radio|switch|toggle|slider|textarea|form|search|combobox|datepicker/i;
+const LIVE_CONTENT_PATTERNS = /toast|notification|alert|snackbar|banner|status|counter|badge|progress|spinner|skeleton/i;
+const MOTION_PATTERNS = /carousel|slider|accordion|drawer|modal|dialog|popover|tooltip|dropdown|collapse|expand|animate/i;
+
+function inferAccessibilityDefaults(
+  name: string,
+  level: AtomicLevel,
+  shadcnBase: string[],
+  props: Record<string, string>,
+): ComponentSpec["accessibility"] {
+  const lowerName = name.toLowerCase();
+  const allNames = [lowerName, ...shadcnBase.map(s => s.toLowerCase())].join(" ");
+
+  const isInteractive = INTERACTIVE_PATTERNS.test(allNames);
+  const isNavigation = NAVIGATION_PATTERNS.test(allNames);
+  const isForm = FORM_PATTERNS.test(allNames);
+  const isLiveContent = LIVE_CONTENT_PATTERNS.test(allNames);
+  const hasMotion = MOTION_PATTERNS.test(allNames);
+
+  // Infer ARIA role from component type
+  let role: string | undefined;
+  if (/button/i.test(allNames)) role = "button";
+  else if (/dialog|modal/i.test(allNames)) role = "dialog";
+  else if (/alert/i.test(allNames)) role = "alert";
+  else if (/tab(?!le)/i.test(allNames)) role = "tablist";
+  else if (/menu/i.test(allNames)) role = "menu";
+  else if (/nav|breadcrumb/i.test(allNames)) role = "navigation";
+  else if (/search/i.test(allNames)) role = "search";
+  else if (/progress/i.test(allNames)) role = "progressbar";
+  else if (/slider/i.test(allNames)) role = "slider";
+  else if (/switch|toggle/i.test(allNames)) role = "switch";
+  else if (/checkbox/i.test(allNames)) role = "checkbox";
+  else if (/radio/i.test(allNames)) role = "radio";
+  else if (/combobox/i.test(allNames)) role = "combobox";
+
+  return {
+    role,
+    ariaLabel: isInteractive || isForm ? "required" : "optional",
+    keyboardNav: isInteractive || isNavigation || isForm,
+    focusStyle: isInteractive ? "outline" : "none",
+    touchTarget: isInteractive ? "min-44" : "default",
+    reducedMotion: hasMotion,
+    liveRegion: isLiveContent ? "polite" : "off",
+    colorIndependent: true,
+  };
+}
+
 // ── Main auto-spec function ─────────────────────────────────
 
 export interface AutoSpecResult {
@@ -163,10 +214,7 @@ export function autoSpecFromDesignSystem(
         props: {},
         mapped: false,
       },
-      accessibility: {
-        ariaLabel: "optional",
-        keyboardNav: false,
-      },
+      accessibility: inferAccessibilityDefaults(comp.name, level, shadcnBase, props),
       dataviz: null,
       tags: ["auto-generated", "figma-pull"],
       createdAt: now,

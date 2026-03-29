@@ -604,19 +604,56 @@ ${specSummary(specs)}
 }
 
 function auditAccessibility(ds: DesignSystem, specs: AnySpec[]): string {
-  return `Audit accessibility compliance.
+  const components = specs.filter((s) => s.type === "component") as ComponentSpec[];
+  const pages = specs.filter((s) => s.type === "page") as PageSpec[];
+  const dataviz = specs.filter((s) => s.type === "dataviz") as DataVizSpec[];
+  return `You are a Senior Accessibility Engineer conducting a WCAG 2.2 compliance audit.
 
-## Design System: ${ds.tokens.length} tokens, ${ds.components.length} components
-## Specs: ${specs.length}
+## Design System
+- ${ds.tokens.length} tokens, ${ds.components.length} components
+- ${components.length} component specs, ${pages.length} page specs, ${dataviz.length} dataviz specs
 
-## WCAG 2.1 Checks
-1. **Color Contrast**: All fg/bg pairs meet AA (4.5:1 normal, 3:1 large text)
-2. **Focus Indicators**: All interactive components have visible focus styles
-3. **ARIA Labels**: All components have appropriate aria-label or aria-labelledby
-4. **Keyboard Navigation**: All interactive elements reachable via Tab, operable via Enter/Space
-5. **Screen Reader**: Semantic HTML, alt text, live regions for dynamic content
-6. **Motion**: Prefers-reduced-motion respected for animations
-7. **Touch Targets**: 44x44px minimum for mobile`;
+## WCAG 2.2 Audit Checklist (Level AA)
+
+### Perceivable
+1. **1.1.1 Non-text Content**: All images have alt text, decorative images use aria-hidden
+2. **1.3.1 Info and Relationships**: Semantic HTML (headings, lists, tables, landmarks)
+3. **1.3.5 Identify Input Purpose**: Form fields use autocomplete attributes for personal data
+4. **1.4.1 Use of Color**: Information not conveyed by color alone — check ${components.filter(c => c.accessibility?.colorIndependent === false).length} components flagged as color-dependent
+5. **1.4.3 Contrast Minimum**: All fg/bg pairs meet 4.5:1 (normal text), 3:1 (large text)
+6. **1.4.11 Non-text Contrast**: UI components and graphical objects meet 3:1
+
+### Operable
+7. **2.1.1 Keyboard**: All interactive elements reachable via Tab, operable via Enter/Space
+8. **2.4.3 Focus Order**: Tab order matches visual layout order
+9. **2.4.7 Focus Visible**: All interactive elements have visible focus indicators
+10. **2.4.11 Focus Appearance** (2.2): Focus indicator >= 2px, contrasts 3:1 with adjacent colors
+11. **2.4.12 Focus Not Obscured** (2.2): Focused elements not fully hidden by sticky/fixed elements
+12. **2.5.5 Target Size**: Interactive targets >= 44x44px (AAA) or 24x24px (AA per 2.5.8)
+13. **2.5.7 Dragging Movements** (2.2): Drag operations have non-dragging alternatives
+14. **2.5.8 Target Size Minimum** (2.2): All targets >= 24x24 CSS px or 24px spacing between
+
+### Understandable
+15. **3.2.3 Consistent Navigation**: Nav order consistent across pages — ${pages.filter(p => p.accessibility?.consistentNav !== false).length}/${pages.length} pages compliant
+16. **3.2.6 Consistent Help** (2.2): Help mechanisms in same relative position across pages
+17. **3.3.1 Error Identification**: Errors described in text, not color alone
+18. **3.3.2 Labels or Instructions**: All form inputs have visible labels
+19. **3.3.7 Redundant Entry** (2.2): Previously entered info auto-populated in multi-step flows
+20. **3.3.8 Accessible Authentication** (2.2): No cognitive function tests as sole auth method
+
+### Robust
+21. **4.1.2 Name, Role, Value**: All components expose correct ARIA name, role, state
+22. **4.1.3 Status Messages**: Dynamic updates use role="status" or aria-live
+
+## Components Missing A11y Properties
+${components.filter(c => !c.accessibility?.role && c.accessibility?.ariaLabel !== "none").map(c => `- ${c.name}: no ARIA role defined`).join("\n") || "(all have roles)"}
+
+## Scoring
+Rate each criterion: PASS / FAIL / PARTIAL / N/A
+Calculate overall percentage. Critical failures (any criterion that blocks access) must be listed separately.
+
+## Output
+For each finding, produce JSON: { id, rule, level, severity, component, element, issue, remediation, effort, automated }`;
 }
 
 function auditReport(intent: string): string {
@@ -635,43 +672,216 @@ function auditReport(intent: string): string {
 
 function a11yContrast(ds: DesignSystem): string {
   const colors = ds.tokens.filter((t) => t.type === "color");
-  return `Check color contrast ratios for all color token pairs.
+  return `You are a Color Accessibility Specialist. Audit all color token pairs for WCAG 2.2 contrast compliance.
 
-## Color Tokens
+## Color Tokens (${colors.length} total)
 ${tokenTable(colors)}
 
-For each foreground/background pair, calculate contrast ratio.
-Flag pairs below WCAG AA (4.5:1 for normal text, 3:1 for large text).
-Suggest fixes for failing pairs.`;
+## Audit Protocol
+1. **Build pair matrix**: For each foreground token, pair with every plausible background token
+2. **Calculate contrast ratio** using relative luminance:
+   - L = 0.2126*R + 0.7152*G + 0.0722*B (linearized sRGB)
+   - ratio = (L_lighter + 0.05) / (L_darker + 0.05)
+3. **Apply thresholds**:
+   - Normal text (< 18px / < 14px bold): 4.5:1 AA, 7:1 AAA
+   - Large text (>= 18px or >= 14px bold): 3:1 AA, 4.5:1 AAA
+   - UI components, icons, borders: 3:1 AA
+   - Disabled elements: exempt
+4. **Check all states**: default, hover, active, focus, selected, error, disabled
+5. **Color-blind safety**: Flag red/green-only distinctions, suggest pattern/icon alternatives
+
+## Non-text Contrast (WCAG 1.4.11)
+- Form input borders must contrast 3:1 against background
+- Icon buttons must contrast 3:1 (the icon itself against its background)
+- Chart series must be distinguishable without color alone (pattern fills, labels)
+- Focus indicators must contrast 3:1 against adjacent colors
+
+## Output
+For each failing pair:
+\`\`\`json
+{ "fg": "#hex", "bg": "#hex", "ratio": "X.X:1", "threshold": "4.5:1", "level": "AA", "usage": "where used", "fix": "suggested replacement with passing ratio" }
+\`\`\``;
 }
 
 function a11yAria(specs: AnySpec[]): string {
   const components = specs.filter((s) => s.type === "component") as ComponentSpec[];
-  return `Check ARIA attributes for all component specs.
+  const dataviz = specs.filter((s) => s.type === "dataviz") as DataVizSpec[];
+  return `You are an ARIA Specialist. Audit all component and dataviz specs for correct ARIA usage.
 
-## Components
-${components.map((c) => `- ${c.name}: role=${c.accessibility?.role || "none"}, ariaLabel=${c.accessibility?.ariaLabel || "MISSING"}`).join("\n") || "(none)"}
+## Component Specs (${components.length})
+${components.map((c) => `- ${c.name} [${c.level}]: role=${c.accessibility?.role || "MISSING"}, ariaLabel=${c.accessibility?.ariaLabel || "MISSING"}, liveRegion=${c.accessibility?.liveRegion || "off"}, colorIndependent=${c.accessibility?.colorIndependent ?? "UNKNOWN"}`).join("\n") || "(none)"}
 
-Ensure:
-1. Every interactive component has an appropriate ARIA role
-2. All components have aria-label or aria-labelledby
-3. Dynamic content uses aria-live regions
-4. Form inputs have associated labels`;
+## DataViz Specs (${dataviz.length})
+${dataviz.map((d) => `- ${d.name} [${d.chartType}]: altText=${d.accessibility?.altText || "MISSING"}, dataTableFallback=${d.accessibility?.dataTableFallback ?? false}, patternFill=${d.accessibility?.patternFill ?? false}`).join("\n") || "(none)"}
+
+## ARIA Audit Checklist
+1. **Roles**: Every interactive component has an appropriate ARIA role matching WAI-ARIA patterns
+   - Buttons: role="button" (or native <button>)
+   - Dialogs: role="dialog" + aria-modal
+   - Tabs: role="tablist" > role="tab" + role="tabpanel"
+   - Menus: role="menu" > role="menuitem"
+2. **Names**: All components have accessible names via aria-label, aria-labelledby, or visible text
+3. **States**: Dynamic components expose aria-expanded, aria-selected, aria-checked, aria-pressed
+4. **Live regions**: Components with dynamic content (toasts, counters, status) use aria-live
+5. **Relationships**: aria-describedby for supplementary info, aria-controls for controlling elements
+6. **Form patterns**: All inputs have <label> or aria-label, error messages use aria-describedby + aria-invalid
+7. **DataViz**: Charts have alt text description, data table fallback in <details>, pattern fills for color independence
+8. **Status messages** (WCAG 4.1.3): Non-intrusive updates use role="status"
+
+## Common Mistakes to Flag
+- Using role="button" on a <div> without tabindex="0" and keyboard handler
+- aria-label on non-interactive elements (screen readers may ignore it)
+- Redundant aria-label that duplicates visible text
+- Missing aria-expanded on expandable triggers
+- Live regions created dynamically (must exist in DOM before content changes)
+
+## Output
+For each finding: { component, issue, pattern (WAI-ARIA pattern name), fix, severity }`;
 }
 
 function a11yKeyboard(specs: AnySpec[]): string {
   const components = specs.filter((s) => s.type === "component") as ComponentSpec[];
-  return `Check keyboard navigation for all components.
+  return `You are a Keyboard Accessibility Specialist. Audit all components for keyboard navigation compliance.
 
-## Components
-${components.map((c) => `- ${c.name}: keyboardNav=${c.accessibility?.keyboardNav ?? "UNKNOWN"}`).join("\n")}
+## Components (${components.length})
+${components.map((c) => `- ${c.name} [${c.level}]: keyboardNav=${c.accessibility?.keyboardNav ?? "UNKNOWN"}, focusStyle=${c.accessibility?.focusStyle || "default"}, touchTarget=${c.accessibility?.touchTarget || "default"}`).join("\n")}
 
-Ensure:
-1. All interactive elements are focusable (tabIndex)
-2. Custom widgets implement WAI-ARIA keyboard patterns
-3. Focus order is logical (DOM order matches visual order)
-4. Escape closes modals/overlays
-5. Arrow keys navigate lists/menus`;
+## WCAG 2.2 Keyboard Audit
+
+### 2.1.1 Keyboard Accessible
+- All functionality available via keyboard (Tab, Enter, Space, Arrow, Escape)
+- No keyboard traps — user can always Tab away (except intentional modal traps)
+- Custom widgets follow WAI-ARIA keyboard patterns:
+  | Widget | Keys | Pattern |
+  |--------|------|---------|
+  | Button | Enter, Space | Activates |
+  | Menu | Arrow Up/Down, Enter, Escape | Navigate items, select, close |
+  | Tabs | Arrow Left/Right, Home, End | Switch tabs within tablist |
+  | Dialog | Tab (trapped), Escape | Focus trapped, Escape closes |
+  | Combobox | Arrow Down, Enter, Escape | Open list, select, close |
+  | Slider | Arrow Left/Right/Up/Down | Adjust value |
+  | Tree | Arrow Up/Down/Left/Right | Navigate, expand/collapse |
+
+### 2.4.7 Focus Visible
+- Every interactive element shows a visible focus indicator
+- Focus ring: minimum 2px, solid outline, contrasts 3:1 with adjacent colors (WCAG 2.4.11)
+
+### 2.4.11 Focus Appearance (WCAG 2.2)
+- Focus indicator area >= 2px perimeter around the element
+- Indicator contrasts at least 3:1 between focused and unfocused states
+- Not fully obscured by author-created content (sticky headers, overlays)
+
+### 2.4.12 Focus Not Obscured (WCAG 2.2)
+- When an element receives focus, it is not entirely hidden by sticky/fixed positioned elements
+- Partially visible is acceptable — fully hidden is a failure
+
+### 2.5.8 Target Size Minimum (WCAG 2.2)
+- All interactive targets >= 24x24 CSS pixels, or 24px spacing between adjacent targets
+- Inline text links are exempt
+- Components with touchTarget="min-44" should be verified at >= 44x44px
+
+## Focus Management Scenarios
+1. Modal open → focus moves to first focusable element inside
+2. Modal close → focus returns to trigger element
+3. Item deleted → focus moves to next item (or previous if last)
+4. Route change (SPA) → focus moves to main heading or main landmark
+5. Form error → focus moves to first invalid field
+6. Accordion toggle → focus stays on trigger
+
+## Output
+For each finding: { component, issue, wcagCriterion, keys (expected keyboard interaction), fix, severity }`;
+}
+
+function a11yCognitive(specs: AnySpec[]): string {
+  const pages = specs.filter((s) => s.type === "page") as PageSpec[];
+  const components = specs.filter((s) => s.type === "component") as ComponentSpec[];
+  return `You are a Cognitive Accessibility Specialist. Audit specs for WCAG 2.2 cognitive accessibility criteria.
+
+## Page Specs (${pages.length})
+${pages.map((p) => `- ${p.name}: consistentNav=${p.accessibility?.consistentNav ?? "UNKNOWN"}, consistentHelp=${p.accessibility?.consistentHelp ?? "UNKNOWN"}, skipLink=${p.accessibility?.skipLink ?? "UNKNOWN"}`).join("\n") || "(none)"}
+
+## Component Specs (${components.length})
+${components.map((c) => `- ${c.name} [${c.level}]: reducedMotion=${c.accessibility?.reducedMotion ?? false}`).join("\n")}
+
+## WCAG 2.2 Cognitive Criteria
+
+### 3.2.6 Consistent Help (New in 2.2)
+- Help mechanisms (chat widget, FAQ link, contact info, self-help option) must appear in the same relative order on every page
+- Check: Do all page specs reference help components in the same section position?
+
+### 3.3.7 Redundant Entry (New in 2.2)
+- Information previously entered in a multi-step process must be auto-populated or selectable
+- Check: Are there multi-step flows where users must re-enter the same data?
+- Exceptions: security re-authentication, data changed since initial entry
+
+### 3.3.8 Accessible Authentication (New in 2.2)
+- No cognitive function test (transcription, memorization, puzzle) as the sole authentication mechanism
+- Password fields must allow paste (no onPaste prevention)
+- Verification code fields must allow paste
+- Check: Are there auth components that block paste or require cognitive tests?
+
+### 2.5.7 Dragging Movements (New in 2.2)
+- Any functionality achievable by dragging has a non-dragging alternative
+- Drag-to-reorder → provide up/down buttons or keyboard arrows
+- Drag-to-resize → provide resize handle with keyboard support
+
+### 2.5.8 Target Size Minimum (New in 2.2)
+- All interactive targets at least 24x24 CSS px
+- Or at least 24px of spacing between adjacent targets
+- Inline links in text paragraphs are exempt
+
+### Motion & Reduced Motion
+- Components flagged with reducedMotion=true: verify they respect prefers-reduced-motion
+- Components with animations: ${components.filter(c => c.accessibility?.reducedMotion).length} flagged
+- All auto-playing content must have pause/stop controls
+
+## Output
+For each finding: { criterion (e.g. "3.2.6"), page/component, issue, recommendation, severity }`;
+}
+
+function a11yMotion(ds: DesignSystem, specs: AnySpec[]): string {
+  const components = specs.filter((s) => s.type === "component") as ComponentSpec[];
+  const motionTokens = ds.tokens.filter(t => t.cssVariable?.includes("motion") || t.cssVariable?.includes("duration") || t.cssVariable?.includes("animation"));
+  const motionComponents = components.filter(c => c.accessibility?.reducedMotion);
+  return `You are a Motion Accessibility Specialist. Audit all animation and motion for WCAG compliance.
+
+## Motion Tokens (${motionTokens.length})
+${tokenTable(motionTokens)}
+
+## Components with Animations (${motionComponents.length})
+${motionComponents.map((c) => `- ${c.name}: reducedMotion=true`).join("\n") || "(none flagged)"}
+
+## WCAG Motion Criteria
+
+### 2.3.1 Three Flashes or Below Threshold
+- No content flashes more than 3 times per second
+- Flash = pair of opposing luminance changes (>10% combined area, or red flash)
+- Automated check: scan for rapid opacity/color transitions
+
+### 2.3.3 Animation from Interactions
+- Motion triggered by interaction can be disabled via prefers-reduced-motion
+- Essential animations (progress bars, loading spinners) are exempt but should still reduce
+
+### 2.2.2 Pause, Stop, Hide
+- Auto-playing content (carousels, animations, videos) must have visible pause/stop controls
+- Moving content that starts automatically and lasts > 5 seconds needs a mechanism to pause
+
+## prefers-reduced-motion Compliance
+Every animation must have a reduced-motion fallback:
+1. CSS transitions → instant (duration: 0.01ms)
+2. CSS animations → single iteration, instant
+3. JS animations (Framer Motion, GSAP) → duration: 0 or skip
+4. Scroll-linked effects (parallax) → static fallback
+5. Page transitions → instant cut
+
+## Implementation Patterns
+- Global CSS: @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+- Tailwind: motion-reduce:animate-none, motion-reduce:transition-none
+- React hook: usePrefersReducedMotion() for JS-driven animations
+- Framer Motion: useReducedMotion() hook
+
+## Output
+For each finding: { component/token, animation type, issue, reduced-motion fix, severity }`;
 }
 
 // ── Init Prompts ─────────────────────────────────────────
@@ -960,6 +1170,8 @@ export const AGENT_PROMPTS = {
   a11yContrast,
   a11yAria,
   a11yKeyboard,
+  a11yCognitive,
+  a11yMotion,
 
   // Init
   initTokens,

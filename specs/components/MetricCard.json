@@ -31,7 +31,12 @@
   "accessibility": {
     "role": "article",
     "ariaLabel": "required",
-    "keyboardNav": false
+    "keyboardNav": false,
+    "focusStyle": "outline",
+    "touchTarget": "default",
+    "reducedMotion": false,
+    "liveRegion": "off",
+    "colorIndependent": true
   },
   "dataviz": null,
   "tags": [

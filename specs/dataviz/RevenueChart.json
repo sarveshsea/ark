@@ -14,7 +14,10 @@
   "accessibility": {
     "altText": "required",
     "keyboardNav": true,
-    "dataTableFallback": true
+    "dataTableFallback": true,
+    "patternFill": false,
+    "announceUpdates": false,
+    "highContrastMode": false
   },
   "responsive": {
     "mobile": {

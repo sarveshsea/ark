@@ -658,6 +658,8 @@ ${existingMappings}
       this.makeTask("Check color contrast", "accessibility-checker", AGENT_PROMPTS.a11yContrast(ctx.designSystem)),
       this.makeTask("Check component ARIA", "accessibility-checker", AGENT_PROMPTS.a11yAria(ctx.specs)),
       this.makeTask("Check keyboard navigation", "accessibility-checker", AGENT_PROMPTS.a11yKeyboard(ctx.specs)),
+      this.makeTask("Check cognitive accessibility", "accessibility-checker", AGENT_PROMPTS.a11yCognitive(ctx.specs)),
+      this.makeTask("Check motion accessibility", "accessibility-checker", AGENT_PROMPTS.a11yMotion(ctx.designSystem, ctx.specs)),
     ];
   }
 
