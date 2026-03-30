@@ -23,14 +23,15 @@ AI-native design intelligence engine. Bridges Figma, user research, and code gen
 ## Architecture
 | Directory | Purpose |
 |-----------|---------|
-| `src/engine/` | Core orchestrator, project detection, registry |
+| `src/engine/` | Core orchestrator, project detection, registry, token-differ, sync, code-watcher, pipeline |
 | `src/figma/` | Figma bridge (WebSocket auto-discovery on ports 9223-9232), tokens, stickies |
 | `src/research/` | Research engine (Excel, web, stickies → insights) |
 | `src/specs/` | Spec types (component, page, dataviz, design, ia) + Zod validation |
 | `src/codegen/` | Code generation (shadcn mapper, dataviz, pages) → atomic folders |
 | `src/notes/` | Mémoire Notes — downloadable skill packs (loader, resolver, installer) |
-| `src/preview/` | Localhost preview gallery (HTML + API server) |
-| `src/agents/` | Agent orchestrator, multi-agent support, self-healing, box widgets |
+| `src/preview/` | Localhost preview gallery (HTML + API server + pipeline/sync/agent dashboards) |
+| `src/agents/` | Agent orchestrator, multi-agent registry, task queue, agent bridge, agent workers |
+| `src/mcp/` | MCP server (stdio transport) — 14 tools, 3 resources for Claude Code/Cursor |
 | `src/tui/` | Terminal UI (Ink/React) |
 | `src/commands/` | CLI commands (Commander.js) |
 | `skills/` | Built-in skill definitions — ship with the npm package |
@@ -71,6 +72,7 @@ Storage: `.memoire/notes/{note-name}/note.json`
 | Command | Purpose |
 |---------|---------|
 | `memi connect` | Connect to Figma (auto-discovers plugin) |
+| `memi connect --role <role>` | Connect as a named agent with a role |
 | `memi pull` | Extract design system from Figma |
 | `memi spec component\|page\|dataviz <name>` | Create a spec |
 | `memi generate [name]` | Generate code from specs → atomic folders |
@@ -81,12 +83,48 @@ Storage: `.memoire/notes/{note-name}/note.json`
 | `memi dashboard` | Launch Mémoire dashboard |
 | `memi ia extract\|create\|show\|validate\|list` | Information architecture tools |
 | `memi watch` | Watch specs for changes, auto-regenerate code |
-| `memi status` / `memi sync` | Project status / full sync pipeline |
+| `memi watch --code` | Also watch generated/ for code changes |
+| `memi status` | Project status |
+| `memi sync` | Full sync pipeline (Figma → design system → specs → code) |
+| `memi sync --live` | Keep running and sync on every change |
+| `memi sync --direction <dir>` | Sync direction: figma-to-code, code-to-figma, bidirectional |
+| `memi sync --conflicts` | Show and resolve pending sync conflicts |
+| `memi daemon start` | Start daemon with auto-pull/spec/generate pipeline |
+| `memi daemon stop\|status\|restart` | Manage daemon lifecycle |
+| `memi mcp start` | Start Mémoire as an MCP server (stdio transport) |
+| `memi mcp config` | Print MCP config for Claude Code / Cursor |
+| `memi agent spawn <role>` | Spawn a persistent agent worker |
+| `memi agent list` | List all registered agents |
+| `memi agent kill <id>` | Kill an agent by ID |
+| `memi agent status` | Show agent registry + task queue status |
 | `memi notes install <source>` | Install a Note (local path or `github:user/repo`) |
 | `memi notes list` | Show all installed Notes with status |
 | `memi notes remove <name>` | Uninstall a Note |
 | `memi notes create <name>` | Scaffold a new Note |
 | `memi notes info <name>` | Show Note details |
+
+## MCP Server
+Mémoire exposes 14 tools and 3 resources via the Model Context Protocol. Any MCP-compatible AI tool (Claude Code, Cursor, Windsurf) can use Mémoire as a design layer.
+
+**Tools:** `pull_design_system`, `get_specs`, `get_spec`, `create_spec`, `generate_code`, `get_tokens`, `update_token`, `capture_screenshot`, `get_selection`, `compose`, `run_audit`, `get_research`, `figma_execute`, `get_page_tree`
+
+**Resources:** `memoire://design-system`, `memoire://specs/{name}`, `memoire://project`
+
+**Config:** Run `memi mcp config --target claude-code` to get a ready-to-paste `.mcp.json` config.
+
+## Multi-Agent Orchestration
+Multiple Claude instances can operate as persistent agents, each owning a role:
+- **Roles:** token-engineer, component-architect, layout-designer, dataviz-specialist, code-generator, accessibility-checker, design-auditor, research-analyst, general
+- **Lifecycle:** spawn → register → heartbeat (10s) → claim tasks → execute → report → evict after 30s stale
+- **Dispatch:** Orchestrator checks AgentRegistry for external agents first, falls back to internal execution
+- **Task Queue:** Dependency resolution, lock-based claiming, timeout reclamation (120s default)
+
+## Bidirectional Sync
+Design-code sync uses per-entity SHA-256 hashing to track changes on both sides:
+- **Figma → Code:** Variable/component changes detected via granular plugin events
+- **Code → Figma:** Token changes pushed via `pushTokens` bridge command
+- **Conflicts:** Detected when both sides change within 1s window. Logged to `.memoire/sync-conflicts.json`
+- **Guard:** Prevents echo loops during push operations (orchestrator enables guard before Figma writes)
 
 ## Skills
 | Skill | File | When to Load |
