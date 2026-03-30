@@ -1,6 +1,7 @@
 import type { Command } from "commander";
 import type { MemoireEngine } from "../engine/core.js";
 import { ui } from "../tui/format.js";
+import { checkCapabilities, formatCapabilityError } from "../engine/capabilities.js";
 
 export interface GeneratePayload {
   mode: "single" | "all";
@@ -63,7 +64,12 @@ export function registerGenerateCommand(program: Command, engine: MemoireEngine)
               console.log(JSON.stringify(payload, null, 2));
             } else {
               console.log();
-            console.log(ui.pending("No specs found. Run " + ui.bold("memi spec component Name") + " first."));
+            console.log(ui.pending("No specs found."));
+            console.log();
+            console.log("  Next steps:");
+            console.log("    memi spec component <Name>    Create a component spec manually");
+            console.log("    memi pull                     Pull from Figma (auto-generates specs)");
+            console.log("    memi init                     Initialize with starter specs");
             console.log();
             }
             return;

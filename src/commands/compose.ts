@@ -20,6 +20,7 @@ import { AgentOrchestrator, classifyIntent } from "../agents/index.js";
 import type { AgentPlan, SubTask } from "../agents/index.js";
 import { hasAI, getTracker } from "../ai/index.js";
 import { ui } from "../tui/format.js";
+import { checkCapabilities } from "../engine/capabilities.js";
 
 export interface ComposePayload {
   intent: string;
@@ -94,6 +95,22 @@ export function registerComposeCommand(program: Command, engine: MemoireEngine) 
 
       try {
         await engine.init();
+
+        // Inform about degraded capabilities (compose works without AI via heuristics)
+        const caps = checkCapabilities("compose", {
+          figma: engine.figma.isConnected,
+          ai: hasAI(),
+          specs: (await engine.registry.getAllSpecs()).length > 0,
+          generatedCode: false,
+          research: false,
+          daemon: false,
+        });
+        if (!opts.json && caps.degraded.length > 0) {
+          for (const cap of caps.degraded) {
+            if (cap === "ai") console.log(ui.dim("  Note: No API key — agents will use heuristic fallbacks"));
+            if (cap === "figma") console.log(ui.dim("  Note: No Figma connection — canvas operations will be skipped"));
+          }
+        }
 
         const category = classifyIntent(intent);
         const orchestrator = new AgentOrchestrator(engine, (plan: AgentPlan) => {
