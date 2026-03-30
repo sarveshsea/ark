@@ -390,9 +390,9 @@ a:hover { text-decoration: underline; }
       <a href="changelog.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>Changelog</a>
     </nav>
     <div class="hdr-stats">
-      <span><span class="n" id="stat-commits">100</span> commits</span>
-      <span><span class="n" id="stat-versions">5</span> versions</span>
-      <span><span class="n" id="stat-latest">2026-03-27</span> latest</span>
+      <span><span class="n" id="stat-commits">108</span> commits</span>
+      <span><span class="n" id="stat-versions">6</span> versions</span>
+      <span><span class="n" id="stat-latest">2026-03-30</span> latest</span>
     </div>
   </header>
 
@@ -407,8 +407,8 @@ a:hover { text-decoration: underline; }
         <div class="hero-kpis">
           <div class="summary-card">
             <span class="summary-kicker">Current release</span>
-            <strong class="summary-value">v0.2.1</strong>
-            <div class="summary-caption">72 commits tracked in v0.2.1 from CHANGELOG.md.</div>
+            <strong class="summary-value">v0.4.0</strong>
+            <div class="summary-caption">14 commits tracked in v0.4.0 from CHANGELOG.md.</div>
           </div>
           <div class="summary-card">
             <span class="summary-kicker">Biggest theme</span>
@@ -434,10 +434,97 @@ a:hover { text-decoration: underline; }
     <section class="release-list" id="release-list"></section>
   </main>
 
-  <footer class="footer">memoire changelog - synced with CHANGELOG.md through v0.2.1</footer>
+  <footer class="footer">memoire changelog - synced with CHANGELOG.md through v0.4.0</footer>
 
 <script>
 const releases = [
+  {
+    "version": "v0.4.0",
+    "date": "2026-03-30",
+    "tag": "feature",
+    "summary": "Memoire exposes 14 tools and 3 resources via the Model Context Protocol, making it callable by Claude Code, Cursor, or any MCP-compatible AI. Stdout logging is suppressed in MCP mode to prevent interference with the JSON-RPC stdio transport.",
+    "commits": [
+      [
+        "fe0d562",
+        "Update CLAUDE.md — document v0.4 commands, MCP server, multi-agent, bidirectional sync"
+      ],
+      [
+        "30d1360",
+        "Add 19 stress tests — large datasets, concurrency, edge cases"
+      ],
+      [
+        "8e9984f",
+        "Upgrade preview dashboard — pipeline stats, sync state, agent registry chips"
+      ],
+      [
+        "951b4f9",
+        "Add MCP config generation — memi mcp config for Claude Code / Cursor / generic"
+      ],
+      [
+        "00ceef5",
+        "Add plugin-side granular events — variable-changed, component-changed, pushTokens"
+      ],
+      [
+        "5f07f5e",
+        "Bump to v0.4.0 — add 66 unit tests, update changelog"
+      ],
+      [
+        "7639909",
+        "Add multi-Claude native orchestration — agent registry, task queue, agent bridge"
+      ],
+      [
+        "9583c4d",
+        "Add bidirectional design-code sync — token differ, sync engine, code watcher"
+      ],
+      [
+        "2f25eef",
+        "Add event-driven pipeline to daemon — reactive pull/diff/spec/generate"
+      ],
+      [
+        "fea3b14",
+        "Add MCP server — expose Memoire as design infrastructure for any AI tool"
+      ],
+      [
+        "e679df4",
+        "Clean up: log silent catches, remove dead params, rebuild plugin bundle"
+      ],
+      [
+        "dfc1243",
+        "Add missing WCAG 2.2 accessibility fields to spec scaffolds"
+      ],
+      [
+        "a96976e",
+        "Fix preview dashboard: XSS escaping, CORS lockdown, body limits, broken JSX"
+      ],
+      [
+        "9d857fb",
+        "Audit fixes: ReDoS guard, token validation, timer cleanup, XSS escape"
+      ]
+    ],
+    "decisions": [
+      [
+        "MCP Server (Phase 1)",
+        "Memoire exposes 14 tools and 3 resources via the Model Context Protocol, making it callable by Claude Code, Cursor, or any MCP-compatible AI. Stdout logging is suppressed in MCP mode to prevent interference with the JSON-RPC stdio transport."
+      ],
+      [
+        "Event-Driven Pipeline (Phase 2)",
+        "The daemon upgrades from a keepalive loop to a reactive automation system. Figma document changes flow through: pull -> diff snapshot -> auto-spec if components changed -> auto-generate if specs changed. The pipeline listens to engine event emissions (not raw document-changed) to avoid double-pulling."
+      ],
+      [
+        "Bidirectional Sync (Phase 3)",
+        "Closes the design-code loop. A token differ (SHA-256 entity hashing) tracks per-entity state on both the Figma and code sides. Conflict detection uses a configurable time window (default 1s) — when both sides change the same entity simultaneously, it's logged as a conflict for manual resolution. The sync guard prevents echo loops during push operations."
+      ],
+      [
+        "Multi-Claude Orchestration (Phase 4)",
+        "Multiple Claude instances can now operate as persistent agents, each owning a role (token-engineer, component-architect, etc.). The AgentRegistry manages lifecycle with file-based persistence and 30s heartbeat eviction. The TaskQueue provides distributed task claiming with dependency resolution and timeout reclamation. The orchestrator's tryExternalOrInternal dispatches to external agents first and falls back to internal execution."
+      ],
+      [
+        "Registry as EventEmitter",
+        "The Registry now extends EventEmitter and emits token-changed, spec-changed, and design-system-changed events, enabling the sync system and pipeline to react to mutations without polling."
+      ]
+    ],
+    "changes": []
+  },
   {
     "version": "v0.2.1",
     "date": "2026-03-27",
