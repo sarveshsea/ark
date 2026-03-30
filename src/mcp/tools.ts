@@ -10,6 +10,8 @@ import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { MemoireEngine } from "../engine/core.js";
 import { AgentOrchestrator } from "../agents/orchestrator.js";
+import { DesignAnalyzer } from "../agents/design-analyzer.js";
+import { getAI } from "../ai/index.js";
 import { ComponentSpecSchema, PageSpecSchema, DataVizSpecSchema } from "../specs/types.js";
 
 function requireFigma(engine: MemoireEngine): void {
@@ -240,6 +242,49 @@ export function registerTools(server: McpServer, engine: MemoireEngine): void {
       requireFigma(engine);
       const result = await engine.figma.execute(code);
       return { content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }] };
+    },
+  );
+
+  // ── analyze_design ──────────────────────────────────────
+  server.tool(
+    "analyze_design",
+    "Analyze a Figma screenshot using AI vision — checks quality, consistency, accessibility, and optionally spec compliance",
+    {
+      nodeId: z.string().optional().describe("Figma node ID to capture and analyze. Omit for current page."),
+      mode: z.enum(["general", "accessibility", "spec-compliance"]).default("general").describe("Analysis mode"),
+      specName: z.string().optional().describe("Spec name to check compliance against (for spec-compliance mode)"),
+    },
+    async ({ nodeId, mode, specName }) => {
+      requireFigma(engine);
+      const ai = getAI();
+      if (!ai) {
+        return { isError: true, content: [{ type: "text" as const, text: "ANTHROPIC_API_KEY not set — AI vision requires an API key" }] };
+      }
+
+      const screenshot = await engine.figma.captureScreenshot(nodeId, "PNG", 2);
+      const analyzer = new DesignAnalyzer(ai);
+
+      let analysis;
+      switch (mode) {
+        case "accessibility":
+          analysis = await analyzer.auditAccessibility(screenshot.base64);
+          break;
+        case "spec-compliance": {
+          if (!specName) {
+            return { isError: true, content: [{ type: "text" as const, text: "specName required for spec-compliance mode" }] };
+          }
+          const spec = await engine.registry.getSpec(specName);
+          if (!spec) {
+            return { isError: true, content: [{ type: "text" as const, text: `Spec "${specName}" not found` }] };
+          }
+          analysis = await analyzer.checkSpecCompliance(screenshot.base64, JSON.stringify(spec, null, 2), engine.registry.designSystem);
+          break;
+        }
+        default:
+          analysis = await analyzer.analyzeDesign(screenshot.base64);
+      }
+
+      return { content: [{ type: "text" as const, text: JSON.stringify(analysis, null, 2) }] };
     },
   );
 

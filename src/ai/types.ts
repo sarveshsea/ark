@@ -26,7 +26,23 @@ export interface AICompletionOptions {
   temperature?: number;
 }
 
+export interface AITextContent {
+  type: "text";
+  text: string;
+}
+
+export interface AIImageContent {
+  type: "image";
+  source: {
+    type: "base64";
+    media_type: "image/png" | "image/jpeg" | "image/gif" | "image/webp";
+    data: string;
+  };
+}
+
+export type AIContentBlock = AITextContent | AIImageContent;
+
 export interface AIMessage {
   role: "user" | "assistant";
-  content: string;
+  content: string | AIContentBlock[];
 }

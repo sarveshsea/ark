@@ -10,7 +10,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { createLogger } from "../engine/logger.js";
 import { TokenTracker } from "./token-tracker.js";
 import { getModelId, getMaxOutput } from "./model-config.js";
-import type { AIResponse, AICompletionOptions, ModelTier, TokenUsage } from "./types.js";
+import type { AIResponse, AICompletionOptions, AIContentBlock, ModelTier, TokenUsage } from "./types.js";
 
 const log = createLogger("ai");
 
@@ -38,7 +38,7 @@ export class AnthropicClient {
       system: opts.system,
       messages: opts.messages.map(m => ({
         role: m.role,
-        content: m.content,
+        content: serializeContent(m.content),
       })),
     });
 
@@ -74,7 +74,7 @@ export class AnthropicClient {
       system: opts.system,
       messages: opts.messages.map(m => ({
         role: m.role,
-        content: m.content,
+        content: serializeContent(m.content),
       })),
     });
 
@@ -101,6 +101,89 @@ export class AnthropicClient {
       usage,
       stopReason: finalMessage.stop_reason || "end_turn",
     };
+  }
+
+  /**
+   * Analyze an image with a text prompt — multimodal vision.
+   * Returns structured text analysis of the provided screenshot.
+   */
+  async vision(opts: {
+    system: string;
+    prompt: string;
+    imageBase64: string;
+    mediaType?: "image/png" | "image/jpeg" | "image/gif" | "image/webp";
+    model?: ModelTier;
+    maxTokens?: number;
+    temperature?: number;
+  }): Promise<AIResponse> {
+    return this.complete({
+      system: opts.system,
+      model: opts.model ?? "deep",
+      maxTokens: opts.maxTokens,
+      temperature: opts.temperature ?? 0.2,
+      messages: [{
+        role: "user",
+        content: [
+          {
+            type: "image",
+            source: {
+              type: "base64",
+              media_type: opts.mediaType ?? "image/png",
+              data: opts.imageBase64,
+            },
+          },
+          { type: "text", text: opts.prompt },
+        ],
+      }],
+    });
+  }
+
+  /**
+   * Analyze an image and return structured JSON — multimodal + JSON extraction.
+   */
+  async visionJSON<T = unknown>(opts: {
+    system: string;
+    prompt: string;
+    imageBase64: string;
+    mediaType?: "image/png" | "image/jpeg" | "image/gif" | "image/webp";
+    schema?: import("zod").ZodSchema<T>;
+    model?: ModelTier;
+    maxTokens?: number;
+  }): Promise<T> {
+    const systemWithJSON = (opts.system || "") + "\n\nIMPORTANT: Return your response as valid JSON. No markdown fencing, no explanation — just the JSON object.";
+
+    const response = await this.vision({
+      ...opts,
+      system: systemWithJSON,
+      temperature: 0.1,
+    });
+
+    let parsed: unknown;
+    try {
+      parsed = parseJSONFromResponse(response.content);
+    } catch {
+      log.warn("Vision JSON parse failed, retrying");
+      const retry = await this.complete({
+        system: systemWithJSON,
+        model: opts.model ?? "deep",
+        maxTokens: opts.maxTokens,
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "image", source: { type: "base64", media_type: opts.mediaType ?? "image/png", data: opts.imageBase64 } },
+              { type: "text", text: opts.prompt },
+            ],
+          },
+          { role: "assistant", content: response.content },
+          { role: "user", content: "That was not valid JSON. Return ONLY valid JSON." },
+        ],
+      });
+      parsed = parseJSONFromResponse(retry.content);
+    }
+
+    if (opts.schema) return opts.schema.parse(parsed) as T;
+    return parsed as T;
   }
 
   async completeJSON<T = unknown>(
@@ -135,6 +218,23 @@ export class AnthropicClient {
     }
     return parsed as T;
   }
+}
+
+/** Convert AIMessage content to Anthropic SDK format (handles multimodal). */
+function serializeContent(content: string | AIContentBlock[]): string | Anthropic.MessageCreateParams["messages"][0]["content"] {
+  if (typeof content === "string") return content;
+  return content.map((block) => {
+    if (block.type === "text") return { type: "text" as const, text: block.text };
+    if (block.type === "image") return {
+      type: "image" as const,
+      source: {
+        type: "base64" as const,
+        media_type: block.source.media_type,
+        data: block.source.data,
+      },
+    };
+    return { type: "text" as const, text: "" };
+  });
 }
 
 function parseJSONFromResponse(content: string): unknown {
