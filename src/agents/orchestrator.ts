@@ -917,14 +917,46 @@ ${existingMappings}
   private async executeTokenEngineer(task: SubTask, ctx: AgentContext): Promise<unknown> {
     const mutations: DesignMutation[] = [];
     const ds = this.engine.registry.designSystem;
+    const prompt = task.prompt.toLowerCase();
 
-    // The task prompt already contains the analysis context.
-    // Here we execute the actual token mutations.
-    if (task.name.includes("Apply") || task.name.includes("Update") || task.name.includes("Generate")) {
-      // Token mutation logic based on task prompt context
-      log.info({ task: task.name }, "Token engineer executing mutation");
+    // Parse color from prompt (hex, named colors)
+    const hexMatch = task.prompt.match(/#[0-9a-fA-F]{3,8}/);
+    const color = hexMatch?.[0];
+
+    // Parse token name from prompt
+    const nameMatch = task.prompt.match(/(?:token|variable|color)\s+(?:named?\s+)?["']?([a-zA-Z][\w-]*)["']?/i);
+    const tokenName = nameMatch?.[1] ?? (prompt.includes("primary") ? "primary" : prompt.includes("accent") ? "accent" : null);
+
+    if (color && tokenName) {
+      // Create or update a color token
+      const existing = ds.tokens.find((t) => t.name === tokenName);
+      const token: import("../engine/registry.js").DesignToken = {
+        name: tokenName,
+        collection: existing?.collection ?? "colors",
+        type: "color",
+        values: { ...(existing?.values ?? {}), Light: color },
+        cssVariable: existing?.cssVariable ?? `--${tokenName.replace(/[^a-zA-Z0-9-]/g, "-").toLowerCase()}`,
+      };
+      this.engine.registry.updateToken(tokenName, token);
+      mutations.push({ type: existing ? "token-updated" : "token-created", target: tokenName, detail: `Set to ${color}` });
     }
 
+    // Handle spacing/radius from prompt
+    const numMatch = task.prompt.match(/(\d+)\s*(?:px)?/);
+    if (numMatch && !color) {
+      const value = parseInt(numMatch[1], 10);
+      const type = prompt.includes("radius") ? "radius" : prompt.includes("shadow") ? "shadow" : "spacing";
+      const name = tokenName ?? `${type}-${value}`;
+      const token: import("../engine/registry.js").DesignToken = {
+        name, collection: type, type,
+        values: { default: value },
+        cssVariable: `--${name.replace(/[^a-zA-Z0-9-]/g, "-").toLowerCase()}`,
+      };
+      this.engine.registry.updateToken(name, token);
+      mutations.push({ type: "token-created", target: name, detail: `Set to ${value}` });
+    }
+
+    log.info({ task: task.name, mutations: mutations.length }, "Token engineer completed");
     return { status: "completed", mutations, tokenCount: ds.tokens.length };
   }
 
@@ -1320,9 +1352,12 @@ ${existingMappings}
   // ── Design Auditor Sub-Agent ───────────────────────────
 
   private async executeDesignAuditor(task: SubTask, ctx: AgentContext): Promise<unknown> {
+    const { runFullAudit, auditTokenContrast, auditTokenCompleteness } = await import("../engine/accessibility.js");
+    const { mapResearchToSpecs } = await import("../engine/research-mapper.js");
+
     const issues: string[] = [];
 
-    // Check for missing token types
+    // 1. Token type coverage
     const tokenTypes = new Set(ctx.designSystem.tokens.map((t) => t.type));
     const expectedTypes = ["color", "spacing", "typography", "radius", "shadow"];
     for (const type of expectedTypes) {
@@ -1331,63 +1366,238 @@ ${existingMappings}
       }
     }
 
-    // Check specs have required fields
+    // 2. WCAG accessibility audit
+    const a11yReport = runFullAudit(ctx.designSystem, ctx.specs);
+    for (const issue of a11yReport.issues) {
+      issues.push(`[${issue.severity.toUpperCase()}] ${issue.rule}: ${issue.message}`);
+    }
+
+    // 3. Spec quality checks
     for (const spec of ctx.specs) {
       if (!spec.purpose) issues.push(`Spec "${spec.name}" missing purpose`);
       if (spec.type === "component") {
         const cs = spec as ComponentSpec;
         if (cs.shadcnBase.length === 0) issues.push(`Component "${cs.name}" has no shadcnBase`);
         if (Object.keys(cs.props).length === 0) issues.push(`Component "${cs.name}" has no props`);
+        if (cs.variants.length === 0) issues.push(`Component "${cs.name}" has no variants`);
       }
     }
 
-    return { status: "completed", issues, issueCount: issues.length };
+    // 4. Naming consistency
+    const names = ctx.specs.map((s) => s.name);
+    const hasCamelCase = names.some((n) => /^[a-z]/.test(n));
+    const hasPascalCase = names.some((n) => /^[A-Z]/.test(n));
+    if (hasCamelCase && hasPascalCase) {
+      issues.push("Inconsistent spec naming: mix of camelCase and PascalCase");
+    }
+
+    // 5. Research coverage (if research is loaded)
+    try {
+      await this.engine.research.load();
+      const store = this.engine.research.getStore();
+      if (store.insights.length > 0) {
+        const mapping = mapResearchToSpecs(store, ctx.specs);
+        if (mapping.coverage < 0.5) {
+          issues.push(`Low research coverage: only ${Math.round(mapping.coverage * 100)}% of insights map to specs`);
+        }
+      }
+    } catch {
+      // Research not available
+    }
+
+    return {
+      status: "completed",
+      issues,
+      issueCount: issues.length,
+      a11yScore: a11yReport.score,
+      wcagLevel: a11yReport.level,
+    };
   }
 
   // ── Accessibility Checker Sub-Agent ────────────────────
 
   private async executeAccessibilityChecker(task: SubTask, ctx: AgentContext): Promise<unknown> {
-    const issues: string[] = [];
+    const {
+      runFullAudit,
+      auditTokenContrast,
+      auditComponentSpec,
+      auditPageSpec,
+      checkContrast,
+    } = await import("../engine/accessibility.js");
 
-    // Check color contrast (simplified)
+    // Run comprehensive WCAG audit
+    const report = runFullAudit(ctx.designSystem, ctx.specs);
+
+    // Additional: compute specific contrast pairs if mentioned in task
+    const contrastPairs: Array<{ fg: string; bg: string; ratio: number; passes: boolean }> = [];
     const colorTokens = ctx.designSystem.tokens.filter((t) => t.type === "color");
-    if (colorTokens.length < 2) {
-      issues.push("Insufficient color tokens for contrast checking");
-    }
-
-    // Check component accessibility
-    for (const spec of ctx.specs) {
-      if (spec.type === "component") {
-        const cs = spec as ComponentSpec;
-        if (!cs.accessibility?.ariaLabel) {
-          issues.push(`Component "${cs.name}" missing ariaLabel`);
+    for (let i = 0; i < colorTokens.length; i++) {
+      for (let j = i + 1; j < colorTokens.length; j++) {
+        const v1 = Object.values(colorTokens[i].values)[0];
+        const v2 = Object.values(colorTokens[j].values)[0];
+        if (typeof v1 === "string" && typeof v2 === "string" && v1.startsWith("#") && v2.startsWith("#")) {
+          const result = checkContrast(v1, v2);
+          if (!result.passesAA) {
+            contrastPairs.push({ fg: v1, bg: v2, ratio: result.ratio, passes: false });
+          }
         }
       }
     }
 
-    return { status: "completed", issues, issueCount: issues.length };
+    return {
+      status: "completed",
+      issues: report.issues.map((i) => `[${i.severity}] [WCAG ${i.wcagCriteria}] ${i.message}`),
+      issueCount: report.issues.length,
+      score: report.score,
+      level: report.level,
+      contrastFailures: contrastPairs.length,
+      passed: report.passed,
+      failed: report.failed,
+    };
   }
 
   // ── Theme Builder Sub-Agent ────────────────────────────
 
   private async executeThemeBuilder(task: SubTask, ctx: AgentContext): Promise<unknown> {
-    log.info({ task: task.name }, "Theme builder processing");
-    return { status: "completed" };
+    const mutations: DesignMutation[] = [];
+    const prompt = task.prompt.toLowerCase();
+
+    // Parse a base color from the prompt
+    const hexMatch = task.prompt.match(/#[0-9a-fA-F]{3,8}/);
+    const baseColor = hexMatch?.[0];
+
+    // Determine theme intent
+    const isDark = prompt.includes("dark");
+    const isLight = prompt.includes("light");
+
+    if (baseColor) {
+      const { parseHex } = await import("../engine/accessibility.js");
+      const parsed = parseHex(baseColor);
+      if (parsed) {
+        // Generate a semantic color palette from the base
+        const palette: Array<{ name: string; value: string }> = [
+          { name: "primary", value: baseColor },
+          { name: "primary-foreground", value: isDark ? "#ffffff" : "#000000" },
+        ];
+
+        // Generate lighter/darker variants
+        const lighten = (r: number, g: number, b: number, amount: number) =>
+          `#${[r, g, b].map((c) => Math.min(255, Math.round(c + (255 - c) * amount)).toString(16).padStart(2, "0")).join("")}`;
+        const darken = (r: number, g: number, b: number, amount: number) =>
+          `#${[r, g, b].map((c) => Math.max(0, Math.round(c * (1 - amount))).toString(16).padStart(2, "0")).join("")}`;
+
+        palette.push({ name: "primary-light", value: lighten(parsed.r, parsed.g, parsed.b, 0.3) });
+        palette.push({ name: "primary-dark", value: darken(parsed.r, parsed.g, parsed.b, 0.3) });
+        palette.push({ name: "muted", value: lighten(parsed.r, parsed.g, parsed.b, 0.8) });
+        palette.push({ name: "muted-foreground", value: darken(parsed.r, parsed.g, parsed.b, 0.5) });
+
+        // Apply to design system
+        for (const { name, value } of palette) {
+          const token: import("../engine/registry.js").DesignToken = {
+            name, collection: "colors", type: "color",
+            values: { [isDark ? "Dark" : "Light"]: value },
+            cssVariable: `--${name}`,
+          };
+          this.engine.registry.updateToken(name, token);
+          mutations.push({ type: "token-created", target: name, detail: `Theme: ${value}` });
+        }
+      }
+    }
+
+    // Generate semantic tokens if none exist
+    const ds = this.engine.registry.designSystem;
+    const semanticDefaults: Array<{ name: string; value: string }> = [
+      { name: "background", value: isDark ? "#0a0a0a" : "#ffffff" },
+      { name: "foreground", value: isDark ? "#fafafa" : "#0a0a0a" },
+      { name: "border", value: isDark ? "#27272a" : "#e4e4e7" },
+      { name: "ring", value: isDark ? "#d4d4d8" : "#18181b" },
+      { name: "destructive", value: "#ef4444" },
+      { name: "destructive-foreground", value: "#fafafa" },
+    ];
+
+    for (const { name, value } of semanticDefaults) {
+      if (!ds.tokens.find((t) => t.name === name)) {
+        const token: import("../engine/registry.js").DesignToken = {
+          name, collection: "colors", type: "color",
+          values: { [isDark ? "Dark" : "Light"]: value },
+          cssVariable: `--${name}`,
+        };
+        this.engine.registry.updateToken(name, token);
+        mutations.push({ type: "token-created", target: name, detail: `Semantic: ${value}` });
+      }
+    }
+
+    log.info({ task: task.name, mutations: mutations.length }, "Theme builder completed");
+    return { status: "completed", mutations, tokenCount: ds.tokens.length + mutations.length };
   }
 
   // ── Responsive Specialist Sub-Agent ────────────────────
 
   private async executeResponsiveSpecialist(task: SubTask, ctx: AgentContext): Promise<unknown> {
     const pageSpecs = ctx.specs.filter((s) => s.type === "page") as PageSpec[];
+    const componentSpecs = ctx.specs.filter((s) => s.type === "component") as ComponentSpec[];
     const issues: string[] = [];
+    const recommendations: string[] = [];
 
+    // 1. Page responsive layout validation
     for (const page of pageSpecs) {
       if (!page.responsive?.mobile) issues.push(`Page "${page.name}" missing mobile layout`);
       if (!page.responsive?.tablet) issues.push(`Page "${page.name}" missing tablet layout`);
       if (!page.responsive?.desktop) issues.push(`Page "${page.name}" missing desktop layout`);
+
+      // Check for grid layouts that won't work on mobile
+      if (page.responsive?.mobile && page.responsive.mobile.startsWith("grid-")) {
+        const cols = parseInt(page.responsive.mobile.split("-")[1] ?? "1", 10);
+        if (cols > 2) {
+          issues.push(`Page "${page.name}" uses ${cols}-col grid on mobile — should stack or use max 2 columns`);
+        }
+      }
+
+      // Check section layout compatibility
+      for (const section of page.sections) {
+        if (section.layout === "grid-4" || section.layout === "grid-3") {
+          recommendations.push(
+            `Page "${page.name}" section "${section.name}" uses ${section.layout} — add responsive breakpoints for tablet (grid-2) and mobile (stack)`,
+          );
+        }
+      }
     }
 
-    return { status: "completed", issues, pageCount: pageSpecs.length };
+    // 2. Component responsive readiness
+    for (const comp of componentSpecs) {
+      // Check if components that compose many specs should be responsive
+      if (comp.composesSpecs.length >= 3) {
+        recommendations.push(
+          `Component "${comp.name}" composes ${comp.composesSpecs.length} specs — consider adding responsive variant (compact/full)`,
+        );
+      }
+
+      // Flag components without a compact variant that might need one
+      if (comp.level === "organism" && !comp.variants.includes("compact") && !comp.variants.includes("mobile")) {
+        recommendations.push(
+          `Organism "${comp.name}" has no compact/mobile variant — may need one for smaller viewports`,
+        );
+      }
+    }
+
+    // 3. Touch target audit for mobile
+    for (const comp of componentSpecs) {
+      const a11y = comp.accessibility as Record<string, unknown> | undefined;
+      if (!a11y?.touchTarget) {
+        const isInteractive = /button|input|select|checkbox|toggle|switch|link|tab/i.test(comp.name);
+        if (isInteractive) {
+          issues.push(`Interactive component "${comp.name}" has no touchTarget defined — need 44px minimum for mobile`);
+        }
+      }
+    }
+
+    return {
+      status: "completed",
+      issues,
+      recommendations,
+      pageCount: pageSpecs.length,
+      componentCount: componentSpecs.length,
+    };
   }
 
   // ── AI-Powered Execution ───────────────────────────────
