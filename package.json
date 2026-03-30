@@ -65,7 +65,9 @@
   "homepage": "https://memoire.cv",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
+    "@chenglou/pretext": "^0.0.3",
     "@modelcontextprotocol/sdk": "^1.26.0",
+    "@napi-rs/canvas": "^0.1.97",
     "@rollup/rollup-darwin-arm64": "^4.60.0",
     "boxen": "^8.0.1",
     "chalk": "^5.4.0",
