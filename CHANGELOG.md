@@ -6,6 +6,31 @@ This changelog tracks Mémoire itself: every version, commit, and architectural 
 
 ---
 
+## v0.5.0 — 2026-03-30
+
+### Commits
+| Hash | Message |
+|------|---------|
+| `ba3e637` | Implement real heuristic fallbacks in 5 stubbed agents |
+| `dc04f42` | Add research-to-design mapping — insights drive spec requirements |
+| `59245d9` | Upgrade codegen — variant logic, smart component bodies, page prop drilling |
+| `ca9ba2c` | Add real accessibility enforcement — WCAG contrast computation, spec auditing |
+| `0064999` | Add AI vision for design QA — multimodal analysis of Figma screenshots |
+
+### Key Design Decisions
+
+- **AI Vision (analyze_design MCP tool)** — Claude's multimodal capability is now available for design QA. The AnthropicClient supports image content blocks (base64 PNG/JPEG). DesignAnalyzer provides 3 modes: general quality analysis (0-100 score), WCAG accessibility audit, and spec compliance checking. All return structured VisualIssue arrays with severity, category, location, and fix suggestions.
+
+- **Real WCAG Enforcement** — The AccessibilityChecker computes actual WCAG 2.2 contrast ratios from hex token values (relative luminance + contrast ratio formula). It validates AA/AAA/AA-Large thresholds, checks semantic token completeness (focus ring, error, disabled), and audits component specs for ariaLabel, keyboardNav, focusStyle, and touchTarget. runFullAudit() produces a 0-100 score with WCAG level determination.
+
+- **Smart Component Bodies** — Code generation now produces variant-aware components. buildVariantLogic() generates a variant → Tailwind class mapping (20 presets: primary, outline, ghost, compact, success, warning, etc.). New component builders for Button (variant prop + disabled + icon), Input (Label + error message), Avatar (image + fallback initials), and Dialog (trigger + header + content). Page generator now derives data props from section configurations for dynamic pages.
+
+- **Research → Design Mapping** — 12 keyword rules map research insights to typed SpecRequirements (accessibility, ux, interaction, content, performance). Insights target specific specs by name mention, tag overlap, or rule patterns. generateA11yChecklist() builds prioritized [MUST]/[SHOULD]/[COULD] checklists. mapPersonaRequirements() extracts requirements from persona pain points.
+
+- **Agent Intelligence Layer** — All 5 stubbed agents now have real heuristic logic. Token-engineer parses hex colors and numeric values from prompts to create/update tokens. Design-auditor runs full WCAG audit + research coverage analysis. Accessibility-checker computes pairwise contrast failures. Theme-builder generates semantic palettes from a base color (6 derived tokens + 6 semantic defaults). Responsive-specialist validates grid layouts, component variants, and touch targets.
+
+---
+
 ## v0.4.0 — 2026-03-30
 
 ### Commits
