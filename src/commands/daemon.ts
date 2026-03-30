@@ -1,6 +1,7 @@
 import type { Command } from "commander";
 import type { MemoireEngine } from "../engine/core.js";
 import { PreviewApiServer } from "../preview/api-server.js";
+import { EventPipeline, type PipelineEvent } from "../engine/pipeline.js";
 
 import { readFile, writeFile, unlink, mkdir } from "fs/promises";
 import { join, basename } from "path";
@@ -12,6 +13,12 @@ interface DaemonStatus {
   figmaPort: number;
   dashboardPort: number;
   startedAt: string;
+  pipeline?: {
+    enabled: boolean;
+    autoPull: boolean;
+    autoSpec: boolean;
+    autoGenerate: boolean;
+  };
 }
 
 interface DaemonStatusPayload {
@@ -102,6 +109,10 @@ export function registerDaemonCommand(program: Command, engine: MemoireEngine): 
     .description("Start the Memoire daemon as a persistent background service")
     .option("-p, --port <port>", "Preview server port", "5173")
     .option("-f, --figma-port <port>", "Starting Figma bridge port to scan", "9223")
+    .option("--no-auto-pull", "Disable auto-pull on Figma changes")
+    .option("--no-auto-spec", "Disable auto-spec on component changes")
+    .option("--no-auto-generate", "Disable auto-generate on spec file changes")
+    .option("--debounce <ms>", "Spec file change debounce in ms", "500")
     .action(async (opts) => {
       // Check if a daemon is already running
       const existing = await readStatus(engine);
@@ -142,6 +153,27 @@ export function registerDaemonCommand(program: Command, engine: MemoireEngine): 
         process.exit(1);
       }
 
+      // 2.5. Start event pipeline
+      const pipeline = new EventPipeline(engine, {
+        figmaDebounceMs: 3000,
+        specDebounceMs: parseInt(opts.debounce ?? "500", 10),
+        autoPull: opts.autoPull !== false,
+        autoSpec: opts.autoSpec !== false,
+        autoGenerate: opts.autoGenerate !== false,
+      });
+      pipeline.start();
+      previewServer.setPipeline(pipeline);
+
+      pipeline.on("pipeline-event", (evt: PipelineEvent) => {
+        const icons: Record<string, string> = {
+          "pull-completed": "+", "generate-completed": "+", "spec-created": "+",
+          "token-diff-detected": "~", "component-diff-detected": "~",
+          "pipeline-error": "x", "generate-failed": "x", "pull-failed": "x",
+        };
+        const icon = icons[evt.type] ?? "·";
+        console.log(`  ${icon} [pipeline] ${evt.detail}`);
+      });
+
       // 3. Write PID file and status JSON
       const dir = memoireDir(engine);
       await mkdir(dir, { recursive: true });
@@ -152,6 +184,12 @@ export function registerDaemonCommand(program: Command, engine: MemoireEngine): 
         figmaPort,
         dashboardPort: 0,
         startedAt: new Date().toISOString(),
+        pipeline: {
+          enabled: true,
+          autoPull: opts.autoPull !== false,
+          autoSpec: opts.autoSpec !== false,
+          autoGenerate: opts.autoGenerate !== false,
+        },
       };
 
       await writeFile(pidPath(engine), String(process.pid));
@@ -173,6 +211,7 @@ export function registerDaemonCommand(program: Command, engine: MemoireEngine): 
       const shutdown = async () => {
         console.log();
         console.log(ui.active("Shutting down daemon..."));
+        pipeline.stop();
         try {
           engine.figma.disconnect();
         } catch {

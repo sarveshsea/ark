@@ -38,11 +38,17 @@ function createPortBindError(port: number, err: NodeJS.ErrnoException): Error & 
   return wrapped;
 }
 
+export interface PipelineAccessor {
+  getStats(): { pullCount: number; specCount: number; generateCount: number; errorCount: number; queueDepth: number };
+  getRecentEvents(): { type: string; timestamp: string; detail: string }[];
+}
+
 export class PreviewApiServer {
   private engine: MemoireEngine;
   private staticDir: string;
   private port: number;
   private startPort: number;
+  private pipeline: PipelineAccessor | null = null;
   private server: ReturnType<typeof createServer> | null = null;
   private wss: WebSocketServer | null = null;
   private liveClients = new Set<WebSocket>();
@@ -63,6 +69,10 @@ export class PreviewApiServer {
     this.staticDir = staticDir;
     this.port = port;
     this.startPort = port;
+  }
+
+  setPipeline(pipeline: PipelineAccessor): void {
+    this.pipeline = pipeline;
   }
 
   async start(): Promise<number> {
@@ -133,6 +143,16 @@ export class PreviewApiServer {
               agents: this.widgetState.getAgents(),
               updatedAt: Date.now(),
             }));
+            return;
+          }
+
+          if (url.pathname === "/api/pipeline/stats" && this.pipeline) {
+            res.end(JSON.stringify(this.pipeline.getStats()));
+            return;
+          }
+
+          if (url.pathname === "/api/pipeline/events" && this.pipeline) {
+            res.end(JSON.stringify(this.pipeline.getRecentEvents()));
             return;
           }
 

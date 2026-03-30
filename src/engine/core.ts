@@ -4,7 +4,7 @@
  */
 
 import { ProjectContext, detectProject } from "./project-context.js";
-import { Registry } from "./registry.js";
+import { Registry, type DesignSystem } from "./registry.js";
 import { FigmaBridge } from "../figma/bridge.js";
 import { ResearchEngine } from "../research/engine.js";
 import { CodeGenerator } from "../codegen/generator.js";
@@ -115,6 +115,11 @@ export class MemoireEngine extends EventEmitter {
 
   get project(): ProjectContext | null {
     return this._project;
+  }
+
+  /** Deep copy of the current design system, useful for diffing before/after pulls. */
+  snapshotDesignSystem(): DesignSystem {
+    return JSON.parse(JSON.stringify(this.registry.designSystem));
   }
 
   /** Design soul — loaded from .memoire/SOUL.md, guides agent output style */
