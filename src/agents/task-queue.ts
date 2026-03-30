@@ -57,7 +57,11 @@ export class TaskQueue extends EventEmitter {
   /** Start the reclaim timer for timed-out tasks. */
   start(): void {
     if (this.reclaimTimer) return;
-    this.reclaimTimer = setInterval(() => this.reclaimTimedOut(), 10_000);
+    this.reclaimTimer = setInterval(() => {
+      this.reclaimTimedOut();
+      // Auto-prune completed tasks older than 10 minutes when queue is large
+      if (this.tasks.size > 1000) this.prune(600_000);
+    }, 10_000);
   }
 
   /** Stop the reclaim timer. */
@@ -249,7 +253,7 @@ export class TaskQueue extends EventEmitter {
         if (now - task.claimedAt > task.timeoutMs) {
           log.warn({ taskId: task.id, agentId: task.claimedBy }, "Task timed out — reclaiming");
           task.status = "timeout";
-          task.error = `Timed out after ${task.timeoutMs}ms`;
+          task.error = `Timed out after ${task.timeoutMs}ms: ${task.name}`;
           task.completedAt = now;
           this.emit("task-timeout", { taskId: task.id, agentId: task.claimedBy });
           this.emit("task-failed", { taskId: task.id, agentId: task.claimedBy, error: task.error });

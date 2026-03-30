@@ -15,6 +15,7 @@ const log = createLogger("agent-bridge");
 
 export class AgentBridge extends EventEmitter {
   private wsServer: MemoireWsServer;
+  private msgCounter = 0;
 
   constructor(wsServer: MemoireWsServer) {
     super();
@@ -48,7 +49,7 @@ export class AgentBridge extends EventEmitter {
   /** Send a task assignment to all connected clients (agent workers listen). */
   sendTaskAssignment(agentId: string, taskId: string, payload: unknown): void {
     const envelope: AgentTaskEnvelope = {
-      id: `msg-${Date.now().toString(36)}`,
+      id: `msg-${++this.msgCounter}-${Date.now().toString(36)}`,
       type: "task-assign",
       agentId,
       taskId,
@@ -70,7 +71,7 @@ export class AgentBridge extends EventEmitter {
   /** Send a task cancellation. */
   sendTaskCancel(agentId: string, taskId: string): void {
     const envelope: AgentTaskEnvelope = {
-      id: `msg-${Date.now().toString(36)}`,
+      id: `msg-${++this.msgCounter}-${Date.now().toString(36)}`,
       type: "task-cancel",
       agentId,
       taskId,

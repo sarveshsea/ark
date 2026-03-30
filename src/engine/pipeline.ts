@@ -102,6 +102,11 @@ export class EventPipeline extends EventEmitter {
   }
 
   start(): void {
+    // Clean up any prior listener to prevent double-registration
+    if (this.engineEventHandler) {
+      this.engine.off("event", this.engineEventHandler);
+    }
+
     // Snapshot current design system for future diffs
     this.lastSnapshot = this.snapshotDesignSystem();
 
@@ -229,8 +234,10 @@ export class EventPipeline extends EventEmitter {
         const msg = err instanceof Error ? err.message : String(err);
         this.stats.lastError = msg;
         this.emitPipelineEvent("pipeline-error", `Task ${task.type} failed: ${msg}`);
-        log.warn({ task, err: msg }, "Pipeline task failed");
+        log.warn({ task: task.type, target: task.target, err: msg }, "Pipeline task failed");
       }
+      // Yield control between tasks to prevent starving the event loop
+      await new Promise((r) => setTimeout(r, 0));
     }
 
     this.processing = false;

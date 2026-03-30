@@ -159,7 +159,7 @@ export class BidirectionalSync extends EventEmitter {
    */
   async sync(snapshot?: DesignSystem): Promise<SyncResult> {
     if (this.syncing) {
-      throw new Error("Sync already in progress");
+      throw new Error("Sync already in progress. Wait for completion or restart the daemon.");
     }
 
     this.syncing = true;
@@ -198,17 +198,22 @@ export class BidirectionalSync extends EventEmitter {
       let pushed = 0;
 
       if (this.config.direction !== "code-to-figma" && diff.hasChanges) {
-        // Figma → Code: apply token/component/style changes to registry
-        for (const change of diff.tokens) {
-          if (change.type === "added" || change.type === "modified") {
-            if (change.after) {
-              this.engine.registry.updateToken(change.name, change.after);
+        // Enable guard during Figma → Code application to prevent echo
+        this.enableGuard();
+        try {
+          for (const change of diff.tokens) {
+            if (change.type === "added" || change.type === "modified") {
+              if (change.after) {
+                this.engine.registry.updateToken(change.name, change.after);
+                applied++;
+              }
+            } else if (change.type === "removed") {
+              this.engine.registry.removeToken(change.name);
               applied++;
             }
-          } else if (change.type === "removed") {
-            this.engine.registry.removeToken(change.name);
-            applied++;
           }
+        } finally {
+          this.disableGuard();
         }
       }
 

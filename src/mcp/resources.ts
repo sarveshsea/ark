@@ -40,6 +40,9 @@ export function registerResources(server: McpServer, engine: MemoireEngine): voi
     { description: "Individual spec by name (component, page, dataviz, design, or ia)" },
     async (uri, { name }) => {
       const specName = decodeURIComponent(String(name));
+      if (!/^[A-Za-z][A-Za-z0-9_-]*$/.test(specName)) {
+        throw new Error(`Invalid spec name: "${specName}"`);
+      }
       const spec = await engine.registry.getSpec(specName);
       if (!spec) {
         throw new Error(`Spec "${specName}" not found`);

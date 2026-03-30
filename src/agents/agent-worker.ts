@@ -201,12 +201,11 @@ export class AgentWorker extends EventEmitter {
   }
 
   private setupMessageHandler(ws: WebSocket): void {
-    ws.on("message", (data) => {
+    const onMessage = (data: unknown) => {
       try {
-        const raw = JSON.parse(data.toString());
+        const raw = JSON.parse(String(data));
         const msg = normalizeBridgeMessage(raw);
         if (!msg) return;
-
         if (msg.type === "agent-message") {
           const taskEnvelope = msg.data as AgentTaskEnvelope;
           if (taskEnvelope.agentId === this.config.id) {
@@ -216,21 +215,26 @@ export class AgentWorker extends EventEmitter {
       } catch {
         // Ignore parse errors
       }
-    });
+    };
 
-    ws.on("close", () => {
+    const onClose = () => {
+      ws.removeListener("message", onMessage);
+      ws.removeListener("close", onClose);
+      ws.removeListener("error", onError);
       this._connected = false;
       this.ws = null;
       log.warn("Disconnected from daemon");
       this.emit("disconnected");
-      if (this.running) {
-        this.scheduleReconnect();
-      }
-    });
+      if (this.running) this.scheduleReconnect();
+    };
 
-    ws.on("error", (err) => {
+    const onError = (err: Error) => {
       log.warn({ err: err.message }, "WebSocket error");
-    });
+    };
+
+    ws.on("message", onMessage);
+    ws.on("close", onClose);
+    ws.on("error", onError);
   }
 
   private handleTaskEnvelope(envelope: AgentTaskEnvelope): void {

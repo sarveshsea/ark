@@ -755,7 +755,7 @@ ${existingMappings}
               this.makeAgentBoxUpdate(plan, task, taskIndex, "done", result),
             );
 
-            if (result && typeof result === "object" && "mutations" in result) {
+            if (result && typeof result === "object" && "mutations" in result && Array.isArray((result as Record<string, unknown>).mutations)) {
               mutations.push(...(result as { mutations: DesignMutation[] }).mutations);
             }
           } catch (err) {

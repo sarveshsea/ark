@@ -111,8 +111,8 @@ export function auditTokenContrast(tokens: DesignToken[]): A11yIssue[] {
   const fgTokens = colorTokens.filter((t) => /foreground|text|fg|on-/i.test(t.name));
   const bgTokens = colorTokens.filter((t) => /background|surface|bg|card/i.test(t.name));
 
-  for (const fg of fgTokens) {
-    for (const bg of bgTokens) {
+  for (const fg of fgTokens.slice(0, 50)) {
+    for (const bg of bgTokens.slice(0, 50)) {
       // Only check tokens from the same semantic family
       const fgBase = fg.name.replace(/foreground|text|fg|on-/gi, "").replace(/^[-/]|[-/]$/g, "").toLowerCase();
       const bgBase = bg.name.replace(/background|surface|bg|card/gi, "").replace(/^[-/]|[-/]$/g, "").toLowerCase();

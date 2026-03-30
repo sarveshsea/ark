@@ -149,8 +149,7 @@ export function registerTools(server: McpServer, engine: MemoireEngine): void {
       engine.registry.updateToken(name, updated);
 
       if (pushToFigma && engine.figma.isConnected) {
-        const orchestrator = new AgentOrchestrator(engine);
-        await (orchestrator as any).pushTokenToFigma?.(updated);
+        await engine.figma.pushTokens([{ name: updated.name, values: updated.values }]);
       }
 
       return { content: [{ type: "text" as const, text: `Token "${name}" updated` }] };

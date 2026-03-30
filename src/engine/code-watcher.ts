@@ -67,7 +67,8 @@ export class CodeWatcher extends EventEmitter {
       if ((err as NodeJS.ErrnoException).code === "ENOENT") {
         log.info("generated/ directory does not exist yet — will watch when created");
       } else {
-        log.warn({ err }, "Failed to start code watcher");
+        this.running = false;
+        log.warn({ err: (err as Error).message }, "Failed to start code watcher — not running");
       }
       return;
     }
