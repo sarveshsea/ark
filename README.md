@@ -76,20 +76,67 @@ memoire preview
 
 | Command | What it does |
 |---------|-------------|
-| `memoire init` | Initialize workspace |
-| `memoire connect` | Start the Figma bridge and report Control Plane install health |
-| `memoire pull` | Extract design tokens, components, styles from Figma |
-| `memoire spec <type> <name>` | Create a component/page/dataviz spec |
-| `memoire generate [name]` | Generate shadcn/ui code from specs |
-| `memoire preview` | Start localhost preview gallery |
-| `memoire sync` | Full pipeline: pull + spec + generate |
-| `memoire go` | Zero-friction single command |
-| `memoire compose "<intent>"` | Agent orchestrator: classify, plan, execute |
-| `memoire research <sub>` | Research pipeline (Excel, stickies, synthesis) |
-| `memoire tokens` | Export design tokens as CSS variables |
-| `memoire status` | Show project status |
-| `memoire doctor` | Health check for project, plugin bundle, bridge, and workspace |
-| `memoire dashboard` | Launch monitoring dashboard |
+| `memi init` | Initialize workspace |
+| `memi connect` | Start the Figma bridge and report Control Plane install health |
+| `memi pull` | Extract design tokens, components, styles from Figma |
+| `memi spec <type> <name>` | Create a component/page/dataviz spec |
+| `memi generate [name]` | Generate shadcn/ui code from specs |
+| `memi preview` | Start localhost preview gallery |
+| `memi sync` | Full pipeline: pull + spec + generate |
+| `memi sync --live` | Live mode: watch for changes and sync continuously |
+| `memi sync --conflicts` | Show and resolve pending sync conflicts |
+| `memi go` | Zero-friction single command |
+| `memi compose "<intent>"` | Agent orchestrator: classify, plan, execute |
+| `memi watch --code` | Watch specs + generated/ for changes |
+| `memi daemon start` | Start daemon with reactive pipeline |
+| `memi mcp start` | Start as MCP server (stdio) |
+| `memi mcp config` | Print MCP config for Claude Code / Cursor |
+| `memi agent spawn <role>` | Spawn a persistent agent worker |
+| `memi agent list\|kill\|status` | Manage agent instances |
+| `memi research <sub>` | Research pipeline (Excel, stickies, synthesis) |
+| `memi tokens` | Export design tokens as CSS variables |
+| `memi status` | Show project status |
+| `memi doctor` | Health check for project, plugin bundle, bridge, and workspace |
+| `memi dashboard` | Launch monitoring dashboard |
+
+---
+
+## MCP Server
+
+Memoire exposes 14 tools and 3 resources via the Model Context Protocol. Any MCP-compatible AI tool can use it as a design layer.
+
+```bash
+# Print config for Claude Code
+memi mcp config --target claude-code
+
+# Print config for Cursor
+memi mcp config --target cursor
+```
+
+Drop the output into `.mcp.json` (Claude Code) or `.cursor/mcp.json` (Cursor).
+
+**Tools:** `pull_design_system`, `get_specs`, `get_spec`, `create_spec`, `generate_code`, `get_tokens`, `update_token`, `capture_screenshot`, `get_selection`, `compose`, `run_audit`, `get_research`, `figma_execute`, `get_page_tree`
+
+---
+
+## Multi-Agent Orchestration
+
+Multiple Claude instances can operate as persistent agents:
+
+```bash
+# Spawn a token engineer agent
+memi agent spawn token-engineer
+
+# Spawn a design auditor in another terminal
+memi agent spawn design-auditor
+
+# Check status
+memi agent status
+```
+
+**Roles:** token-engineer, component-architect, layout-designer, dataviz-specialist, code-generator, accessibility-checker, design-auditor, research-analyst, general
+
+The orchestrator dispatches to external agents first and falls back to internal execution.
 
 ---
 
@@ -97,14 +144,15 @@ memoire preview
 
 ```
 src/
-├── engine/    Core orchestrator, project detection, registry
+├── engine/    Core orchestrator, registry, token-differ, sync, pipeline
 ├── figma/     Figma bridge (WebSocket on ports 9223-9232)
+├── mcp/       MCP server (14 tools, 3 resources, stdio transport)
+├── agents/    Agent orchestrator, registry, task queue, agent bridge
 ├── research/  Research engine (Excel, stickies, web)
 ├── specs/     Spec types + Zod validation + 56-component catalog
 ├── codegen/   Code generation (shadcn mapper, dataviz, pages)
-├── agents/    Agent orchestrator, AI sub-agents, self-healing
 ├── ai/        Anthropic SDK integration
-├── preview/   Localhost preview gallery
+├── preview/   Localhost preview gallery + dashboard
 ├── tui/       Terminal UI (Ink/React)
 └── commands/  CLI commands (Commander.js)
 ```
