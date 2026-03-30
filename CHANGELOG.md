@@ -6,6 +6,34 @@ This changelog tracks Mémoire itself: every version, commit, and architectural 
 
 ---
 
+## v0.4.0 — 2026-03-30
+
+### Commits
+| Hash | Message |
+|------|---------|
+| `7639909` | Add multi-Claude native orchestration — agent registry, task queue, agent bridge |
+| `9583c4d` | Add bidirectional design-code sync — token differ, sync engine, code watcher |
+| `2f25eef` | Add event-driven pipeline to daemon — reactive pull/diff/spec/generate |
+| `fea3b14` | Add MCP server — expose Memoire as design infrastructure for any AI tool |
+| `e679df4` | Clean up: log silent catches, remove dead params, rebuild plugin bundle |
+| `dfc1243` | Add missing WCAG 2.2 accessibility fields to spec scaffolds |
+| `a96976e` | Fix preview dashboard: XSS escaping, CORS lockdown, body limits, broken JSX |
+| `9d857fb` | Audit fixes: ReDoS guard, token validation, timer cleanup, XSS escape |
+
+### Key Design Decisions
+
+- **MCP Server (Phase 1)** — Memoire exposes 14 tools and 3 resources via the Model Context Protocol, making it callable by Claude Code, Cursor, or any MCP-compatible AI. Stdout logging is suppressed in MCP mode to prevent interference with the JSON-RPC stdio transport.
+
+- **Event-Driven Pipeline (Phase 2)** — The daemon upgrades from a keepalive loop to a reactive automation system. Figma document changes flow through: pull -> diff snapshot -> auto-spec if components changed -> auto-generate if specs changed. The pipeline listens to engine event emissions (not raw document-changed) to avoid double-pulling.
+
+- **Bidirectional Sync (Phase 3)** — Closes the design-code loop. A token differ (SHA-256 entity hashing) tracks per-entity state on both the Figma and code sides. Conflict detection uses a configurable time window (default 1s) — when both sides change the same entity simultaneously, it's logged as a conflict for manual resolution. The sync guard prevents echo loops during push operations.
+
+- **Multi-Claude Orchestration (Phase 4)** — Multiple Claude instances can now operate as persistent agents, each owning a role (token-engineer, component-architect, etc.). The AgentRegistry manages lifecycle with file-based persistence and 30s heartbeat eviction. The TaskQueue provides distributed task claiming with dependency resolution and timeout reclamation. The orchestrator's `tryExternalOrInternal` dispatches to external agents first and falls back to internal execution.
+
+- **Registry as EventEmitter** — The Registry now extends EventEmitter and emits `token-changed`, `spec-changed`, and `design-system-changed` events, enabling the sync system and pipeline to react to mutations without polling.
+
+---
+
 ## v0.2.1 — 2026-03-27
 
 ### Commits

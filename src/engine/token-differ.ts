@@ -50,8 +50,22 @@ export interface SyncConflict {
 
 /** Compute a stable SHA-256 hash of a value for change detection. */
 export function entityHash(value: unknown): string {
-  const json = JSON.stringify(value, Object.keys(value as Record<string, unknown>).sort());
+  const json = stableStringify(value);
   return createHash("sha256").update(json).digest("hex").slice(0, 16);
+}
+
+/** JSON.stringify with sorted keys at all nesting levels. */
+function stableStringify(value: unknown): string {
+  return JSON.stringify(value, (_key, val) => {
+    if (val && typeof val === "object" && !Array.isArray(val)) {
+      const sorted: Record<string, unknown> = {};
+      for (const k of Object.keys(val).sort()) {
+        sorted[k] = (val as Record<string, unknown>)[k];
+      }
+      return sorted;
+    }
+    return val;
+  });
 }
 
 /** Hash a design token by its values (mode-sensitive). */
