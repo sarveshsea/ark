@@ -343,6 +343,27 @@ function normalizeBridgeMessage(value) {
         type,
         data: message.data
       };
+    case "agent-register":
+      return {
+        channel: BRIDGE_V2_CHANNEL,
+        source: "server",
+        type,
+        data: message.data
+      };
+    case "agent-deregister":
+      return {
+        channel: BRIDGE_V2_CHANNEL,
+        source: "server",
+        type,
+        data: message.data
+      };
+    case "agent-message":
+      return {
+        channel: BRIDGE_V2_CHANNEL,
+        source: "server",
+        type,
+        data: message.data
+      };
     default:
       return null;
   }
@@ -429,6 +450,9 @@ function serializeBridgeEnvelope(envelope, mode = "legacy") {
     case "token-push":
     case "variable-changed":
     case "component-changed":
+    case "agent-register":
+    case "agent-deregister":
+    case "agent-message":
       return {
         type: envelope.type,
         data: envelope.data

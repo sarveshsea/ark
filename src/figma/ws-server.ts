@@ -558,10 +558,22 @@ export class MemoireWsServer extends EventEmitter {
         this.emit("agent-status", msg.data);
         break;
 
+      case "agent-message":
+        this.emit("agent-message", msg.data);
+        break;
+
+      case "agent-register":
+      case "agent-deregister":
+        // These are server→client only, ignore if received from client
+        break;
+
       case "identify":
       case "event":
       case "error":
       case "pong":
+      case "token-push":
+      case "variable-changed":
+      case "component-changed":
         break;
 
       default:

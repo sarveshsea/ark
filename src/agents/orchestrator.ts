@@ -745,7 +745,7 @@ ${existingMappings}
           await this.updateAgentBox(this.makeAgentBoxUpdate(plan, task, taskIndex, "busy"));
 
           try {
-            const result = await this.executeWithRetry(task, plan.context);
+            const result = await this.tryExternalOrInternal(task, plan.context);
             task.status = "completed";
             task.result = result;
             task.completedAt = new Date().toISOString();
@@ -809,6 +809,47 @@ ${existingMappings}
 
   private static readonly MAX_RETRIES = 2;
   private static readonly RETRY_BASE_MS = 500;
+
+  /**
+   * Try to dispatch a task to an external agent first; fall back to internal execution.
+   * External agents are matched by role via the AgentRegistry.
+   */
+  private async tryExternalOrInternal(task: SubTask, ctx: AgentContext): Promise<unknown> {
+    const role = task.agentType as import("../plugin/shared/contracts.js").AgentRole;
+    const externalAgent = this.engine.agentRegistry.getAvailableAgent(role);
+
+    if (externalAgent) {
+      log.info({ taskId: task.id, agentId: externalAgent.id, role }, "Dispatching to external agent");
+      this.engine.agentRegistry.markBusy(externalAgent.id);
+
+      const queueTaskId = this.engine.taskQueue.enqueue({
+        role,
+        name: task.name,
+        intent: task.prompt,
+        payload: { task, context: ctx },
+        dependencies: [],
+        timeoutMs: 120_000,
+      });
+
+      // Claim on behalf of the external agent and send assignment
+      this.engine.taskQueue.claim(externalAgent.id, role);
+      this.engine.taskQueue.markRunning(queueTaskId, externalAgent.id);
+      this.engine.agentBridge.sendTaskAssignment(externalAgent.id, queueTaskId, { task, context: ctx });
+
+      try {
+        const queueTask = await this.engine.taskQueue.waitForTask(queueTaskId, 120_000);
+        if (queueTask.status === "completed") {
+          return queueTask.result;
+        }
+        // External failed — fall through to internal
+        log.warn({ taskId: task.id, queueTaskId }, "External agent failed, falling back to internal");
+      } catch {
+        log.warn({ taskId: task.id }, "External agent timed out, falling back to internal");
+      }
+    }
+
+    return this.executeWithRetry(task, ctx);
+  }
 
   private async executeWithRetry(task: SubTask, ctx: AgentContext): Promise<unknown> {
     let lastError: Error | undefined;

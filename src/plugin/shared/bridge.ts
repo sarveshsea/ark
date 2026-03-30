@@ -1,5 +1,7 @@
 import type {
   AgentBoxState,
+  AgentRegistryEntry,
+  AgentTaskEnvelope,
   WidgetCommandName,
   WidgetConnectionState,
   WidgetHealSummary,
@@ -147,6 +149,27 @@ export interface BridgeAgentStatusEnvelope {
   data: AgentBoxState;
 }
 
+export interface BridgeAgentRegisterEnvelope {
+  channel: typeof BRIDGE_V2_CHANNEL;
+  source: "server";
+  type: "agent-register";
+  data: AgentRegistryEntry;
+}
+
+export interface BridgeAgentDeregisterEnvelope {
+  channel: typeof BRIDGE_V2_CHANNEL;
+  source: "server";
+  type: "agent-deregister";
+  data: { agentId: string };
+}
+
+export interface BridgeAgentMessageEnvelope {
+  channel: typeof BRIDGE_V2_CHANNEL;
+  source: "server";
+  type: "agent-message";
+  data: AgentTaskEnvelope;
+}
+
 export interface BridgeTokenPushEnvelope {
   channel: typeof BRIDGE_V2_CHANNEL;
   source: "server";
@@ -201,7 +224,10 @@ export type BridgeEnvelope =
   | BridgeAgentStatusEnvelope
   | BridgeTokenPushEnvelope
   | BridgeVariableChangedEnvelope
-  | BridgeComponentChangedEnvelope;
+  | BridgeComponentChangedEnvelope
+  | BridgeAgentRegisterEnvelope
+  | BridgeAgentDeregisterEnvelope
+  | BridgeAgentMessageEnvelope;
 
 export function isBridgeEnvelope(value: unknown): value is BridgeEnvelope {
   return Boolean(
@@ -429,6 +455,27 @@ export function normalizeBridgeMessage(value: unknown): BridgeEnvelope | null {
         type,
         data: message.data as BridgeComponentChangedEnvelope["data"],
       };
+    case "agent-register":
+      return {
+        channel: BRIDGE_V2_CHANNEL,
+        source: "server",
+        type,
+        data: message.data as AgentRegistryEntry,
+      };
+    case "agent-deregister":
+      return {
+        channel: BRIDGE_V2_CHANNEL,
+        source: "server",
+        type,
+        data: message.data as BridgeAgentDeregisterEnvelope["data"],
+      };
+    case "agent-message":
+      return {
+        channel: BRIDGE_V2_CHANNEL,
+        source: "server",
+        type,
+        data: message.data as AgentTaskEnvelope,
+      };
     default:
       return null;
   }
@@ -520,6 +567,9 @@ export function serializeBridgeEnvelope(
     case "token-push":
     case "variable-changed":
     case "component-changed":
+    case "agent-register":
+    case "agent-deregister":
+    case "agent-message":
       return {
         type: envelope.type,
         data: envelope.data,

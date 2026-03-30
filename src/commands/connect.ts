@@ -236,9 +236,10 @@ export function registerConnectCommand(program: Command, engine: MemoireEngine) 
     .description("Connect to Figma — guided setup if first time")
     .option("-p, --port <port>", "Starting port to scan", "9223")
     .option("-n, --name <name>", "Instance name shown in Figma plugin")
+    .option("--role <role>", "Register as an agent with this role (e.g., token-engineer)")
     .option("--skip-setup", "Skip the guided setup, go straight to connecting")
     .option("--json", "Output connection state as JSON")
-    .action(async (opts: { port: string; name?: string; skipSetup?: boolean; json?: boolean }) => {
+    .action(async (opts: { port: string; name?: string; role?: string; skipSetup?: boolean; json?: boolean }) => {
       await engine.init();
 
       const root = engine.config.projectRoot;
@@ -477,6 +478,23 @@ export function registerConnectCommand(program: Command, engine: MemoireEngine) 
           engine.figma.disconnect();
           process.exit(0);
         });
+
+        // ── Agent registration (optional) ────────────────
+        if (opts.role) {
+          const { AgentWorker } = await import("../agents/agent-worker.js");
+          const worker = new AgentWorker({
+            role: opts.role as import("../plugin/shared/contracts.js").AgentRole,
+            name: opts.name,
+          });
+          const entry = worker.toRegistryEntry();
+          await engine.agentRegistry.register(entry);
+          await worker.start();
+          engine.agentBridge.broadcastRegistration(entry);
+          console.log(ui.ok(`Registered as agent: ${entry.name} (${entry.role})`));
+
+          // Heartbeat
+          setInterval(() => engine.agentRegistry.heartbeat(entry.id), 10_000);
+        }
 
         console.log();
         console.log(ui.active("Waiting for Figma plugin... " + ui.dim("(Ctrl+C to stop)")));

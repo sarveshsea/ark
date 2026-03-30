@@ -11,6 +11,9 @@ import { CodeGenerator } from "../codegen/generator.js";
 import { autoSpecFromDesignSystem } from "./auto-spec.js";
 import { BidirectionalSync, type SyncDirection } from "./sync.js";
 import { CodeWatcher } from "./code-watcher.js";
+import { AgentRegistry } from "../agents/agent-registry.js";
+import { TaskQueue } from "../agents/task-queue.js";
+import { AgentBridge } from "../agents/agent-bridge.js";
 import { createLogger } from "./logger.js";
 import { EventEmitter } from "events";
 import { readFile, writeFile, mkdir } from "fs/promises";
@@ -51,6 +54,9 @@ export class MemoireEngine extends EventEmitter {
   readonly healer: CanvasHealer;
   readonly sync: BidirectionalSync;
   readonly codeWatcher: CodeWatcher;
+  readonly agentRegistry: AgentRegistry;
+  readonly taskQueue: TaskQueue;
+  private _agentBridge: AgentBridge | null = null;
 
   private _project: ProjectContext | null = null;
   private _initialized = false;
@@ -87,6 +93,8 @@ export class MemoireEngine extends EventEmitter {
     );
     this.sync = new BidirectionalSync(this);
     this.codeWatcher = new CodeWatcher(join(config.projectRoot, "generated"));
+    this.agentRegistry = new AgentRegistry(join(config.projectRoot, ".memoire"));
+    this.taskQueue = new TaskQueue();
 
     // Auto-pull design system when Figma document changes (debounced)
     this.figma.on("document-changed", () => this._onDocumentChanged());
@@ -140,6 +148,29 @@ export class MemoireEngine extends EventEmitter {
     return JSON.parse(JSON.stringify(this.registry.designSystem));
   }
 
+  /** Get or create the agent bridge (lazy — needs connected ws-server). */
+  get agentBridge(): AgentBridge {
+    if (!this._agentBridge) {
+      this._agentBridge = new AgentBridge(this.figma.wsServer);
+
+      // Route agent messages from bridge through task queue
+      this.figma.wsServer.on("agent-message", (data: unknown) => {
+        this._agentBridge!.handleAgentMessage(data as import("../plugin/shared/contracts.js").AgentTaskEnvelope);
+      });
+
+      // When agent bridge receives task results, complete/fail them in the queue
+      this._agentBridge.on("task-result", (data: { agentId: string; taskId: string; result?: unknown; error?: string }) => {
+        if (data.error) {
+          this.taskQueue.fail(data.taskId, data.agentId, data.error);
+        } else {
+          this.taskQueue.complete(data.taskId, data.agentId, data.result);
+        }
+        this.agentRegistry.markOnline(data.agentId);
+      });
+    }
+    return this._agentBridge;
+  }
+
   /** Design soul — loaded from .memoire/SOUL.md, guides agent output style */
   get soul(): string {
     return this._soul;
@@ -165,8 +196,11 @@ export class MemoireEngine extends EventEmitter {
     // Load design soul for agent context
     this._soul = await readSoul(memoireDir);
 
-    // Load sync state
+    // Load sync state and agent registry
     await this.sync.loadState();
+    await this.agentRegistry.load();
+    this.agentRegistry.startHealthCheck();
+    this.taskQueue.start();
 
     // Load Mémoire Notes
     await this.notes.loadAll();

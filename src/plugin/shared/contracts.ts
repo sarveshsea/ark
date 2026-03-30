@@ -136,6 +136,46 @@ export interface AgentBoxState {
   elapsedMs?: number;
 }
 
+// ── Multi-Agent Types ─────────────────────────────────────
+
+export type AgentRole =
+  | "token-engineer"
+  | "component-architect"
+  | "layout-designer"
+  | "dataviz-specialist"
+  | "code-generator"
+  | "accessibility-checker"
+  | "design-auditor"
+  | "research-analyst"
+  | "general";
+
+export interface AgentRegistryEntry {
+  id: string;
+  name: string;
+  role: AgentRole;
+  pid: number;
+  port: number;
+  status: "online" | "busy" | "offline";
+  lastHeartbeat: number;
+  registeredAt: number;
+  capabilities: string[];
+}
+
+export interface AgentRegistryState {
+  agents: AgentRegistryEntry[];
+  updatedAt: number;
+}
+
+export interface AgentTaskEnvelope {
+  id: string;
+  type: "task-assign" | "task-result" | "task-cancel";
+  agentId: string;
+  taskId: string;
+  payload?: unknown;
+  result?: unknown;
+  error?: string;
+}
+
 export interface WidgetJob {
   id: string;
   runId: string;

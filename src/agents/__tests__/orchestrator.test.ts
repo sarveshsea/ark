@@ -61,6 +61,10 @@ function makeEngine(initialSpecs: AnySpec[]) {
       notes: { loaded: false, notes: [] },
       figma: { isConnected: false, publishAgentStatus() {} },
       project: { framework: "vite" },
+      agentRegistry: { getAvailableAgent() { return null; } },
+      taskQueue: { enqueue() { return ""; }, claim() { return null; }, markRunning() {}, waitForTask() { return Promise.resolve(null); } },
+      agentBridge: { sendTaskAssignment() {} },
+      sync: { enableGuard() {}, disableGuard() {}, isGuarded: false },
       async generateFromSpec(name: string) {
         generated.push(name);
         return `generated/${name}.tsx`;
