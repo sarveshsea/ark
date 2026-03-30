@@ -1391,7 +1391,39 @@ ${existingMappings}
       issues.push("Inconsistent spec naming: mix of camelCase and PascalCase");
     }
 
-    // 5. Research coverage (if research is loaded)
+    // 5. Text overflow detection via Pretext
+    const textOverflows: string[] = [];
+    try {
+      const { getTextMeasurer } = await import("../engine/text-measurer.js");
+      const measurer = getTextMeasurer();
+      for (const spec of ctx.specs) {
+        if (spec.type !== "component") continue;
+        const cs = spec as ComponentSpec;
+        // Check string props for potential overflow at common widths
+        for (const [propName, propType] of Object.entries(cs.props)) {
+          if (propType !== "string" && propType !== "string?") continue;
+          // Simulate a typical label (30 chars) at card-width containers
+          const sampleText = `Sample ${propName} content for ${cs.name}`;
+          const check = measurer.checkOverflow(sampleText, {
+            maxWidth: 280, // typical card inner width
+            containerHeight: 24, // single line height
+            font: "14px sans-serif",
+          });
+          if (!check.fits) {
+            textOverflows.push(
+              `Component "${cs.name}" prop "${propName}" may overflow at 280px (${check.lineCount} lines, ${check.actualHeight}px vs 24px container)`
+            );
+          }
+        }
+      }
+    } catch {
+      // TextMeasurer not available (missing native deps)
+    }
+    for (const overflow of textOverflows) {
+      issues.push(`[TEXT-OVERFLOW] ${overflow}`);
+    }
+
+    // 6. Research coverage (if research is loaded)
     try {
       await this.engine.research.load();
       const store = this.engine.research.getStore();
@@ -1409,6 +1441,7 @@ ${existingMappings}
       status: "completed",
       issues,
       issueCount: issues.length,
+      textOverflows: textOverflows.length,
       a11yScore: a11yReport.score,
       wcagLevel: a11yReport.level,
     };
