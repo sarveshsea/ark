@@ -1624,10 +1624,38 @@ ${existingMappings}
       }
     }
 
+    // 4. Text reflow validation across breakpoints via Pretext
+    const breakpointResults: Array<{ spec: string; prop: string; breakpoint: string; lineCount: number; fits: boolean }> = [];
+    try {
+      const { getTextMeasurer } = await import("../engine/text-measurer.js");
+      const measurer = getTextMeasurer();
+      for (const comp of componentSpecs) {
+        for (const [propName, propType] of Object.entries(comp.props)) {
+          if (propType !== "string" && propType !== "string?") continue;
+          const sampleText = `Sample ${propName} content for testing responsive text reflow`;
+          const results = measurer.checkBreakpoints(sampleText, {
+            font: "14px sans-serif",
+            containerHeight: 48, // 2 lines max
+          });
+          for (const r of results) {
+            if (!r.fits) {
+              issues.push(
+                `Component "${comp.name}" prop "${propName}" overflows at ${r.breakpoint} (${r.width}px): ${r.lineCount} lines, ${r.height}px`
+              );
+            }
+            breakpointResults.push({ spec: comp.name, prop: propName, breakpoint: r.breakpoint, lineCount: r.lineCount, fits: r.fits });
+          }
+        }
+      }
+    } catch {
+      // TextMeasurer not available
+    }
+
     return {
       status: "completed",
       issues,
       recommendations,
+      breakpointResults: breakpointResults.length,
       pageCount: pageSpecs.length,
       componentCount: componentSpecs.length,
     };
