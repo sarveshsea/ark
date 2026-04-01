@@ -11,6 +11,10 @@ This changelog tracks Mémoire itself: every version, commit, and architectural 
 ### Commits
 | Hash | Message |
 |------|---------|
+| `e2bbdd5` | Add Framer preview components and standalone dashboard build script |
+| `3a6ce0d` | Audit fixes: memory leaks, race conditions, error handling across 10 files |
+| `24f067c` | Efficiency fixes: incremental TS build, rate limiter stale entry eviction |
+| `2d87916` | Remove dead dependencies and unused TUI app file |
 | `dd4bd77` | Add research preview tab — insights, personas, themes, coverage bar in dashboard |
 | `b152460` | Add research traceability — bidirectional insight-to-spec links |
 | `bcb437a` | Add transcript processor — heuristic interview parsing into structured research |
