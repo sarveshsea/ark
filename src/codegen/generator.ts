@@ -3,6 +3,7 @@
  * components from specs. All output uses shadcn/ui primitives.
  */
 
+import { createHash } from "crypto";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { createLogger } from "../engine/logger.js";
@@ -40,6 +41,18 @@ export class CodeGenerator {
   }
 
   async generate(spec: AnySpec, ctx: CodegenContext): Promise<CodegenResult> {
+    // Hash-based caching — skip generation when spec + design system unchanged
+    const specHash = computeSpecHash(spec, ctx);
+    const previousState = this.config.registry.getGenerationState(spec.name);
+    if (previousState && previousState.specHash === specHash) {
+      this.emitEvent("info", `Skipping "${spec.name}" — skipped — unchanged`);
+      return {
+        entryFile: previousState.files[0] ?? "",
+        files: previousState.files.map((path) => ({ path, content: "" })),
+        spec,
+      };
+    }
+
     this.emitEvent("info", `Generating code for "${spec.name}" (${spec.type})...`);
 
     let result: CodegenResult;
@@ -78,7 +91,7 @@ export class CodeGenerator {
       specName: spec.name,
       generatedAt: new Date().toISOString(),
       files: result.files.map((f) => f.path),
-      specHash: simpleHash(JSON.stringify(spec)),
+      specHash,
     });
 
     this.emitEvent("success", `Generated ${result.files.length} files for "${spec.name}"`);
@@ -168,12 +181,8 @@ export class CodeGenerator {
   }
 }
 
-function simpleHash(str: string): string {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash |= 0;
-  }
-  return Math.abs(hash).toString(36);
+function computeSpecHash(spec: AnySpec, ctx: CodegenContext): string {
+  return createHash("sha256")
+    .update(JSON.stringify(spec) + JSON.stringify(ctx.designSystem.tokens.length))
+    .digest("hex");
 }
