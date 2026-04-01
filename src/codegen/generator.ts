@@ -99,6 +99,29 @@ export class CodeGenerator {
   }
 
   /**
+   * Preview mode — generates code in memory without writing files to disk.
+   * Returns the same CodegenResult so callers can inspect file paths and contents.
+   */
+  async preview(spec: AnySpec, ctx: CodegenContext): Promise<CodegenResult> {
+    this.emitEvent("info", `Previewing code for "${spec.name}" (${spec.type})...`);
+
+    switch (spec.type) {
+      case "component":
+        return this.generateComponentFiles(spec, ctx);
+      case "page":
+        return this.generatePageFiles(spec, ctx);
+      case "dataviz":
+        return this.generateDataVizFiles(spec, ctx);
+      case "design":
+      case "ia":
+        this.emitEvent("info", `Skipping "${spec.name}" — ${spec.type} specs are reference-only, no code generated`);
+        return { entryFile: "", files: [], spec };
+      default:
+        throw new Error(`Unknown spec type: ${(spec as { type: string }).type}`);
+    }
+  }
+
+  /**
    * Maps atomic level to output folder following Atomic Design methodology.
    * atoms → components/ui/, molecules → components/molecules/, etc.
    */

@@ -1,5 +1,6 @@
 import type { Command } from "commander";
 import type { MemoireEngine } from "../engine/core.js";
+import type { CodegenResult } from "../codegen/generator.js";
 import { ui } from "../tui/format.js";
 import { checkCapabilities, formatCapabilityError } from "../engine/capabilities.js";
 
@@ -10,6 +11,7 @@ export interface GeneratePayload {
   options: {
     all: boolean;
     json: boolean;
+    preview: boolean;
   };
   summary: {
     totalSpecs: number;
@@ -38,12 +40,72 @@ export function registerGenerateCommand(program: Command, engine: MemoireEngine)
     .description("Generate code from a spec (or all specs if no name given)")
     .option("-a, --all", "Generate all specs")
     .option("--json", "Output generate results as JSON")
-    .action(async (specName: string | undefined, opts: { all?: boolean; json?: boolean }) => {
+    .option("--preview", "Show generated code diff without writing files")
+    .action(async (specName: string | undefined, opts: { all?: boolean; json?: boolean; preview?: boolean }) => {
       const startedAt = Date.now();
       const generateAll = Boolean(opts.all || !specName);
 
       try {
         await engine.init();
+
+        // ── Preview mode — generate in memory, no disk writes ──
+        if (opts.preview) {
+          const specs = generateAll
+            ? await engine.registry.getAllSpecs()
+            : specName
+              ? [await engine.registry.getSpec(specName)].filter(Boolean)
+              : [];
+
+          if (specs.length === 0) {
+            if (opts.json) {
+              console.log(JSON.stringify({ mode: "preview", results: [], error: specName ? `Spec "${specName}" not found` : "No specs found" }, null, 2));
+            } else {
+              console.log();
+              console.log(ui.pending(specName ? `Spec "${specName}" not found.` : "No specs found."));
+              console.log();
+            }
+            return;
+          }
+
+          const project = engine.project;
+          if (!project) {
+            throw new Error("Engine not initialized. Call init() before generating code.");
+          }
+
+          const ctx = { project, designSystem: engine.registry.designSystem };
+          const previewResults: { name: string; files: { path: string; content: string }[] }[] = [];
+
+          for (const spec of specs) {
+            if (!spec) continue;
+            const result: CodegenResult = await engine.codegen.preview(spec, ctx);
+            previewResults.push({ name: spec.name, files: result.files });
+          }
+
+          if (opts.json) {
+            console.log(JSON.stringify({
+              mode: "preview",
+              results: previewResults.map((r) => ({
+                name: r.name,
+                files: r.files.map((f) => ({ path: f.path, content: f.content })),
+              })),
+            }, null, 2));
+          } else {
+            console.log();
+            for (const r of previewResults) {
+              for (const f of r.files) {
+                console.log(ui.section(f.path));
+                const lines = f.content.split("\n");
+                const preview = lines.slice(0, 20).join("\n");
+                console.log(preview);
+                if (lines.length > 20) {
+                  console.log(ui.dim(`  ... ${lines.length - 20} more lines`));
+                }
+                console.log();
+              }
+            }
+          }
+          return;
+        }
 
         if (generateAll) {
           const specs = await engine.registry.getAllSpecs();
@@ -54,6 +116,7 @@ export function registerGenerateCommand(program: Command, engine: MemoireEngine)
               options: {
                 all: generateAll,
                 json: Boolean(opts.json),
+                preview: false,
               },
               results: [],
               generatedFiles: [],
@@ -114,6 +177,7 @@ export function registerGenerateCommand(program: Command, engine: MemoireEngine)
             options: {
               all: generateAll,
               json: Boolean(opts.json),
+              preview: false,
             },
             results,
             generatedFiles,
@@ -144,6 +208,7 @@ export function registerGenerateCommand(program: Command, engine: MemoireEngine)
           options: {
             all: false,
             json: Boolean(opts.json),
+            preview: false,
           },
           results: [{
             name: specName,
@@ -173,6 +238,7 @@ export function registerGenerateCommand(program: Command, engine: MemoireEngine)
             options: {
               all: generateAll,
               json: Boolean(opts.json),
+              preview: false,
             },
             results: [{
               name: specName ?? "all",
