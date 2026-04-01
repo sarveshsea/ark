@@ -220,6 +220,10 @@ export class TextMeasurer {
         const firstKey = this.cache.keys().next().value!;
         this.cache.delete(firstKey);
       }
+    } else {
+      // True LRU: move accessed entry to end of insertion order
+      this.cache.delete(key);
+      this.cache.set(key, prepared);
     }
     return prepared;
   }
