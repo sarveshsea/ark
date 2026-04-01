@@ -11,6 +11,18 @@ This changelog tracks Mémoire itself: every version, commit, and architectural 
 ### Commits
 | Hash | Message |
 |------|---------|
+| `675d6a0` | Fix tests for v0.7.0 — update version assertion and changelog snapshot |
+| `aa7d9c2` | Add --preview flag to generate — show diffs without writing files |
+| `db079f5` | Add bridge health check — latency measurement and MCP tool |
+| `a3e6e27` | Add persistent task queue — survive daemon restarts |
+| `b3d4761` | Instrument daemon startup — phase timings in status output |
+| `b109617` | Add batch mode to orchestrator — queue intents with shared context |
+| `05f9cb9` | Add sync_design_tokens MCP tool — auto-map Figma tokens to Tailwind config |
+| `eecdde1` | Add codegen caching — skip generation when spec + design system unchanged |
+| `0add89b` | Add get_ai_usage MCP tool — token usage and cost estimation per session |
+| `0296c8f` | Cache design system pull results for 5 minutes to avoid duplicate API calls |
+| `2b6d3a7` | Add exponential backoff + jitter to Figma WebSocket reconnection |
+| `d16f4e6` | Remove Framer preview components and standalone build script |
 | `1cb0ae9` | Bump to v0.7.0 — the compression release |
 
 ### Key Design Decisions
@@ -22,6 +34,22 @@ This changelog tracks Mémoire itself: every version, commit, and architectural 
 - **Orchestrator Decomposition** — The 2,208-line monolithic orchestrator split into four focused modules: `intent-classifier.ts` (pattern matching), `plan-builder.ts` (task decomposition), `sub-agents.ts` (heuristic execution), and a thin `orchestrator.ts` coordinator (535 lines). Each module is independently testable.
 
 - **Test Deduplication** — Shared `test-helpers.ts` module eliminates `captureLogs`/`lastLog`/`writePluginBundle` duplication across 14 test files.
+
+- **Exponential Backoff** — Figma WebSocket reconnection uses exponential backoff (100ms → 5s) with ±25% jitter instead of flat delays.
+
+- **Pull Caching** — `pullDesignSystem()` caches results for 5 minutes. Prevents duplicate API calls from CLI retries or agent loops.
+
+- **Codegen Caching** — SHA-256 hash of spec + design system skips code generation when nothing changed. Massively faster iterative workflows.
+
+- **Batch Orchestration** — `executeBatch(intents[])` reuses a single context across multiple design intents for throughput.
+
+- **Daemon Instrumentation** — Phase timings (init, figma-connect, preview-start, ready) in daemon status output.
+
+- **Generate Preview** — `memi generate <spec> --preview` outputs generated code without writing to disk.
+
+- **New MCP Tools** — `sync_design_tokens` (Figma → Tailwind config), `get_ai_usage` (session cost), `check_bridge_health` (latency diagnostics).
+
+- **Persistent Task Queue** — JSON-backed persistence for agent tasks survives daemon restarts.
 
 ---
 
