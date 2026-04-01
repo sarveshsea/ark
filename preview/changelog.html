@@ -390,9 +390,9 @@ a:hover { text-decoration: underline; }
       <a href="changelog.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>Changelog</a>
     </nav>
     <div class="hdr-stats">
-      <span><span class="n" id="stat-commits">119</span> commits</span>
-      <span><span class="n" id="stat-versions">8</span> versions</span>
-      <span><span class="n" id="stat-latest">2026-03-30</span> latest</span>
+      <span><span class="n" id="stat-commits">124</span> commits</span>
+      <span><span class="n" id="stat-versions">9</span> versions</span>
+      <span><span class="n" id="stat-latest">2026-03-31</span> latest</span>
     </div>
   </header>
 
@@ -407,8 +407,8 @@ a:hover { text-decoration: underline; }
         <div class="hero-kpis">
           <div class="summary-card">
             <span class="summary-kicker">Current release</span>
-            <strong class="summary-value">v0.6.0</strong>
-            <div class="summary-caption">6 commits tracked in v0.6.0 from CHANGELOG.md.</div>
+            <strong class="summary-value">v0.7.0</strong>
+            <div class="summary-caption">1 commits tracked in v0.7.0 from CHANGELOG.md.</div>
           </div>
           <div class="summary-card">
             <span class="summary-kicker">Biggest theme</span>
@@ -434,16 +434,63 @@ a:hover { text-decoration: underline; }
     <section class="release-list" id="release-list"></section>
   </main>
 
-  <footer class="footer">memoire changelog - synced with CHANGELOG.md through v0.6.0</footer>
+  <footer class="footer">memoire changelog - synced with CHANGELOG.md through v0.7.0</footer>
 
 <script>
 const releases = [
+  {
+    "version": "v0.7.0",
+    "date": "2026-03-31",
+    "tag": "feature",
+    "summary": "HTML/CSS/JS content extracted from TypeScript template literals into static asset files. Gallery page (3,762→2,044 lines) and research page (730→208 lines) now load CSS and client JS via readFileSync at module init. Build pipeline updated to copy assets to dist/.",
+    "commits": [
+      [
+        "1cb0ae9",
+        "Bump to v0.7.0 — the compression release"
+      ]
+    ],
+    "decisions": [
+      [
+        "Template Extraction",
+        "HTML/CSS/JS content extracted from TypeScript template literals into static asset files. Gallery page (3,762→2,044 lines) and research page (730→208 lines) now load CSS and client JS via readFileSync at module init. Build pipeline updated to copy assets to dist/."
+      ],
+      [
+        "Data-Driven Components",
+        "shadcn-library.ts reduced from 1,540 to 850 lines by deleting 20 dead My*() functions and replacing verbose object literals with a comp() factory + compact variant tuples. Component catalog reduced from 723 to 114 lines by moving data to JSON."
+      ],
+      [
+        "Orchestrator Decomposition",
+        "The 2,208-line monolithic orchestrator split into four focused modules: intent-classifier.ts (pattern matching), plan-builder.ts (task decomposition), sub-agents.ts (heuristic execution), and a thin orchestrator.ts coordinator (535 lines). Each module is independently testable."
+      ],
+      [
+        "Test Deduplication",
+        "Shared test-helpers.ts module eliminates captureLogs/lastLog/writePluginBundle duplication across 14 test files."
+      ]
+    ],
+    "changes": []
+  },
   {
     "version": "v0.6.0",
     "date": "2026-03-30",
     "tag": "feature",
     "summary": "Every command declares required and optional capabilities (figma, ai, specs, generated-code, research, daemon). Missing required capabilities produce recovery-oriented error messages. Missing optional capabilities trigger degraded mode with warnings. This enables offline-first workflows and clear \"what to do next\" guidance.",
     "commits": [
+      [
+        "e2bbdd5",
+        "Add Framer preview components and standalone dashboard build script"
+      ],
+      [
+        "3a6ce0d",
+        "Audit fixes: memory leaks, race conditions, error handling across 10 files"
+      ],
+      [
+        "24f067c",
+        "Efficiency fixes: incremental TS build, rate limiter stale entry eviction"
+      ],
+      [
+        "2d87916",
+        "Remove dead dependencies and unused TUI app file"
+      ],
       [
         "dd4bd77",
         "Add research preview tab — insights, personas, themes, coverage bar in dashboard"
