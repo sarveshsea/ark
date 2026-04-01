@@ -11,7 +11,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { MemoireEngine } from "../engine/core.js";
 import { AgentOrchestrator } from "../agents/orchestrator.js";
 import { DesignAnalyzer } from "../agents/design-analyzer.js";
-import { getAI } from "../ai/index.js";
+import { getAI, getTracker } from "../ai/index.js";
 import { ComponentSpecSchema, PageSpecSchema, DataVizSpecSchema } from "../specs/types.js";
 
 function requireFigma(engine: MemoireEngine): void {
@@ -340,6 +340,31 @@ export function registerTools(server: McpServer, engine: MemoireEngine): void {
       }
 
       return { content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }] };
+    },
+  );
+
+  // ── get_ai_usage ──────────────────────────────────────
+  server.tool(
+    "get_ai_usage",
+    "Get AI token usage and cost estimates for the current session",
+    {},
+    async () => {
+      const tracker = getTracker();
+      if (!tracker) {
+        return { content: [{ type: "text" as const, text: JSON.stringify({ calls: 0, inputTokens: 0, outputTokens: 0, estimatedCost: "$0.0000", summary: "No AI client initialized" }, null, 2) }] };
+      }
+      return {
+        content: [{
+          type: "text" as const,
+          text: JSON.stringify({
+            calls: tracker.callCount,
+            inputTokens: tracker.totalInput,
+            outputTokens: tracker.totalOutput,
+            estimatedCost: `$${tracker.totalCost.toFixed(4)}`,
+            summary: tracker.summary,
+          }, null, 2),
+        }],
+      };
     },
   );
 }
