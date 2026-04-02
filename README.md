@@ -1,17 +1,16 @@
 <p align="center">
-  <img src="assets/memoire-moon.svg" alt="Memoire" width="120" height="120" />
+  <img src="assets/authentic-logo.svg" alt="Memoire" width="120" height="120" />
 </p>
 
 <h1 align="center">Memoire</h1>
 
 <p align="center">
-  AI-native design intelligence engine.<br/>
-  Connects to Figma. Pulls your design system. Generates production React code.<br/>
-  Runs autonomously with Codex or Claude.
+  Design intelligence engine for Figma.<br/>
+  Pull your design system. Generate production code. Sync changes bidirectionally.<br/>
+  Works standalone, with Claude Code, or as an MCP server.
 </p>
 
 <p align="center">
-  <a href="https://github.com/sarveshsea/m-moire/actions"><img src="https://github.com/sarveshsea/m-moire/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://www.npmjs.com/package/@sarveshsea/memoire"><img src="https://img.shields.io/npm/v/@sarveshsea/memoire" alt="npm"></a>
   <a href="https://github.com/sarveshsea/m-moire/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
 </p>
@@ -20,14 +19,15 @@
 
 ## What it does
 
-Point it at a Figma file. It:
-1. Connects to Figma automatically (no config)
-2. Pulls design tokens, components, and styles
-3. Creates structured JSON specs (every component described before code)
-4. Generates React + TypeScript + Tailwind code using shadcn/ui
-5. Shows everything on a local preview server
+Connect to Figma. Memoire handles the rest:
 
-All components follow **Atomic Design** -- atoms, molecules, organisms, templates, pages.
+1. **Pulls** design tokens, components, and styles via WebSocket bridge
+2. **Creates** structured JSON specs (every component described before code)
+3. **Generates** React + TypeScript + Tailwind code using shadcn/ui
+4. **Syncs** changes bidirectionally between Figma and code
+5. **Previews** everything on a local dashboard
+
+All components follow Atomic Design -- atoms, molecules, organisms, templates, pages.
 
 ---
 
@@ -37,125 +37,165 @@ All components follow **Atomic Design** -- atoms, molecules, organisms, template
 npm install -g @sarveshsea/memoire
 ```
 
-Or run directly:
-
-```bash
-npx @sarveshsea/memoire
-```
-
-### Requirements
-
-- Node.js 20+
-- Figma Desktop App (for plugin bridge)
-- Codex or Claude Code (optional -- for autonomous agent mode)
-
----
+Requires Node.js 20+ and Figma Desktop (for the plugin bridge).
 
 ## Quick start
 
 ```bash
-# Initialize in your project
-memoire init
-
-# Connect to Figma
-memoire connect
-
-# Pull your design system
-memoire pull
-
-# Generate code from specs
-memoire generate
-
-# Start preview server
-memoire preview
+memi init              # scaffold workspace
+memi connect           # start Figma bridge
+memi pull              # extract design system
+memi generate          # produce React code
+memi preview           # open preview dashboard
 ```
+
+Or do it all at once:
+
+```bash
+memi go                # connect + pull + spec + generate + preview
+```
+
+## Uninstall
+
+```bash
+memi uninstall                          # remove ~/.memoire and .memoire/
+npm uninstall -g @sarveshsea/memoire    # remove the package
+```
+
+Your specs, generated code, and .env files are never touched.
 
 ---
 
 ## Commands
 
+### Core workflow
+
 | Command | What it does |
 |---------|-------------|
-| `memi init` | Initialize workspace |
-| `memi connect` | Start the Figma bridge and report Control Plane install health |
-| `memi pull` | Extract design tokens, components, styles from Figma |
-| `memi spec <type> <name>` | Create a component/page/dataviz spec |
+| `memi init` | Initialize workspace with starter specs |
+| `memi connect` | Start Figma bridge, report plugin health |
+| `memi pull` | Extract tokens, components, styles from Figma |
+| `memi spec <type> <name>` | Create a component, page, or dataviz spec |
 | `memi generate [name]` | Generate shadcn/ui code from specs |
+| `memi generate --preview` | Show generated code without writing files |
 | `memi preview` | Start localhost preview gallery |
-| `memi sync` | Full pipeline: pull + spec + generate |
-| `memi sync --live` | Live mode: watch for changes and sync continuously |
+| `memi go` | Full pipeline in one command |
+| `memi export` | Export generated code into your project |
+| `memi tokens` | Export design tokens as CSS / Tailwind / JSON |
+| `memi validate` | Validate specs against schemas and cross-references |
+
+### Sync and daemon
+
+| Command | What it does |
+|---------|-------------|
+| `memi sync` | Full sync: Figma + specs + code |
+| `memi sync --live` | Watch for changes and sync continuously |
 | `memi sync --conflicts` | Show and resolve pending sync conflicts |
-| `memi go` | Zero-friction single command |
-| `memi compose "<intent>"` | Agent orchestrator: classify, plan, execute |
 | `memi watch --code` | Watch specs + generated/ for changes |
 | `memi daemon start` | Start daemon with reactive pipeline |
-| `memi mcp start` | Start as MCP server (stdio) |
-| `memi mcp config` | Print MCP config for Claude Code / Cursor |
+| `memi daemon status` | Show daemon status with startup phase timings |
+
+### Agents and orchestration
+
+| Command | What it does |
+|---------|-------------|
+| `memi compose "<intent>"` | Agent orchestrator: classify, plan, execute |
 | `memi agent spawn <role>` | Spawn a persistent agent worker |
-| `memi agent list\|kill\|status` | Manage agent instances |
-| `memi research <sub>` | Research pipeline (Excel, stickies, synthesis) |
-| `memi tokens` | Export design tokens as CSS variables |
-| `memi status` | Show project status |
-| `memi doctor` | Health check for project, plugin bundle, bridge, and workspace |
+| `memi agent list` | List registered agents |
+| `memi agent status` | Agent registry + task queue status |
+
+### Research
+
+| Command | What it does |
+|---------|-------------|
+| `memi research from-file <path>` | Process Excel/CSV into research |
+| `memi research from-stickies` | Convert FigJam stickies to insights |
+| `memi research synthesize` | Synthesize themes and personas |
+| `memi research report` | Generate markdown research report |
+
+### Diagnostics
+
+| Command | What it does |
+|---------|-------------|
+| `memi status` | Project status overview |
+| `memi doctor` | Health check: project, plugin, bridge, workspace |
 | `memi dashboard` | Launch monitoring dashboard |
+| `memi uninstall` | Remove all Memoire artifacts |
+
+All commands support `--json` for structured output.
 
 ---
 
 ## MCP Server
 
-Memoire exposes 14 tools and 3 resources via the Model Context Protocol. Any MCP-compatible AI tool can use it as a design layer.
+Memoire works as an MCP server for Claude Code, Cursor, or any MCP-compatible AI tool.
 
 ```bash
-# Print config for Claude Code
+# Get config for your tool
 memi mcp config --target claude-code
-
-# Print config for Cursor
 memi mcp config --target cursor
 ```
 
 Drop the output into `.mcp.json` (Claude Code) or `.cursor/mcp.json` (Cursor).
 
-**Tools:** `pull_design_system`, `get_specs`, `get_spec`, `create_spec`, `generate_code`, `get_tokens`, `update_token`, `capture_screenshot`, `get_selection`, `compose`, `run_audit`, `get_research`, `figma_execute`, `get_page_tree`
+### 17 tools
+
+| Tool | What it does |
+|------|-------------|
+| `pull_design_system` | Pull tokens, components, styles from Figma |
+| `get_specs` / `get_spec` | List or read specs |
+| `create_spec` | Create a spec from JSON |
+| `generate_code` | Generate code from a spec |
+| `get_tokens` / `update_token` | Read or update design tokens |
+| `sync_design_tokens` | Map Figma tokens to Tailwind config |
+| `capture_screenshot` | Screenshot a Figma node |
+| `get_selection` | Get current Figma selection |
+| `get_page_tree` | Get Figma page structure |
+| `compose` | Run agent orchestrator with natural language |
+| `run_audit` | Design system audit |
+| `get_research` | Get research store |
+| `figma_execute` | Execute Plugin API code in Figma |
+| `analyze_design` | AI vision analysis of Figma screenshots |
+| `measure_text` | Server-side text measurement |
+| `get_ai_usage` | Session token usage and cost |
+| `check_bridge_health` | Bridge latency diagnostics |
+
+### 3 resources
+
+| Resource | What it provides |
+|----------|-----------------|
+| `memoire://design-system` | Current design system |
+| `memoire://specs/{name}` | Individual spec |
+| `memoire://project` | Project context |
 
 ---
 
-## Multi-Agent Orchestration
+## Multi-agent orchestration
 
-Multiple Claude instances can operate as persistent agents:
+Multiple Claude instances can operate as persistent agents, each owning a role:
 
 ```bash
-# Spawn a token engineer agent
+# Terminal 1
 memi agent spawn token-engineer
 
-# Spawn a design auditor in another terminal
+# Terminal 2
 memi agent spawn design-auditor
 
-# Check status
+# Terminal 3
 memi agent status
 ```
 
 **Roles:** token-engineer, component-architect, layout-designer, dataviz-specialist, code-generator, accessibility-checker, design-auditor, research-analyst, general
 
-The orchestrator dispatches to external agents first and falls back to internal execution.
+The orchestrator checks for external agents first, falls back to internal execution. Tasks persist across daemon restarts.
 
----
+### Batch orchestration
 
-## Architecture
-
+```bash
+memi compose "create a button, card, and input component"
 ```
-src/
-├── engine/    Core orchestrator, registry, token-differ, sync, pipeline
-├── figma/     Figma bridge (WebSocket on ports 9223-9232)
-├── mcp/       MCP server (14 tools, 3 resources, stdio transport)
-├── agents/    Agent orchestrator, registry, task queue, agent bridge
-├── research/  Research engine (Excel, stickies, web)
-├── specs/     Spec types + Zod validation + 56-component catalog
-├── codegen/   Code generation (shadcn mapper, dataviz, pages)
-├── ai/        Anthropic SDK integration
-├── preview/   Localhost preview gallery + dashboard
-├── tui/       Terminal UI (Ink/React)
-└── commands/  CLI commands (Commander.js)
-```
+
+The orchestrator classifies the intent, builds a plan of sub-tasks with dependencies, and executes them with shared context.
 
 ---
 
@@ -163,33 +203,32 @@ src/
 
 The Figma plugin auto-discovers Memoire on ports 9223-9232.
 
+### Setup
+
 1. Open Figma Desktop
-2. Go to **Plugins > Development > Import plugin from manifest**
+2. **Plugins > Development > Import plugin from manifest**
 3. Select `~/.memoire/plugin/manifest.json`
-4. If Figma says the `main` file must not be a symlink, remove the old import and re-import from that copied path, not from a linked `node_modules` path
 
-### Figma Operator Console
+If Figma says the main file must not be a symlink, remove the old import and re-import from the copied path.
 
-The Widget V2 plugin is an operator console, not only a bridge debugger.
+### Operator Console
 
-- `Jobs` shows sync, inspect, capture, and healer work as tracked job state
-- `Selection` shows live node IDs, layout facts, styles, variants, and quick actions
-- `System` shows bridge status, ports, latency, and buffered change-stream state
+The Widget V2 plugin is an operator console with three panels:
 
-Use these commands to verify the installed bundle and bridge health:
+- **Jobs** -- sync, inspect, capture, and healer work as tracked job state
+- **Selection** -- live node IDs, layout facts, styles, variants, quick actions
+- **System** -- bridge status, ports, latency, buffered change-stream state
 
 ```bash
-memi connect --json
-memi doctor --json
+memi connect --json    # plugin install health
+memi doctor --json     # bundle health + bridge state
 ```
-
-`memi connect --json` reports where the Control Plane manifest is being loaded from, whether the installed bundle is current, and which widget assets are present. `memi doctor --json` reports plugin bundle health, install freshness, and bridge state.
 
 ---
 
 ## Spec-first workflow
 
-Every component starts as a JSON spec before code generation:
+Every component starts as a JSON spec before code is generated:
 
 ```json
 {
@@ -210,6 +249,55 @@ Every component starts as a JSON spec before code generation:
   }
 }
 ```
+
+Specs are validated with Zod schemas. Run `memi validate` to check all specs against the schema and cross-reference rules.
+
+---
+
+## Architecture
+
+```
+src/
+  engine/     Core orchestrator, registry, sync, pipeline, text measurer
+  figma/      WebSocket bridge (ports 9223-9232), canvas healer
+  agents/     Intent classifier, plan builder, sub-agents, task queue
+  mcp/        MCP server (17 tools, 3 resources, stdio transport)
+  codegen/    shadcn/ui mapper, dataviz, pages, prototype exporter
+  research/   Research engine (Excel, stickies, transcripts, web)
+  specs/      Spec types, Zod schemas, 62-component catalog
+  ai/         Anthropic SDK, token tracking, cost estimation
+  preview/    Preview gallery, API server, dashboard
+  notes/      Downloadable skill packs (loader, resolver, installer)
+  commands/   20 CLI commands (Commander.js)
+  plugin/     Figma plugin source (Widget V2)
+```
+
+---
+
+## Notes (skill packs)
+
+Notes extend what Memoire can do. Install from local paths or GitHub:
+
+```bash
+memi notes install github:user/repo
+memi notes list
+memi notes info <name>
+memi notes remove <name>
+```
+
+Built-in categories: craft, research, connect, generate.
+
+---
+
+## Stack
+
+- TypeScript strict, ESM modules
+- shadcn/ui + Tailwind for all generated code
+- Zod for schema validation
+- Commander.js for CLI
+- WebSocket for Figma bridge
+- Pino for structured logging
+- Vitest for testing (318 tests)
 
 ---
 
