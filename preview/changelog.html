@@ -390,9 +390,9 @@ a:hover { text-decoration: underline; }
       <a href="changelog.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>Changelog</a>
     </nav>
     <div class="hdr-stats">
-      <span><span class="n" id="stat-commits">136</span> commits</span>
-      <span><span class="n" id="stat-versions">9</span> versions</span>
-      <span><span class="n" id="stat-latest">2026-03-31</span> latest</span>
+      <span><span class="n" id="stat-commits">156</span> commits</span>
+      <span><span class="n" id="stat-versions">10</span> versions</span>
+      <span><span class="n" id="stat-latest">2026-04-06</span> latest</span>
     </div>
   </header>
 
@@ -442,37 +442,116 @@ const releases = [
     "version": "v0.8.0",
     "date": "2026-04-06",
     "tag": "feature",
-    "summary": "REST-based Figma pull (no plugin required) and design-doc command (extract any site's design system from a URL). 178 stress tests found and fixed 2 bugs before release.",
+    "summary": "src/figma/rest-client.ts mirrors bridge.extractDesignSystem() exactly, returning the same DesignSystem interface. Zero changes to registry, autoSpec, or codegen — they consume REST-pulled data identically to plugin-pulled data.",
     "commits": [
-      ["fe3ec2c", "feat(rest-client): export FigmaConfigError for external instanceof checks"],
-      ["c0c7c70", "docs(readme): correct MCP tool count to 20"],
-      ["cb37979", "test(mcp): add tools registration smoke test for design_doc and tool count"],
-      ["ad37cbb", "test(pull): add --rest --force tests covering force propagation and JSON output"],
-      ["9007f06", "test(css-extractor): add 4 @import following integration tests"],
-      ["42bb878", "test(cli): extend registration smoke test for design-doc and pull flags"],
-      ["6d3c8a1", "docs(readme): bump MCP tool count, add design_doc entry"],
-      ["0d92c15", "docs(readme): add pull --rest and design-doc to command reference"],
-      ["53db613", "fix(rest-client): log partial recovery summary when endpoints fail"],
-      ["b0eabc5", "fix(go): show REST mode in pipeline header"],
-      ["629c10a", "feat(design-doc): show extracted page title and token summary in output"],
-      ["a896485", "feat(doctor): check FIGMA_FILE_KEY and FIGMA_TOKEN for REST mode"],
-      ["6810acc", "feat(pull): add --force flag to bypass 5-minute pull cache"],
-      ["2966146", "feat(mcp): add design_doc tool"],
-      ["786a063", "feat(css-extractor): cap color extraction at 50 to reduce noise"],
-      ["c4dc4f3", "feat(css-extractor): follow CSS @import rules one level deep"],
-      ["c5b1946", "chore: bump version to 0.8.0"],
-      ["30958d8", "fix(index): add pull --rest and design-doc to CLI header comment"],
-      ["7c21664", "test: add 178 stress tests for v0.8.0 features, fix 2 bugs found"],
-      ["5c3c23b", "feat: add REST pull + design-doc command (v0.8.0 features)"]
+      [
+        "fe3ec2c",
+        "feat(rest-client): export FigmaConfigError for external instanceof checks"
+      ],
+      [
+        "c0c7c70",
+        "docs(readme): correct MCP tool count to 20"
+      ],
+      [
+        "cb37979",
+        "test(mcp): add tools registration smoke test for design_doc and tool count"
+      ],
+      [
+        "ad37cbb",
+        "test(pull): add --rest --force tests covering force propagation and JSON output"
+      ],
+      [
+        "9007f06",
+        "test(css-extractor): add 4 @import following integration tests"
+      ],
+      [
+        "42bb878",
+        "test(cli): extend registration smoke test for design-doc and pull flags"
+      ],
+      [
+        "6d3c8a1",
+        "docs(readme): bump MCP tool count, add design_doc entry"
+      ],
+      [
+        "0d92c15",
+        "docs(readme): add pull --rest and design-doc to command reference"
+      ],
+      [
+        "53db613",
+        "fix(rest-client): log partial recovery summary when endpoints fail"
+      ],
+      [
+        "b0eabc5",
+        "fix(go): show REST mode in pipeline header"
+      ],
+      [
+        "629c10a",
+        "feat(design-doc): show extracted page title and token summary in output"
+      ],
+      [
+        "a896485",
+        "feat(doctor): check FIGMA_FILE_KEY and FIGMA_TOKEN for REST mode"
+      ],
+      [
+        "6810acc",
+        "feat(pull): add --force flag to bypass 5-minute pull cache"
+      ],
+      [
+        "2966146",
+        "feat(mcp): add design_doc tool"
+      ],
+      [
+        "786a063",
+        "feat(css-extractor): cap color extraction at 50 to reduce noise"
+      ],
+      [
+        "c4dc4f3",
+        "feat(css-extractor): follow CSS @import rules one level deep"
+      ],
+      [
+        "c5b1946",
+        "chore: bump version to 0.8.0"
+      ],
+      [
+        "30958d8",
+        "fix(index): add pull --rest and design-doc to CLI header comment"
+      ],
+      [
+        "7c21664",
+        "test: add 178 stress tests for v0.8.0 features, fix 2 bugs found"
+      ],
+      [
+        "5c3c23b",
+        "feat: add REST pull + design-doc command (v0.8.0 features)"
+      ]
     ],
     "decisions": [
-      ["REST Pull Architecture", "src/figma/rest-client.ts mirrors bridge.extractDesignSystem() exactly, returning the same DesignSystem interface. Zero changes to registry, autoSpec, or codegen — they consume REST-pulled data identically to plugin-pulled data."],
-      ["FigmaConfigError propagation", "403/404/5xx from Figma REST are re-thrown as FigmaConfigError (now exported). Network failures and timeouts are absorbed (warn-logged, partial recovery). Makes config problems loud and transient problems silent."],
-      ["CSS @import following", "fetchPageAssets() follows one level of @import url() and @import \"...\" in linked stylesheets, then stops. Prevents infinite loops on circular imports while capturing the token layer most design systems put in a separate file."],
-      ["Color noise cap", "MAX_COLORS = 50 prevents icon-heavy sites (hundreds of inline SVG colors) from drowning out the actual palette. Applied after deduplication."],
-      ["Doctor REST check", "memi doctor now verifies FIGMA_TOKEN + FIGMA_FILE_KEY presence and reports three states: both set (pass), token only (warn), neither (warn). Check code: rest.credentials."],
-      ["Test-driven bug discovery", "178 new tests across 4 files found 2 real bugs: (1) FigmaConfigError was silently absorbed making 403/404 indistinguishable from success; (2) design-doc --output /absolute/path double-prefixed with projectRoot. Both fixed before tagging."]
-    ]
+      [
+        "REST Pull Architecture",
+        "src/figma/rest-client.ts mirrors bridge.extractDesignSystem() exactly, returning the same DesignSystem interface. Zero changes to registry, autoSpec, or codegen — they consume REST-pulled data identically to plugin-pulled data."
+      ],
+      [
+        "FigmaConfigError propagation",
+        "403/404/5xx from Figma REST are re-thrown as FigmaConfigError (now exported). Network failures and timeouts are absorbed (warn-logged, partial recovery). This makes config problems loud and transient problems silent."
+      ],
+      [
+        "CSS @import following",
+        "fetchPageAssets() follows one level of @import url() and @import \"...\" in linked stylesheets, then stops. Prevents infinite loops on circular imports while capturing the token layer most design systems put in a separate file."
+      ],
+      [
+        "Color noise cap",
+        "MAX_COLORS = 50 prevents icon-heavy sites (hundreds of inline SVG colors) from drowning out the actual palette. Applied after deduplication."
+      ],
+      [
+        "Doctor REST check",
+        "memi doctor now verifies FIGMA_TOKEN + FIGMA_FILE_KEY presence and reports three states: both set (pass), token only (warn), neither (warn). The check code is rest.credentials."
+      ],
+      [
+        "Test-driven bug discovery",
+        "178 new tests across 4 files found 2 real bugs before release: (1) FigmaConfigError was silently absorbed instead of propagating, making 403/404 indistinguishable from success; (2) design-doc --output /absolute/path double-prefixed the path with projectRoot. Both fixed before tagging."
+      ]
+    ],
+    "changes": []
   },
   {
     "version": "v0.7.0",

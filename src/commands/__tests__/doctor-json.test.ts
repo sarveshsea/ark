@@ -72,12 +72,12 @@ describe("doctor --json", () => {
     const checks = getChecks(payload);
     const summary = getSummary(payload, checks);
 
-    expect(checks).toHaveLength(12);
+    expect(checks).toHaveLength(13);
     expect(summary).toMatchObject({
       pass: 8,
-      warn: 3,
+      warn: 4,
       fail: 1,
-      total: 12,
+      total: 13,
     });
     expect(statusMap(checks)).toEqual({
       "Project detected": "pass",
@@ -91,6 +91,7 @@ describe("doctor --json", () => {
       Preview: "pass",
       Node: "pass",
       Dependencies: "pass",
+      "REST credentials": "warn",
       Workspace: "fail",
     });
     expect(detailMap(checks).get("Specs")).toContain("missing shadcnBase");
