@@ -390,7 +390,7 @@ a:hover { text-decoration: underline; }
       <a href="changelog.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>Changelog</a>
     </nav>
     <div class="hdr-stats">
-      <span><span class="n" id="stat-commits">124</span> commits</span>
+      <span><span class="n" id="stat-commits">136</span> commits</span>
       <span><span class="n" id="stat-versions">9</span> versions</span>
       <span><span class="n" id="stat-latest">2026-03-31</span> latest</span>
     </div>
@@ -407,18 +407,18 @@ a:hover { text-decoration: underline; }
         <div class="hero-kpis">
           <div class="summary-card">
             <span class="summary-kicker">Current release</span>
-            <strong class="summary-value">v0.7.0</strong>
-            <div class="summary-caption">1 commits tracked in v0.7.0 from CHANGELOG.md.</div>
+            <strong class="summary-value">v0.8.0</strong>
+            <div class="summary-caption">20 commits tracked in v0.8.0 from CHANGELOG.md.</div>
           </div>
           <div class="summary-card">
             <span class="summary-kicker">Biggest theme</span>
-            <strong class="summary-value">Extensibility</strong>
-            <div class="summary-caption">Notes, skills, activation, install flows, and agent-oriented ergonomics.</div>
+            <strong class="summary-value">Offline-First Figma</strong>
+            <div class="summary-caption">REST pull — no plugin, no Desktop, no bridge. FIGMA_TOKEN + FIGMA_FILE_KEY only.</div>
           </div>
           <div class="summary-card">
-            <span class="summary-kicker">Reliability push</span>
-            <strong class="summary-value">Bridge + Preview</strong>
-            <div class="summary-caption">Bind handling, cleanup, hot reload, listener hygiene, and daemon-aware routing.</div>
+            <span class="summary-kicker">New command</span>
+            <strong class="summary-value">design-doc</strong>
+            <div class="summary-caption">Extract any site's design system from its URL. Outputs DESIGN.md + optional DesignSpec JSON.</div>
           </div>
         </div>
       </div>
@@ -434,16 +434,100 @@ a:hover { text-decoration: underline; }
     <section class="release-list" id="release-list"></section>
   </main>
 
-  <footer class="footer">memoire changelog - synced with CHANGELOG.md through v0.7.0</footer>
+  <footer class="footer">memoire changelog - synced with CHANGELOG.md through v0.8.0</footer>
 
 <script>
 const releases = [
+  {
+    "version": "v0.8.0",
+    "date": "2026-04-06",
+    "tag": "feature",
+    "summary": "REST-based Figma pull (no plugin required) and design-doc command (extract any site's design system from a URL). 178 stress tests found and fixed 2 bugs before release.",
+    "commits": [
+      ["fe3ec2c", "feat(rest-client): export FigmaConfigError for external instanceof checks"],
+      ["c0c7c70", "docs(readme): correct MCP tool count to 20"],
+      ["cb37979", "test(mcp): add tools registration smoke test for design_doc and tool count"],
+      ["ad37cbb", "test(pull): add --rest --force tests covering force propagation and JSON output"],
+      ["9007f06", "test(css-extractor): add 4 @import following integration tests"],
+      ["42bb878", "test(cli): extend registration smoke test for design-doc and pull flags"],
+      ["6d3c8a1", "docs(readme): bump MCP tool count, add design_doc entry"],
+      ["0d92c15", "docs(readme): add pull --rest and design-doc to command reference"],
+      ["53db613", "fix(rest-client): log partial recovery summary when endpoints fail"],
+      ["b0eabc5", "fix(go): show REST mode in pipeline header"],
+      ["629c10a", "feat(design-doc): show extracted page title and token summary in output"],
+      ["a896485", "feat(doctor): check FIGMA_FILE_KEY and FIGMA_TOKEN for REST mode"],
+      ["6810acc", "feat(pull): add --force flag to bypass 5-minute pull cache"],
+      ["2966146", "feat(mcp): add design_doc tool"],
+      ["786a063", "feat(css-extractor): cap color extraction at 50 to reduce noise"],
+      ["c4dc4f3", "feat(css-extractor): follow CSS @import rules one level deep"],
+      ["c5b1946", "chore: bump version to 0.8.0"],
+      ["30958d8", "fix(index): add pull --rest and design-doc to CLI header comment"],
+      ["7c21664", "test: add 178 stress tests for v0.8.0 features, fix 2 bugs found"],
+      ["5c3c23b", "feat: add REST pull + design-doc command (v0.8.0 features)"]
+    ],
+    "decisions": [
+      ["REST Pull Architecture", "src/figma/rest-client.ts mirrors bridge.extractDesignSystem() exactly, returning the same DesignSystem interface. Zero changes to registry, autoSpec, or codegen — they consume REST-pulled data identically to plugin-pulled data."],
+      ["FigmaConfigError propagation", "403/404/5xx from Figma REST are re-thrown as FigmaConfigError (now exported). Network failures and timeouts are absorbed (warn-logged, partial recovery). Makes config problems loud and transient problems silent."],
+      ["CSS @import following", "fetchPageAssets() follows one level of @import url() and @import \"...\" in linked stylesheets, then stops. Prevents infinite loops on circular imports while capturing the token layer most design systems put in a separate file."],
+      ["Color noise cap", "MAX_COLORS = 50 prevents icon-heavy sites (hundreds of inline SVG colors) from drowning out the actual palette. Applied after deduplication."],
+      ["Doctor REST check", "memi doctor now verifies FIGMA_TOKEN + FIGMA_FILE_KEY presence and reports three states: both set (pass), token only (warn), neither (warn). Check code: rest.credentials."],
+      ["Test-driven bug discovery", "178 new tests across 4 files found 2 real bugs: (1) FigmaConfigError was silently absorbed making 403/404 indistinguishable from success; (2) design-doc --output /absolute/path double-prefixed with projectRoot. Both fixed before tagging."]
+    ]
+  },
   {
     "version": "v0.7.0",
     "date": "2026-03-31",
     "tag": "feature",
     "summary": "HTML/CSS/JS content extracted from TypeScript template literals into static asset files. Gallery page (3,762→2,044 lines) and research page (730→208 lines) now load CSS and client JS via readFileSync at module init. Build pipeline updated to copy assets to dist/.",
     "commits": [
+      [
+        "675d6a0",
+        "Fix tests for v0.7.0 — update version assertion and changelog snapshot"
+      ],
+      [
+        "aa7d9c2",
+        "Add --preview flag to generate — show diffs without writing files"
+      ],
+      [
+        "db079f5",
+        "Add bridge health check — latency measurement and MCP tool"
+      ],
+      [
+        "a3e6e27",
+        "Add persistent task queue — survive daemon restarts"
+      ],
+      [
+        "b3d4761",
+        "Instrument daemon startup — phase timings in status output"
+      ],
+      [
+        "b109617",
+        "Add batch mode to orchestrator — queue intents with shared context"
+      ],
+      [
+        "05f9cb9",
+        "Add sync_design_tokens MCP tool — auto-map Figma tokens to Tailwind config"
+      ],
+      [
+        "eecdde1",
+        "Add codegen caching — skip generation when spec + design system unchanged"
+      ],
+      [
+        "0add89b",
+        "Add get_ai_usage MCP tool — token usage and cost estimation per session"
+      ],
+      [
+        "0296c8f",
+        "Cache design system pull results for 5 minutes to avoid duplicate API calls"
+      ],
+      [
+        "2b6d3a7",
+        "Add exponential backoff + jitter to Figma WebSocket reconnection"
+      ],
+      [
+        "d16f4e6",
+        "Remove Framer preview components and standalone build script"
+      ],
       [
         "1cb0ae9",
         "Bump to v0.7.0 — the compression release"
@@ -465,6 +549,38 @@ const releases = [
       [
         "Test Deduplication",
         "Shared test-helpers.ts module eliminates captureLogs/lastLog/writePluginBundle duplication across 14 test files."
+      ],
+      [
+        "Exponential Backoff",
+        "Figma WebSocket reconnection uses exponential backoff (100ms → 5s) with ±25% jitter instead of flat delays."
+      ],
+      [
+        "Pull Caching",
+        "pullDesignSystem() caches results for 5 minutes. Prevents duplicate API calls from CLI retries or agent loops."
+      ],
+      [
+        "Codegen Caching",
+        "SHA-256 hash of spec + design system skips code generation when nothing changed. Massively faster iterative workflows."
+      ],
+      [
+        "Batch Orchestration",
+        "executeBatch(intents[]) reuses a single context across multiple design intents for throughput."
+      ],
+      [
+        "Daemon Instrumentation",
+        "Phase timings (init, figma-connect, preview-start, ready) in daemon status output."
+      ],
+      [
+        "Generate Preview",
+        "memi generate <spec> --preview outputs generated code without writing to disk."
+      ],
+      [
+        "New MCP Tools",
+        "sync_design_tokens (Figma → Tailwind config), get_ai_usage (session cost), check_bridge_health (latency diagnostics)."
+      ],
+      [
+        "Persistent Task Queue",
+        "JSON-backed persistence for agent tasks survives daemon restarts."
       ]
     ],
     "changes": []
