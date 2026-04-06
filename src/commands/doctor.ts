@@ -303,7 +303,18 @@ export function registerDoctorCommand(program: Command, engine: MemoireEngine): 
         push("runtime.dependencies", "runtime", "fail", "Dependencies", "node_modules not found");
       }
 
-      // 10. Workspace
+      // 10. REST credentials (optional — enables plugin-free pull)
+      const figmaToken = engine.config.figmaToken || process.env.FIGMA_TOKEN;
+      const figmaFileKey = engine.config.figmaFileKey || process.env.FIGMA_FILE_KEY;
+      if (figmaToken && figmaFileKey) {
+        push("rest.credentials", "bridge", "pass", "REST credentials", "FIGMA_TOKEN + FIGMA_FILE_KEY set — `memi pull --rest` available");
+      } else if (figmaToken && !figmaFileKey) {
+        push("rest.credentials", "bridge", "warn", "REST credentials", "FIGMA_TOKEN set but FIGMA_FILE_KEY missing — add to .env.local to enable `memi pull --rest`");
+      } else {
+        push("rest.credentials", "bridge", "warn", "REST credentials", "Not configured — add FIGMA_TOKEN + FIGMA_FILE_KEY to .env.local for plugin-free pulls");
+      }
+
+      // 11. Workspace
       try {
         const memoireDir = join(engine.config.projectRoot, ".memoire");
         await access(memoireDir, constants.R_OK | constants.W_OK);
