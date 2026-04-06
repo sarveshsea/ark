@@ -94,6 +94,7 @@
     "prototype-creation": "Creating interactive prototypes or user flows",
     "multi-instance": "Multiple Claude agents operating simultaneously",
     "component-creation": "Creating or modifying component specs",
-    "research-to-dashboard": "Transforming research data into visual dashboards"
+    "research-to-dashboard": "Transforming research data into visual dashboards",
+    "docker-environment": "Project contains Dockerfile, docker-compose.yml, or .devcontainer/"
   }
 }

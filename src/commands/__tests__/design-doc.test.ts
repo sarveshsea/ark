@@ -54,6 +54,12 @@ beforeEach(async () => {
     radii: ["6px"],
     shadows: ["0 2px 4px rgba(0,0,0,0.1)"],
     cssVars: { "--bg": "#fafaf9", "--accent": "#5b5bd6" },
+    contrastPairs: [
+      { fg: "#5b5bd6", bg: "#ffffff", ratio: 4.56, level: "AA" },
+      { fg: "#5b5bd6", bg: "#000000", ratio: 4.60, level: "AA" },
+      { fg: "#fafaf9", bg: "#ffffff", ratio: 1.02, level: "fail" },
+      { fg: "#fafaf9", bg: "#000000", ratio: 20.58, level: "AAA" },
+    ],
   });
 
   mockHasAI.mockReturnValue(false);
@@ -231,7 +237,7 @@ describe("design-doc --json", () => {
     expect(JSON.parse(logs.at(-1)!).url).toBe("https://example.com");
   });
 
-  it("JSON payload includes colorCount and cssVarCount", async () => {
+  it("JSON payload includes colorCount, cssVarCount, and contrastFailCount", async () => {
     const logs = captureLogs();
     const program = new Command();
     registerDesignDocCommand(program, makeEngine() as never);
@@ -239,6 +245,7 @@ describe("design-doc --json", () => {
     const payload = JSON.parse(logs.at(-1)!);
     expect(typeof payload.colorCount).toBe("number");
     expect(typeof payload.cssVarCount).toBe("number");
+    expect(typeof payload.contrastFailCount).toBe("number");
   });
 
   it("JSON payload has elapsedMs", async () => {

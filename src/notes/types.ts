@@ -96,5 +96,6 @@ export const INTENT_TO_ACTIVATION: Record<string, string[]> = {
   "responsive-layout":  ["always", "design-creation", "prototype-creation"],
   "accessibility-check":["always", "design-review"],
   "multi-agent":        ["always", "multi-instance"],
+  "docker-setup":       ["always", "docker-environment"],
   "general":            ["always"],
 };
