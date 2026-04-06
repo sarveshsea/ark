@@ -124,6 +124,15 @@ function formatTokenValue(value: unknown, type: string): string | number {
   return JSON.stringify(value);
 }
 
+// ── Config errors (not retried, always propagated) ───────
+
+class FigmaConfigError extends Error {
+  constructor(msg: string) {
+    super(msg);
+    this.name = "FigmaConfigError";
+  }
+}
+
 // ── Fetch helpers ─────────────────────────────────────────
 
 async function figmaGet<T>(path: string, token: string): Promise<T> {
@@ -136,13 +145,13 @@ async function figmaGet<T>(path: string, token: string): Promise<T> {
   });
 
   if (response.status === 403) {
-    throw new Error("Invalid FIGMA_TOKEN or insufficient file permissions");
+    throw new FigmaConfigError("Invalid FIGMA_TOKEN or insufficient file permissions");
   }
   if (response.status === 404) {
-    throw new Error("File not found. Check FIGMA_FILE_KEY");
+    throw new FigmaConfigError("File not found. Check FIGMA_FILE_KEY");
   }
   if (!response.ok) {
-    throw new Error(`Figma API error ${response.status}: ${response.statusText}`);
+    throw new FigmaConfigError(`Figma API error ${response.status}: ${response.statusText}`);
   }
 
   return response.json() as Promise<T>;
@@ -226,20 +235,25 @@ export async function extractDesignSystemREST(
 ): Promise<DesignSystem> {
   log.info({ fileKey }, "Pulling design system via Figma REST API");
 
-  // Fetch all three in parallel — each failure is non-fatal
+  // Fetch all three in parallel.
+  // FigmaConfigError (403/404/5xx) always propagates — it signals a config problem.
+  // Network/transient errors are absorbed per-endpoint so partial data is still returned.
   const [variablesData, componentsData, stylesData] = await Promise.all([
     figmaGet<RestVariablesResponse>(`/files/${fileKey}/variables/local`, token)
       .catch((err) => {
+        if (err instanceof FigmaConfigError) throw err;
         log.warn({ err: err.message }, "Variables fetch failed");
         return null;
       }),
     figmaGet<RestComponentsResponse>(`/files/${fileKey}/components`, token)
       .catch((err) => {
+        if (err instanceof FigmaConfigError) throw err;
         log.warn({ err: err.message }, "Components fetch failed");
         return null;
       }),
     figmaGet<RestStylesResponse>(`/files/${fileKey}/styles`, token)
       .catch((err) => {
+        if (err instanceof FigmaConfigError) throw err;
         log.warn({ err: err.message }, "Styles fetch failed");
         return null;
       }),

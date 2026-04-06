@@ -12,7 +12,7 @@
 import type { Command } from "commander";
 import type { MemoireEngine } from "../engine/core.js";
 import { writeFile, mkdir } from "fs/promises";
-import { join, dirname } from "path";
+import { join, dirname, isAbsolute } from "path";
 import { fetchPageAssets, parseCSSTokens, type RawDesignTokens } from "../research/css-extractor.js";
 import { getAI, hasAI } from "../ai/client.js";
 
@@ -70,7 +70,9 @@ export function registerDesignDocCommand(program: Command, engine: MemoireEngine
         }
 
         // 4. Write DESIGN.md
-        const outputPath = join(engine.config.projectRoot, opts.output);
+        const outputPath = isAbsolute(opts.output)
+          ? opts.output
+          : join(engine.config.projectRoot, opts.output);
         await mkdir(dirname(outputPath), { recursive: true });
         await writeFile(outputPath, content, "utf-8");
 
