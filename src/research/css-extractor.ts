@@ -65,8 +65,27 @@ function resolveUrl(href: string, base: string): string | null {
 }
 
 /**
+ * Extract @import URLs from a CSS string, resolved relative to baseUrl.
+ * Handles both url() and bare string syntax.
+ */
+function extractImportUrls(css: string, baseUrl: string): string[] {
+  const urls: string[] = [];
+  // @import url("...") or @import url('...') or @import "..." or @import '...'
+  const re = /@import\s+(?:url\(["']?([^"')]+)["']?\)|["']([^"']+)["'])/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(css)) !== null) {
+    const href = (m[1] ?? m[2] ?? "").trim();
+    if (!href) continue;
+    const resolved = resolveUrl(href, baseUrl);
+    if (resolved) urls.push(resolved);
+  }
+  return urls;
+}
+
+/**
  * Fetch a page's HTML and all linked/inline CSS blocks.
- * Follows up to MAX_STYLESHEETS <link rel="stylesheet"> hrefs.
+ * Follows up to MAX_STYLESHEETS <link rel="stylesheet"> hrefs
+ * and one level of @import rules within each stylesheet.
  */
 export async function fetchPageAssets(url: string): Promise<PageAssets> {
   log.info({ url }, "Fetching page assets");
@@ -108,8 +127,15 @@ export async function fetchPageAssets(url: string): Promise<PageAssets> {
 
   // Fetch stylesheets in parallel (capped at MAX_STYLESHEETS)
   const sheetFetches = sheetUrls.slice(0, MAX_STYLESHEETS).map((sheetUrl) =>
-    fetchText(sheetUrl).then((css) => {
-      if (css) cssBlocks.push(css);
+    fetchText(sheetUrl).then(async (css) => {
+      if (!css) return;
+      cssBlocks.push(css);
+      // 3. Follow @import rules within each stylesheet (one level deep)
+      const importUrls = extractImportUrls(css, sheetUrl);
+      for (const importUrl of importUrls.slice(0, 3)) {
+        const importedCss = await fetchText(importUrl).catch(() => null);
+        if (importedCss) cssBlocks.push(importedCss);
+      }
     }).catch(() => null)
   );
   await Promise.all(sheetFetches);
