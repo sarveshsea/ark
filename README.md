@@ -140,7 +140,7 @@ memi mcp config --target cursor
 
 Drop the output into `.mcp.json` (Claude Code) or `.cursor/mcp.json` (Cursor).
 
-### 18 tools
+### 20 tools
 
 | Tool | What it does |
 |------|-------------|
@@ -264,7 +264,7 @@ src/
   engine/     Core orchestrator, registry, sync, pipeline, text measurer
   figma/      WebSocket bridge (ports 9223-9232), canvas healer
   agents/     Intent classifier, plan builder, sub-agents, task queue
-  mcp/        MCP server (18 tools, 3 resources, stdio transport)
+  mcp/        MCP server (20 tools, 3 resources, stdio transport)
   codegen/    shadcn/ui mapper, dataviz, pages, prototype exporter
   research/   Research engine (Excel, stickies, transcripts, web)
   specs/      Spec types, Zod schemas, 62-component catalog
