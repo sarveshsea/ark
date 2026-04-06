@@ -12,6 +12,7 @@ const log = createLogger("css-extractor");
 
 const FETCH_TIMEOUT_MS = 15000;
 const MAX_STYLESHEETS = 10;
+const MAX_COLORS = 50;        // cap to avoid noise from icon-heavy sites
 
 // ── Types ─────────────────────────────────────────────────
 
@@ -175,9 +176,11 @@ function extractColors(css: string): string[] {
     let m: RegExpExecArray | null;
     const re = new RegExp(pattern.source, pattern.flags);
     while ((m = re.exec(css)) !== null) {
+      if (found.size >= MAX_COLORS) break;
       const normalized = normalizeColor(m[0]);
       if (!IGNORE_COLORS.has(normalized)) found.add(m[0].trim());
     }
+    if (found.size >= MAX_COLORS) break;
   }
   return Array.from(found);
 }
