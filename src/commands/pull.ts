@@ -27,18 +27,19 @@ export function registerPullCommand(program: Command, engine: MemoireEngine) {
     .command("pull")
     .description("Pull design system from connected Figma file")
     .option("--rest", "Pull via Figma REST API (no plugin required — needs FIGMA_TOKEN + FIGMA_FILE_KEY)")
+    .option("--force", "Bypass the 5-minute pull cache and force a fresh pull")
     .option("--json", "Output pull results as JSON")
-    .action(async (opts: { rest?: boolean; json?: boolean }) => {
+    .action(async (opts: { rest?: boolean; force?: boolean; json?: boolean }) => {
       const start = Date.now();
       await engine.init();
 
       // REST mode — bypass plugin entirely
       if (opts.rest) {
-        if (!opts.json) console.log("\n  Pulling via REST API (no plugin required)...\n");
+        if (!opts.json) console.log(`\n  Pulling via REST API${opts.force ? " (forced)" : ""}...\n`);
 
         try {
           const before = engine.snapshotDesignSystem?.() ?? { tokens: [], components: [], styles: [], lastSync: "" };
-          await engine.pullDesignSystemREST();
+          await engine.pullDesignSystemREST(opts.force ?? false);
           const ds = engine.registry.designSystem;
           const specs = await engine.registry.getAllSpecs();
           const autoSpecs = specs.filter((s) => s.type === "component" && s.tags?.includes("auto-generated"));
@@ -129,8 +130,8 @@ export function registerPullCommand(program: Command, engine: MemoireEngine) {
       // Snapshot before pull for diff
       const before = engine.snapshotDesignSystem?.() ?? { tokens: [], components: [], styles: [], lastSync: "" };
 
-      if (!opts.json) console.log("\n  Pulling design system...\n");
-      await engine.pullDesignSystem();
+      if (!opts.json) console.log(`\n  Pulling design system${opts.force ? " (forced)" : ""}...\n`);
+      await engine.pullDesignSystem(opts.force ?? false);
 
       const specs = await engine.registry.getAllSpecs();
       const autoSpecs = specs.filter((s) => s.type === "component" && s.tags?.includes("auto-generated"));
