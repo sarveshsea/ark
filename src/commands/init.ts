@@ -88,7 +88,7 @@ export function registerInitCommand(program: Command, engine: MemoireEngine) {
           trend: "up | down | flat",
         },
         shadcnBase: ["Card", "Badge"],
-        accessibility: { role: "article", ariaLabel: "required", keyboardNav: false, focusStyle: "outline", touchTarget: "default", reducedMotion: false, liveRegion: "off", colorIndependent: true },
+        accessibility: { role: "article", ariaLabel: "required", keyboardNav: false, focusStyle: "outline", focusWidth: "2px", touchTarget: "default", reducedMotion: false, liveRegion: "off", colorIndependent: true },
         dataviz: null,
         tags: ["dashboard", "kpi"],
         createdAt: new Date().toISOString(),

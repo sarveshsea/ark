@@ -1,0 +1,16 @@
+{
+  "name": "docker-environments",
+  "version": "1.0.0",
+  "description": "Docker-aware Mémoire operation — CI/CD headless pipelines, shared MCP server, agent worker containers, and Figma bridge port-forwarding for containerized setups",
+  "category": "connect",
+  "tags": ["docker", "container", "ci-cd", "devcontainer", "mcp", "headless", "multi-agent", "compose"],
+  "skills": [{
+    "file": "docker-environments.md",
+    "name": "Docker Environments",
+    "activateOn": "docker-environment",
+    "freedomLevel": "high"
+  }],
+  "dependencies": [],
+  "createdAt": "2026-04-06T00:00:00.000Z",
+  "updatedAt": "2026-04-06T00:00:00.000Z"
+}

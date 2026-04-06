@@ -145,6 +145,7 @@ function inferAccessibilityDefaults(
     ariaLabel: isInteractive || isForm ? "required" : "optional",
     keyboardNav: isInteractive || isNavigation || isForm,
     focusStyle: isInteractive ? "outline" : "none",
+    focusWidth: "2px",
     touchTarget: isInteractive ? "min-44" : "default",
     reducedMotion: hasMotion,
     liveRegion: isLiveContent ? "polite" : "off",

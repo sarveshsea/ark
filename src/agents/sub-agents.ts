@@ -986,6 +986,7 @@ export class SubAgentRunner {
         ariaLabel: "optional",
         keyboardNav: /dialog|modal|menu|dropdown|select|sidebar/i.test(lowerIntent),
         focusStyle: "outline",
+        focusWidth: "2px",
         touchTarget: "default",
         reducedMotion: false,
         liveRegion: "off",
