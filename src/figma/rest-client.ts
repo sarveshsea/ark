@@ -263,10 +263,23 @@ export async function extractDesignSystemREST(
   const components = componentsData ? parseComponentsFromREST(componentsData) : [];
   const styles = stylesData ? parseStylesFromREST(stylesData) : [];
 
-  log.info(
-    { tokens: tokens.length, components: components.length, styles: styles.length },
-    "REST pull complete",
-  );
+  const failed = [
+    !variablesData && "variables",
+    !componentsData && "components",
+    !stylesData && "styles",
+  ].filter(Boolean);
+
+  if (failed.length > 0) {
+    log.warn(
+      { tokens: tokens.length, components: components.length, styles: styles.length, failed },
+      `REST pull partial — ${failed.join(", ")} endpoint${failed.length > 1 ? "s" : ""} failed, recovered remaining data`,
+    );
+  } else {
+    log.info(
+      { tokens: tokens.length, components: components.length, styles: styles.length },
+      "REST pull complete",
+    );
+  }
 
   return {
     tokens,
