@@ -31,15 +31,21 @@ export function generatePreviewHTML(data: PreviewData): string {
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='6' fill='%23ffffff'/%3E%3C/svg%3E">
 <title>mémoire</title>
 <style>
-\${CSS}
+${CSS}
 </style>
 </head>
 <body>
 
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<header>
 <div class="hdr">
   <div class="hdr-left">
-    <div class="hdr-project">mémoire</div>
+    <div class="hdr-project">
+      <h1 class="hdr-project-title">mémoire</h1>
+    </div>
   </div>
+  <nav aria-label="Mémoire navigation">
   <div class="hdr-nav">
     <a href="#screens" class="hdr-nav-link active" onclick="showSection('screens',this)">Screens</a>
     <a href="#research" class="hdr-nav-link" onclick="showSection('research',this)">Research</a>
@@ -47,83 +53,87 @@ export function generatePreviewHTML(data: PreviewData): string {
     <a href="#system" class="hdr-nav-link" onclick="showSection('system',this)">Systems</a>
     <a href="#changelog" class="hdr-nav-link" onclick="showSection('changelog',this)">Changelog</a>
   </div>
+  </nav>
   <div class="hdr-stats">
     <span><span class="n" id="stat-userflows">0</span>USERFLOWS</span>
     <span><span class="n" id="stat-specs">0</span>SPECS</span>
     <span><span class="n" id="stat-tokens">60</span>SYSTEMS</span>
   </div>
 </div>
+</header>
+
+<main id="main-content" tabindex="-1">
 
 <!-- ── Screens Section ────────────────────────── -->
 <div id="section-screens" class="section-panel active">
 <div class="screens-section">
   <div class="screens-header">
-    <div class="screens-label">DIBS</div>
+    <h2 class="screens-label">DIBS</h2>
     <div class="screens-subtitle">Agency Production Bidding &mdash; AICP-Compliant Estimation</div>
     <div class="screens-line"></div>
     <div class="screens-count" id="screens-count">0 USERFLOWS</div>
   </div>
   <div class="screens-grid">
     <a href="dibs.html" class="screen-card">
-      <div class="screen-thumb"><iframe src="dibs.html" tabindex="-1"></iframe></div>
+      <div class="screen-thumb"><iframe src="dibs.html" tabindex="-1" title="Project Setup preview"></iframe></div>
       <div class="screen-info">
-        <div class="screen-name">Project Setup</div>
+        <h3 class="screen-name">Project Setup</h3>
         <div class="screen-desc">Production type, brief, template selection</div>
         <div class="screen-badge">STEP 1</div>
       </div>
     </a>
     <a href="dibs.html#step2" class="screen-card">
-      <div class="screen-thumb"><iframe src="dibs.html" tabindex="-1"></iframe></div>
+      <div class="screen-thumb"><iframe src="dibs.html" tabindex="-1" title="Smart Estimator preview"></iframe></div>
       <div class="screen-info">
-        <div class="screen-name">Smart Estimator</div>
+        <h3 class="screen-name">Smart Estimator</h3>
         <div class="screen-desc">AI pre-filled line items, 9 AICP categories</div>
         <div class="screen-badge">STEP 2</div>
       </div>
     </a>
     <a href="dibs.html#step3" class="screen-card">
-      <div class="screen-thumb"><iframe src="dibs.html" tabindex="-1"></iframe></div>
+      <div class="screen-thumb"><iframe src="dibs.html" tabindex="-1" title="Timeline preview"></iframe></div>
       <div class="screen-info">
-        <div class="screen-name">Timeline</div>
+        <h3 class="screen-name">Timeline</h3>
         <div class="screen-desc">Gantt chart, milestones, shoot day planning</div>
         <div class="screen-badge">STEP 3</div>
       </div>
     </a>
     <a href="dibs.html#step4" class="screen-card">
-      <div class="screen-thumb"><iframe src="dibs.html" tabindex="-1"></iframe></div>
+      <div class="screen-thumb"><iframe src="dibs.html" tabindex="-1" title="Bid Summary preview"></iframe></div>
       <div class="screen-info">
-        <div class="screen-name">Bid Summary</div>
+        <h3 class="screen-name">Bid Summary</h3>
         <div class="screen-desc">Budget breakdown, comparison, export to AICP PDF</div>
         <div class="screen-badge">STEP 4</div>
       </div>
     </a>
     <a href="dibs-dashboard.html" class="screen-card">
-      <div class="screen-thumb"><iframe src="dibs-dashboard.html" tabindex="-1"></iframe></div>
+      <div class="screen-thumb"><iframe src="dibs-dashboard.html" tabindex="-1" title="Dashboard preview"></iframe></div>
       <div class="screen-info">
-        <div class="screen-name">Dashboard</div>
+        <h3 class="screen-name">Dashboard</h3>
         <div class="screen-desc">Active bids, pipeline stats, recent activity</div>
         <div class="screen-badge">OVERVIEW</div>
       </div>
     </a>
     <a href="dibs-dashboard.html" class="screen-card">
-      <div class="screen-thumb"><iframe src="dibs-dashboard.html" tabindex="-1"></iframe></div>
+      <div class="screen-thumb"><iframe src="dibs-dashboard.html" tabindex="-1" title="Line Items and Compare preview"></iframe></div>
       <div class="screen-info">
-        <div class="screen-name">Line Items & Compare</div>
+        <h3 class="screen-name">Line Items & Compare</h3>
         <div class="screen-desc">Budget breakdown, comparison, all in dashboard</div>
         <div class="screen-badge">WIDGETS</div>
       </div>
     </a>
     <a href="dibs-rates.html" class="screen-card">
-      <div class="screen-thumb"><iframe src="dibs-rates.html" tabindex="-1"></iframe></div>
+      <div class="screen-thumb"><iframe src="dibs-rates.html" tabindex="-1" title="Rate Cards preview"></iframe></div>
       <div class="screen-info">
-        <div class="screen-name">Rate Cards</div>
+        <h3 class="screen-name">Rate Cards</h3>
         <div class="screen-desc">Union rates, crew benchmarks, equipment pricing</div>
         <div class="screen-badge">RATES</div>
       </div>
     </a>
     <a href="dibs-collab.html" class="screen-card">
-      <div class="screen-thumb"><iframe src="dibs-collab.html" tabindex="-1"></iframe></div>
+      <div class="screen-thumb"><iframe src="dibs-collab.html" tabindex="-1" title="Collaboration preview"></iframe></div>
       <div class="screen-info">
-        <div class="screen-name">Collaboration</div>
+        <h3 class="screen-name">Collaboration</h3>
         <div class="screen-desc">Real-time co-editing, comments, version history</div>
         <div class="screen-badge">COLLAB</div>
       </div>
@@ -137,8 +147,8 @@ export function generatePreviewHTML(data: PreviewData): string {
 <div id="section-system" class="section-panel">
 <div class="sys-section">
   <div class="sys-header">
-    <svg width="20" height="20" viewBox="0 0 32 32" fill="none"><path d="M25.5 15.5A9.5 9.5 0 0 1 12 25 9.5 9.5 0 0 1 9.5 6.5 12 12 0 1 0 25.5 15.5z" fill="#C4A35A"/></svg>
-    <span class="sys-title">Dibs Design System</span>
+    <svg width="20" height="20" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M25.5 15.5A9.5 9.5 0 0 1 12 25 9.5 9.5 0 0 1 9.5 6.5 12 12 0 1 0 25.5 15.5z" fill="#C4A35A"/></svg>
+    <h2 class="sys-title">Dibs Design System</h2>
     <span class="sys-sub">Tokens, primitives, components</span>
   </div>
 
@@ -199,35 +209,35 @@ export function generatePreviewHTML(data: PreviewData): string {
     <div class="sys-comp-grid">
       <div class="sys-comp">
         <div class="sys-comp-demo"><button style="background:#9D833E;color:#fff;border:none;padding:10px 24px;border-radius:4px;font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:0.5px;cursor:pointer">Continue to Estimator</button></div>
-        <div class="sys-comp-name">Button / Primary</div>
+        <h3 class="sys-comp-name">Button / Primary</h3>
       </div>
       <div class="sys-comp">
         <div class="sys-comp-demo"><button style="background:transparent;color:#9D833E;border:1px solid #9D833E;padding:10px 24px;border-radius:4px;font-family:var(--mono);font-size:12px;cursor:pointer">Save Draft</button></div>
-        <div class="sys-comp-name">Button / Outline</div>
+        <h3 class="sys-comp-name">Button / Outline</h3>
       </div>
       <div class="sys-comp">
         <div class="sys-comp-demo"><div style="background:#fff;border:1px solid #E8DDD0;border-radius:8px;padding:16px;width:200px"><div style="font-size:10px;color:#666;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">TOTAL BUDGET</div><div style="font-size:22px;font-weight:700;color:#1a1a1a">$487,250</div></div></div>
-        <div class="sys-comp-name">Metric Card</div>
+        <h3 class="sys-comp-name">Metric Card</h3>
       </div>
       <div class="sys-comp">
         <div class="sys-comp-demo"><div style="display:flex;gap:8px"><span style="background:#F7F3EE;border:2px solid #9D833E;border-radius:4px;padding:6px 16px;font-size:11px;font-weight:600;color:#9D833E">Performance Spot</span><span style="background:transparent;border:1px solid #E8DDD0;border-radius:4px;padding:6px 16px;font-size:11px;color:#666">Lifestyle</span></div></div>
-        <div class="sys-comp-name">Template Chip</div>
+        <h3 class="sys-comp-name">Template Chip</h3>
       </div>
       <div class="sys-comp">
         <div class="sys-comp-demo"><div style="display:flex;align-items:center;gap:12px;background:#FFF8E7;border:1px solid #D4A017;border-radius:6px;padding:12px 16px;width:280px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4A017" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span style="font-size:12px;color:#92400E">Confirm talent count — SAG rates applied</span></div></div>
-        <div class="sys-comp-name">Attention Card</div>
+        <h3 class="sys-comp-name">Attention Card</h3>
       </div>
       <div class="sys-comp">
         <div class="sys-comp-demo"><div style="display:flex;align-items:center;gap:10px"><div style="width:60px;height:60px;position:relative"><svg width="60" height="60" viewBox="0 0 60 60"><circle cx="30" cy="30" r="26" fill="none" stroke="#E8DDD0" stroke-width="4"/><circle cx="30" cy="30" r="26" fill="none" stroke="#9D833E" stroke-width="4" stroke-dasharray="120" stroke-dashoffset="32" transform="rotate(-90 30 30)"/></svg><span style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:13px;font-weight:700;color:#1a1a1a">73%</span></div><div style="font-size:11px;color:#666">7 of 9 categories<br>complete</div></div></div>
-        <div class="sys-comp-name">Progress Ring</div>
+        <h3 class="sys-comp-name">Progress Ring</h3>
       </div>
       <div class="sys-comp">
         <div class="sys-comp-demo"><div style="background:#fff;border:1px solid #E8DDD0;border-radius:6px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;width:260px"><div><div style="font-size:13px;font-weight:600;color:#1a1a1a">Crew & Labor</div><div style="font-size:10px;color:#888">38 / 52 items</div></div><div style="display:flex;align-items:center;gap:8px"><svg width="14" height="14" viewBox="0 0 24 24" fill="#2D5016" stroke="none"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg><span style="font-size:15px;font-weight:700;color:#1a1a1a">$142,800</span></div></div></div>
-        <div class="sys-comp-name">Category Row</div>
+        <h3 class="sys-comp-name">Category Row</h3>
       </div>
       <div class="sys-comp">
         <div class="sys-comp-demo"><div style="display:flex;gap:4px;align-items:end;height:40px"><div style="width:8px;height:30px;background:#9D833E;border-radius:2px 2px 0 0"></div><div style="width:8px;height:20px;background:#C4A35A;border-radius:2px 2px 0 0"></div><div style="width:8px;height:35px;background:#6B5A2A;border-radius:2px 2px 0 0"></div><div style="width:8px;height:15px;background:#D4B86A;border-radius:2px 2px 0 0"></div><div style="width:8px;height:25px;background:#9D833E;border-radius:2px 2px 0 0"></div></div></div>
-        <div class="sys-comp-name">Bar Chart</div>
+        <h3 class="sys-comp-name">Bar Chart</h3>
       </div>
     </div>
   </div>
@@ -239,8 +249,8 @@ export function generatePreviewHTML(data: PreviewData): string {
 <div id="section-research" class="section-panel">
 <div class="research-section">
   <div class="sys-header">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C4A35A" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    <span class="sys-title">Dibs Research</span>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C4A35A" stroke-width="1.5" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <h2 class="sys-title">Dibs Research</h2>
     <span class="sys-sub">${data.research ? data.research.insights.length + ' insights / ' + data.research.themes.length + ' themes / ' + (data.research.personas?.length || 0) + ' personas / ' + (data.research.sources?.length || 0) + ' sources' : 'No research data'}</span>
   </div>
 
@@ -380,8 +390,8 @@ export function generatePreviewHTML(data: PreviewData): string {
 <div id="section-specs" class="section-panel">
 <div class="research-section">
   <div class="sys-header">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C4A35A" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
-    <span class="sys-title">Product Specifications</span>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C4A35A" stroke-width="1.5" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+    <h2 class="sys-title">Product Specifications</h2>
     <span class="sys-sub">AICP bid form data model + research sources</span>
   </div>
 
@@ -666,10 +676,10 @@ export function generatePreviewHTML(data: PreviewData): string {
 <div id="section-changelog" class="section-panel">
 <div class="hero">
   <div class="hero-badge">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
     VERSION HISTORY
   </div>
-  <h1>Version Changelog</h1>
+  <h2 class="hero-heading">Version Changelog</h2>
   <p>Commits, changes, and key design decisions for every release of Mémoire.</p>
 </div>
 
@@ -1929,13 +1939,15 @@ export function generatePreviewHTML(data: PreviewData): string {
 </div>
 </div>
 
+</main>
+
 <!-- ── Footer ────────────────────────────────── -->
-<div class="memoire-footer">
+<footer class="memoire-footer">
   <div>MÉMOIRE v0.1.0 &mdash; AI-native design intelligence engine</div>
   <div>
     <a href="#changelog" onclick="showSection('changelog',document.querySelector('.hdr-nav-link[href=&quot;#changelog&quot;]'));return false">Changelog</a>
   </div>
-</div>
+</footer>
 
 <!-- ── Agent Command Palette (Cmd+K) ────────── -->
 <div id="cmd-palette" class="cmd-palette hidden">
@@ -1959,7 +1971,7 @@ export function generatePreviewHTML(data: PreviewData): string {
       <button class="cmd-item" onclick="runAgent('Generate a complete shadcn/ui token foundation')"><span class="cmd-item-icon">&#9881;</span> Initialize token system</button>
       <button class="cmd-item" onclick="runAgent('Generate code for all specs')"><span class="cmd-item-icon">&lt;/&gt;</span> Generate all code</button>
     </div>
-    <div id="cmd-status" class="cmd-status hidden"></div>
+    <div id="cmd-status" class="cmd-status hidden" role="status" aria-live="polite" aria-atomic="true"></div>
   </div>
 </div>
 
@@ -1977,10 +1989,13 @@ export function generatePreviewHTML(data: PreviewData): string {
 </div>
 
 <!-- ── Toast Notifications ──────────────────── -->
-<div id="toast-container" class="toast-container"></div>
+<div id="toast-container" class="toast-container" role="status" aria-live="polite" aria-atomic="true"></div>
+
+<!-- ── Pipeline Status (screen-reader region) ── -->
+<div id="pipeline-status" role="status" aria-live="polite" aria-atomic="true" class="sr-only"></div>
 
 <!-- ── Figma Connection Status Bar ──────────── -->
-<div id="figma-bar" class="figma-bar">
+<div id="figma-bar" class="figma-bar" role="status" aria-live="polite" aria-atomic="true">
   <div class="figma-status-stack">
     <div class="figma-status-row">
       <span id="figma-dot" class="figma-dot"></span>
@@ -2007,7 +2022,7 @@ export function generatePreviewHTML(data: PreviewData): string {
     <span>AGENT ACTIVITY</span>
     <button onclick="toggleAgentLog()" style="background:none;border:none;color:var(--fg-muted);cursor:pointer;font-family:var(--mono)">&times;</button>
   </div>
-  <div id="agent-log-body" class="agent-log-body"></div>
+  <div id="agent-log-body" class="agent-log-body" role="log" aria-live="polite" aria-atomic="false"></div>
 </div>
 <button id="agent-log-toggle" class="agent-log-toggle" onclick="toggleAgentLog()">&#9670; AGENT LOG</button>
 

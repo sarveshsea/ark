@@ -1,5 +1,57 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* ── Accessibility: Skip Link ─────────────── */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 0;
+  background: #000;
+  color: #fff;
+  padding: 8px 16px;
+  font-size: 14px;
+  z-index: 9999;
+  transition: top 0.1s;
+  text-decoration: none;
+}
+.skip-link:focus {
+  top: 0;
+}
+
+/* ── Accessibility: Focus Indicators ─────── */
+:focus-visible {
+  outline: 2px solid #0066cc;
+  outline-offset: 2px;
+}
+
+/* ── Accessibility: Screen-reader only ───── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* ── Accessibility: h1 reset for project title */
+.hdr-project-title {
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  margin: 0;
+}
+
+/* ── Accessibility: hero heading reset ───── */
+.hero-heading {
+  font-size: inherit;
+  font-weight: inherit;
+  margin: 0;
+}
+
 :root {
   --bg: #111113;
   --bg-card: #19191c;
@@ -130,7 +182,7 @@ body {
 /* ── Screens Section ─────────────────────── */
 .screens-section { padding: 24px; }
 .screens-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
-.screens-label { font-family: var(--mono); font-size: 18px; font-weight: 700; letter-spacing: 3px; color: var(--accent-bright); text-transform: uppercase; white-space: nowrap; }
+.screens-label { font-family: var(--mono); font-size: 18px; font-weight: 700; letter-spacing: 3px; color: var(--accent-bright); text-transform: uppercase; white-space: nowrap; margin: 0; }
 .screens-subtitle { font-family: var(--mono); font-size: 11px; color: var(--fg-muted); white-space: nowrap; }
 .screens-line { flex: 1; height: 1px; background: var(--border); }
 .screens-count { font-family: var(--mono); font-size: 10px; letter-spacing: 1px; color: var(--fg-muted); white-space: nowrap; }
@@ -149,7 +201,7 @@ body {
   transform: scale(0.28); transform-origin: top left;
 }
 .screen-info { padding: 14px 16px; display: flex; align-items: center; gap: 10px; }
-.screen-name { font-family: var(--mono); font-size: 13px; font-weight: 600; flex: 1; }
+.screen-name { font-family: var(--mono); font-size: 13px; font-weight: 600; flex: 1; margin: 0; }
 .screen-desc { display: none; }
 .screen-badge {
   font-family: var(--mono); font-size: 9px; letter-spacing: 1px; padding: 2px 8px;
@@ -490,7 +542,7 @@ body {
 /* ── Design System Section ──────────────── */
 .sys-section { padding: 24px; }
 .sys-header { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; }
-.sys-title { font-family: var(--mono); font-size: 16px; font-weight: 700; letter-spacing: 2px; color: var(--accent-bright); }
+.sys-title { font-family: var(--mono); font-size: 16px; font-weight: 700; letter-spacing: 2px; color: var(--accent-bright); margin: 0; }
 .sys-sub { font-family: var(--mono); font-size: 11px; color: var(--fg-muted); }
 .sys-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
 @media (max-width: 768px) { .sys-grid { grid-template-columns: 1fr; } }
@@ -517,7 +569,7 @@ body {
 .sys-comp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; padding: 0 24px 24px; }
 .sys-comp { background: var(--bg-card); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
 .sys-comp-demo { padding: 20px; display: flex; align-items: center; justify-content: center; background: #F7F3EE; min-height: 80px; }
-.sys-comp-name { padding: 10px 14px; font-family: var(--mono); font-size: 10px; color: var(--fg-muted); letter-spacing: 0.5px; border-top: 1px solid var(--border); }
+.sys-comp-name { padding: 10px 14px; font-family: var(--mono); font-size: 10px; color: var(--fg-muted); letter-spacing: 0.5px; border-top: 1px solid var(--border); margin: 0; }
 
 /* ── Research Section ───────────────────── */
 .research-section { padding: 24px; }
@@ -647,7 +699,7 @@ body {
 #section-changelog .preview-body { padding: 12px; background: #fafaf8; font-family: Inter, -apple-system, sans-serif; }
 #section-changelog .hero { padding: 40px 24px 32px; max-width: 800px; margin: 0 auto; }
 #section-changelog .hero-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; font-weight: 600; }
-#section-changelog .hero h1 { font-size: 24px; font-weight: 700; color: var(--accent-bright); letter-spacing: 2px; margin-bottom: 8px; }
+#section-changelog .hero h2.hero-heading { font-size: 24px; font-weight: 700; color: var(--accent-bright); letter-spacing: 2px; margin-bottom: 8px; }
 #section-changelog .hero p { font-size: 11px; color: var(--fg-muted); letter-spacing: 0.5px; }
 #section-changelog .files-toggle { font-size: 9px; color: var(--fg-muted); cursor: pointer; letter-spacing: 1px; text-transform: uppercase; padding: 4px 0; border: none; background: none; font-family: var(--mono); transition: color 0.15s; }
 #section-changelog .files-toggle:hover { color: var(--accent); }
@@ -695,7 +747,8 @@ body {
 .cmd-modal { position:relative; width:600px; max-width:90vw; background:var(--bg-card); border:1px solid var(--border); border-radius:6px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.5); }
 .cmd-header { display:flex; align-items:center; padding:12px 16px; border-bottom:1px solid var(--border); gap:10px; }
 .cmd-icon { color:var(--accent-bright); font-size:14px; }
-.cmd-input { flex:1; background:none; border:none; color:var(--fg); font-family:var(--mono); font-size:13px; outline:none; }
+.cmd-input { flex:1; background:none; border:none; color:var(--fg); font-family:var(--mono); font-size:13px; }
+.cmd-input:focus { outline: 2px solid #0066cc; outline-offset: 2px; }
 .cmd-input::placeholder { color:var(--fg-muted); }
 .cmd-kbd { font-size:9px; padding:2px 6px; border:1px solid var(--border); border-radius:2px; color:var(--fg-muted); font-family:var(--mono); }
 .cmd-suggestions { max-height:300px; overflow-y:auto; padding:4px; }
@@ -720,8 +773,8 @@ body {
 /* ── Edit Form Fields ─────────────────────── */
 .edit-field { margin-bottom:14px; }
 .edit-label { display:block; font-size:9px; letter-spacing:1px; text-transform:uppercase; color:var(--fg-muted); margin-bottom:4px; }
-.edit-input { width:100%; padding:6px 10px; background:var(--bg); border:1px solid var(--border); border-radius:2px; color:var(--fg); font-family:var(--mono); font-size:11px; outline:none; }
-.edit-input:focus { border-color:var(--accent); }
+.edit-input { width:100%; padding:6px 10px; background:var(--bg); border:1px solid var(--border); border-radius:2px; color:var(--fg); font-family:var(--mono); font-size:11px; }
+.edit-input:focus { border-color:var(--accent); outline: 2px solid #0066cc; outline-offset: 2px; }
 .edit-color-row { display:flex; align-items:center; gap:8px; }
 .edit-color-swatch { width:32px; height:32px; border-radius:2px; border:1px solid var(--border); cursor:pointer; }
 .edit-color-input { flex:1; }
