@@ -14,6 +14,7 @@ import type { ProjectContext } from "../engine/project-context.js";
 import { generateComponent } from "./shadcn-mapper.js";
 import { generateDataViz } from "./dataviz-generator.js";
 import { generatePage } from "./page-generator.js";
+import { atomicLevelToFolder } from "../utils/naming.js";
 
 export interface CodegenConfig {
   outputDir: string;
@@ -123,15 +124,43 @@ export class CodeGenerator {
 
   /**
    * Maps atomic level to output folder following Atomic Design methodology.
-   * atoms → components/ui/, molecules → components/molecules/, etc.
+   * Delegates to the shared atomicLevelToFolder() utility.
    */
   private getAtomicDir(spec: ComponentSpec): string {
-    switch (spec.level) {
-      case "atom": return `components/ui/${spec.name}`;
-      case "molecule": return `components/molecules/${spec.name}`;
-      case "organism": return `components/organisms/${spec.name}`;
-      case "template": return `components/templates/${spec.name}`;
-      default: return `components/${spec.name}`;
+    return `${atomicLevelToFolder(spec.level)}/${spec.name}`;
+  }
+
+  /**
+   * Check that each shadcnBase component exists in the project's components/ui/.
+   * Emits a warn event for any that are missing so the user can install them.
+   */
+  private async checkShadcnInstalled(spec: ComponentSpec): Promise<void> {
+    const { access } = await import("fs/promises");
+    const { join: pathJoin } = await import("path");
+
+    for (const base of spec.shadcnBase) {
+      const kebab = base
+        .replace(/([A-Z])/g, (m, c, i) => (i === 0 ? c.toLowerCase() : `-${c.toLowerCase()}`));
+      const candidates = [
+        pathJoin(this.config.outputDir, "..", "components", "ui", `${kebab}.tsx`),
+        pathJoin(this.config.outputDir, "..", "node_modules", "@shadcn", "ui", `${kebab}.tsx`),
+      ];
+      let found = false;
+      for (const candidate of candidates) {
+        try {
+          await access(candidate);
+          found = true;
+          break;
+        } catch {
+          // not found at this path
+        }
+      }
+      if (!found) {
+        this.emitEvent(
+          "warn",
+          `${base} not found in components/ui/ — run: npx shadcn@latest add ${kebab}`
+        );
+      }
     }
   }
 
@@ -146,6 +175,9 @@ export class CodeGenerator {
         `Consider using the existing implementation instead of regenerating.`
       );
     }
+
+    // shadcn install check — warn for any missing base components
+    await this.checkShadcnInstalled(spec);
 
     const code = generateComponent(spec, ctx);
     const dir = this.getAtomicDir(spec);

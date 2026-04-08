@@ -53,7 +53,7 @@ export function generateComponent(spec: ComponentSpec, ctx: CodegenContext): Com
   const imports = buildImports(spec);
   const propsInterface = buildPropsInterface(spec);
   const tokens = ctx.designSystem?.tokens ?? [];
-  const componentBody = buildComponentBody(spec, tokens);
+  const componentBody = buildComponentBody(spec, tokens, ctx);
   const variantTypes = buildVariantType(spec);
 
   // Build destructured props, handling empty props case
@@ -108,8 +108,8 @@ function buildPropsInterface(spec: ComponentSpec): string {
   const lines: string[] = [`export interface ${spec.name}Props extends React.HTMLAttributes<HTMLDivElement> {`];
 
   for (const [name, type] of Object.entries(spec.props)) {
-    const tsType = mapPropType(type);
     const optional = type.endsWith("?") ? "?" : "";
+    const tsType = mapPropType(type);
     lines.push(`  ${name}${optional}: ${tsType}`);
   }
 
@@ -128,7 +128,7 @@ function buildVariantType(spec: ComponentSpec): string {
   return `export type ${spec.name}Variant = ${variants}\n`;
 }
 
-function buildComponentBody(spec: ComponentSpec, tokens: DesignToken[] = []): string {
+function buildComponentBody(spec: ComponentSpec, tokens: DesignToken[] = [], ctx?: CodegenContext): string {
   const hasCard = spec.shadcnBase.includes("Card");
   const hasBadge = spec.shadcnBase.includes("Badge");
   const hasButton = spec.shadcnBase.includes("Button");
@@ -139,7 +139,7 @@ function buildComponentBody(spec: ComponentSpec, tokens: DesignToken[] = []): st
   const variantLogic = buildVariantLogic(spec);
 
   if (hasCard) {
-    return buildCardComponent(spec, hasBadge, tokenStyles, variantLogic);
+    return buildCardComponent(spec, hasBadge, tokenStyles, variantLogic, tokens);
   }
 
   if (hasButton) {
@@ -164,7 +164,8 @@ function buildComponentBody(spec: ComponentSpec, tokens: DesignToken[] = []): st
   lines.push("  return (");
   const styleAttr = tokenStyles ? ` style={${tokenStyles}}` : "";
   const variantClass = spec.variants.length > 1 ? ", variantClasses" : "";
-  lines.push(`    <div className={cn("${defaultClasses(spec)}"${variantClass}, className)}${styleAttr} {...props}>`);
+  const defaultCls = substituteTokensInClasses(defaultClasses(spec), tokens);
+  lines.push(`    <div className={cn("${defaultCls}"${variantClass}, className)}${styleAttr} {...props}>`);
 
   for (const [name, type] of Object.entries(spec.props)) {
     if (type === "boolean" || type === "boolean?") {
@@ -312,7 +313,7 @@ function buildDialogComponent(spec: ComponentSpec, tokenStyles?: string): string
   return lines.join("\n");
 }
 
-function buildCardComponent(spec: ComponentSpec, hasBadge: boolean, tokenStyles?: string, variantLogic?: string | null): string {
+function buildCardComponent(spec: ComponentSpec, hasBadge: boolean, tokenStyles?: string, variantLogic?: string | null, tokens: DesignToken[] = []): string {
   const props = Object.keys(spec.props);
   const titleProp = props.find((p) => p.toLowerCase().includes("title"));
   const valueProp = props.find((p) => p.toLowerCase().includes("value") || p.toLowerCase().includes("metric"));
@@ -323,7 +324,8 @@ function buildCardComponent(spec: ComponentSpec, hasBadge: boolean, tokenStyles?
   lines.push("  return (");
   const styleAttr = tokenStyles ? ` style={${tokenStyles}}` : "";
   const variantClass = spec.variants.length > 1 ? ", variantClasses" : "";
-  lines.push(`    <Card className={cn("${defaultClasses(spec)}"${variantClass}, className)}${styleAttr} {...props}>`);
+  const defaultCls = substituteTokensInClasses(defaultClasses(spec), tokens);
+  lines.push(`    <Card className={cn("${defaultCls}"${variantClass}, className)}${styleAttr} {...props}>`);
 
   if (titleProp || descProp) {
     lines.push("      <CardHeader>");
@@ -367,8 +369,35 @@ function defaultClasses(spec: ComponentSpec): string {
   return classes.join(" ");
 }
 
+/**
+ * Map a spec prop-type string to its TypeScript equivalent.
+ *
+ * Supported forms:
+ *   "string"           → string
+ *   "string?"          → string   (optional marker stripped; optionality is on the property key)
+ *   "string[]"         → string[]
+ *   "number[]?"        → number[]
+ *   "'sm'|'md'|'lg'"   → "sm" | "md" | "lg"   (union literal string)
+ *   "ReactNode"        → React.ReactNode
+ *   Anything else      → passed through as-is
+ */
 function mapPropType(type: string): string {
-  const clean = type.replace("?", "").trim();
+  // Strip trailing "?" — optionality is expressed on the property key
+  const clean = type.replace(/\?$/, "").trim();
+
+  // Union literal: contains "|" and members are quoted strings → normalise quotes
+  if (clean.includes("|")) {
+    return clean
+      .split("|")
+      .map((part) => {
+        const trimmed = part.trim();
+        // Already a valid TS type (e.g. "string", "number")? keep it.
+        if (/^[a-zA-Z_$][a-zA-Z0-9_$]*(\[\])?$/.test(trimmed)) return trimmed;
+        // Strip single or double quotes and re-wrap with double quotes
+        return `"${trimmed.replace(/^['"]|['"]$/g, "")}"`;
+      })
+      .join(" | ");
+  }
 
   const mapping: Record<string, string> = {
     string: "string",
@@ -376,7 +405,9 @@ function mapPropType(type: string): string {
     boolean: "boolean",
     "string[]": "string[]",
     "number[]": "number[]",
+    "boolean[]": "boolean[]",
     ReactNode: "React.ReactNode",
+    "ReactNode[]": "React.ReactNode[]",
   };
 
   return mapping[clean] ?? clean;
@@ -414,4 +445,72 @@ function buildTokenStyles(spec: ComponentSpec, tokens: DesignToken[]): string | 
 
   if (styles.length === 0) return undefined;
   return `{ ${styles.join(", ")} }`;
+}
+
+/**
+ * Approximate mapping from common hex values to Tailwind utility classes.
+ * Used by substituteTokensInClasses() to replace raw hex colour values
+ * with Tailwind semantic classes when design tokens are available.
+ */
+const HEX_TO_TAILWIND: Record<string, string> = {
+  // Blue scale
+  "#3B82F6": "bg-blue-500",
+  "#2563EB": "bg-blue-600",
+  "#1D4ED8": "bg-blue-700",
+  "#60A5FA": "bg-blue-400",
+  "#93C5FD": "bg-blue-300",
+  // Red / destructive
+  "#EF4444": "bg-red-500",
+  "#DC2626": "bg-red-600",
+  // Green
+  "#22C55E": "bg-green-500",
+  "#16A34A": "bg-green-600",
+  // Yellow / warning
+  "#EAB308": "bg-yellow-500",
+  "#CA8A04": "bg-yellow-600",
+  // Neutral
+  "#F9FAFB": "bg-gray-50",
+  "#F3F4F6": "bg-gray-100",
+  "#E5E7EB": "bg-gray-200",
+  "#D1D5DB": "bg-gray-300",
+  "#9CA3AF": "bg-gray-400",
+  "#6B7280": "bg-gray-500",
+  "#4B5563": "bg-gray-600",
+  "#374151": "bg-gray-700",
+  "#1F2937": "bg-gray-800",
+  "#111827": "bg-gray-900",
+  "#FFFFFF": "bg-white",
+  "#000000": "bg-black",
+};
+
+/**
+ * Given a set of design tokens and an inline class string that may contain
+ * hex colour values, replace known hex values with their Tailwind equivalents.
+ * Also maps token values (from the registry) to Tailwind classes.
+ *
+ * @param classes  - raw Tailwind class string, may contain hex values
+ * @param tokens   - design system tokens from registry
+ * @returns        - class string with hex values replaced by Tailwind classes
+ */
+export function substituteTokensInClasses(classes: string, tokens: DesignToken[]): string {
+  let result = classes;
+
+  // Build a reverse map from token value → Tailwind class using the registry
+  for (const token of tokens) {
+    const value = Object.values(token.values)[0];
+    if (typeof value !== "string") continue;
+    const hex = value.trim().toUpperCase();
+    const twClass = HEX_TO_TAILWIND[hex];
+    if (twClass) {
+      // Replace any occurrence of the raw hex (case-insensitive) in the class string
+      result = result.replace(new RegExp(value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"), twClass);
+    }
+  }
+
+  // Also apply the static lookup table
+  for (const [hex, twClass] of Object.entries(HEX_TO_TAILWIND)) {
+    result = result.replace(new RegExp(hex.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"), twClass);
+  }
+
+  return result;
 }
