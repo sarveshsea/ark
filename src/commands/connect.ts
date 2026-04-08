@@ -9,6 +9,7 @@ import { fileURLToPath } from "url";
 import { createInterface } from "readline";
 import chalk from "chalk";
 import { resolvePluginHealth, type PluginInstallHealth } from "../plugin/install-info.js";
+import { validateFigmaToken } from "../figma/rest-client.js";
 import { ui } from "../tui/format.js";
 
 type ConfigSource = "process" | ".env.local" | ".env" | "missing";
@@ -364,8 +365,18 @@ export function registerConnectCommand(program: Command, engine: MemoireEngine) 
         }
 
         await setEnvVar(root, "FIGMA_TOKEN", inputToken);
-        console.log(ui.ok("Saved to .env.local"));
         process.env.FIGMA_TOKEN = inputToken;
+
+        // ── Instant token validation via REST ─────────
+        process.stdout.write("  Validating token...");
+        try {
+          const user = await validateFigmaToken(inputToken);
+          process.stdout.write("\r" + " ".repeat(40) + "\r");
+          console.log(ui.ok(`Token valid — connected as @${user.handle} (${user.email})`));
+        } catch {
+          process.stdout.write("\r" + " ".repeat(40) + "\r");
+          console.log(ui.warn("Token saved but could not be validated — check it's correct"));
+        }
 
         // ── File key ──────────────────────────────────
         console.log(ui.section("FILE"));

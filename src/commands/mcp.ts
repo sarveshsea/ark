@@ -6,6 +6,10 @@ import type { Command } from "commander";
 import type { MemoireEngine } from "../engine/core.js";
 import { startStdioMcpServer } from "../mcp/server.js";
 import { ui } from "../tui/format.js";
+import { readFile, writeFile, mkdir, access } from "fs/promises";
+import { join, dirname } from "path";
+import { homedir } from "os";
+import chalk from "chalk";
 
 export function registerMcpCommand(program: Command, engine: MemoireEngine): void {
   const mcp = program
@@ -22,10 +26,11 @@ export function registerMcpCommand(program: Command, engine: MemoireEngine): voi
 
   mcp
     .command("config")
-    .description("Print MCP config snippets for Claude Code, Cursor, or generic JSON")
+    .description("Print or install MCP config for Claude Code, Cursor, or generic JSON")
     .option("--target <target>", "Config target: claude-code, cursor, generic", "claude-code")
     .option("--global", "Use global memi binary (default). Use --no-global for npx.")
-    .action(async (opts: { target: string; global?: boolean }) => {
+    .option("--install", "Write config directly to the target config file instead of printing")
+    .action(async (opts: { target: string; global?: boolean; install?: boolean }) => {
       const useGlobal = opts.global !== false;
       const cmd = useGlobal ? "memi" : "npx";
       const args = useGlobal ? ["mcp", "start"] : ["@sarveshsea/memoire", "mcp", "start"];
@@ -39,13 +44,71 @@ export function registerMcpCommand(program: Command, engine: MemoireEngine): voi
         },
       };
 
+      // ── --install mode: write directly to config file ─────
+      if (opts.install) {
+        const home = homedir();
+        let targetPath: string;
+        let fileDescription: string;
+
+        switch (opts.target) {
+          case "cursor":
+            targetPath = join(process.cwd(), ".cursor", "mcp.json");
+            fileDescription = ".cursor/mcp.json";
+            break;
+          case "claude-code":
+          default:
+            // Claude Code reads from ~/.claude/settings.json (global) or .mcp.json (project)
+            // --global flag writes to the global settings, otherwise project .mcp.json
+            if (opts.global) {
+              targetPath = join(home, ".claude", "settings.json");
+              fileDescription = "~/.claude/settings.json";
+            } else {
+              targetPath = join(process.cwd(), ".mcp.json");
+              fileDescription = ".mcp.json";
+            }
+        }
+
+        try {
+          await mkdir(dirname(targetPath), { recursive: true });
+
+          // Read existing file
+          let existing: Record<string, unknown> = {};
+          try {
+            await access(targetPath);
+            const raw = await readFile(targetPath, "utf-8");
+            existing = JSON.parse(raw) as Record<string, unknown>;
+          } catch { /* file doesn't exist or is malformed — start fresh */ }
+
+          // Merge memoire entry
+          const servers = ((existing.mcpServers ?? {}) as Record<string, unknown>);
+          const alreadyExists = !!servers.memoire;
+          servers.memoire = serverConfig;
+          existing.mcpServers = servers;
+
+          await writeFile(targetPath, JSON.stringify(existing, null, 2) + "\n");
+
+          console.log();
+          if (alreadyExists) {
+            console.log(ui.ok(`Updated memoire entry in ${fileDescription}`));
+          } else {
+            console.log(ui.ok(`Written to ${fileDescription}`));
+          }
+          console.log();
+          console.log(chalk.dim("  Reload Claude Code / Cursor to pick up the new MCP server."));
+          console.log(chalk.dim("  Make sure FIGMA_TOKEN and FIGMA_FILE_KEY are in your environment."));
+          console.log();
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          console.log(ui.fail(`Could not write config: ${msg}`));
+          process.exitCode = 1;
+        }
+        return;
+      }
+
+      // ── Print mode (original behaviour) ───────────────────
       switch (opts.target) {
         case "claude-code": {
-          const config = {
-            mcpServers: {
-              memoire: serverConfig,
-            },
-          };
+          const config = { mcpServers: { memoire: serverConfig } };
           console.log();
           console.log(ui.section("CLAUDE CODE MCP CONFIG"));
           console.log();
@@ -53,20 +116,14 @@ export function registerMcpCommand(program: Command, engine: MemoireEngine): voi
           console.log();
           console.log(JSON.stringify(config, null, 2));
           console.log();
-          console.log("  Or add to ~/.claude/settings.json under mcpServers for global access.");
+          console.log("  Or install automatically:");
+          console.log("    memi mcp config --install              (project .mcp.json)");
+          console.log("    memi mcp config --install --global     (~/.claude/settings.json)");
           console.log();
           break;
         }
-
         case "cursor": {
-          const config = {
-            mcpServers: {
-              memoire: {
-                command: cmd,
-                args,
-              },
-            },
-          };
+          const config = { mcpServers: { memoire: { command: cmd, args } } };
           console.log();
           console.log(ui.section("CURSOR MCP CONFIG"));
           console.log();
@@ -74,16 +131,13 @@ export function registerMcpCommand(program: Command, engine: MemoireEngine): voi
           console.log();
           console.log(JSON.stringify(config, null, 2));
           console.log();
+          console.log("  Or install automatically:");
+          console.log("    memi mcp config --install --target cursor");
+          console.log();
           break;
         }
-
         default: {
-          const config = {
-            mcpServers: {
-              memoire: serverConfig,
-            },
-          };
-          console.log(JSON.stringify(config, null, 2));
+          console.log(JSON.stringify({ mcpServers: { memoire: serverConfig } }, null, 2));
           break;
         }
       }
@@ -108,7 +162,6 @@ export function registerMcpCommand(program: Command, engine: MemoireEngine): voi
         console.log(`  ${name.padEnd(28)} ${ui.dim(desc)}`);
       }
       console.log();
-
       console.log(ui.section("RESOURCES (3)"));
       console.log();
       console.log("  memoire://design-system     Current tokens, components, styles");

@@ -51,6 +51,7 @@ import { registerMcpCommand } from "./commands/mcp.js";
 import { registerAgentCommand } from "./commands/agent.js";
 import { registerValidateCommand } from "./commands/validate.js";
 import { registerDesignDocCommand } from "./commands/design-doc.js";
+import { registerSetupCommand } from "./commands/setup.js";
 import { existsSync, rmSync } from "fs";
 import { join } from "path";
 
@@ -120,6 +121,7 @@ registerMcpCommand(program, engine);
 registerAgentCommand(program, engine);
 registerValidateCommand(program, engine);
 registerDesignDocCommand(program, engine);
+registerSetupCommand(program, engine);
 
 // Uninstall command — removes all Mémoire artifacts
 program

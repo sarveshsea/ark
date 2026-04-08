@@ -154,6 +154,9 @@ async function figmaGet<T>(path: string, token: string): Promise<T> {
     },
   });
 
+  if (response.status === 401) {
+    throw new FigmaConfigError("Invalid or expired Figma token. Generate a new one at figma.com/settings", 401);
+  }
   if (response.status === 403) {
     // Variables endpoint returns 403 on Free/Starter plans — not a token error.
     // Components/styles on a file you can't access also return 403 — that IS a token error.
@@ -172,6 +175,47 @@ async function figmaGet<T>(path: string, token: string): Promise<T> {
   }
 
   return response.json() as Promise<T>;
+}
+
+// ── Token + File Validation ───────────────────────────────
+
+export interface FigmaUserInfo {
+  id: string;
+  email: string;
+  handle: string;
+  img_url?: string;
+}
+
+/**
+ * Validate a Figma token by calling GET /v1/me.
+ * Throws FigmaConfigError on 401 (invalid/expired token).
+ * Call immediately after the user pastes a token — don't wait until pull.
+ */
+export async function validateFigmaToken(token: string): Promise<FigmaUserInfo> {
+  return figmaGet<FigmaUserInfo>("/me", token);
+}
+
+export interface FigmaFileInfo {
+  name: string;
+  componentCount: number;
+}
+
+/**
+ * Validate a file key by fetching its published component list.
+ * Returns component count as a proxy for file health.
+ * Throws FigmaConfigError on 404 (bad key) or 403 (no access).
+ */
+export async function validateFigmaFile(fileKey: string, token: string): Promise<FigmaFileInfo> {
+  const data = await figmaGet<RestComponentsResponse>(`/files/${fileKey}/components`, token)
+    .catch((err) => {
+      if (err instanceof FigmaPlanError) return null; // plan limit = file exists, absorb
+      throw err;
+    });
+
+  return {
+    name: fileKey,
+    componentCount: data?.meta?.components?.length ?? 0,
+  };
 }
 
 // ── Parsers ───────────────────────────────────────────────
