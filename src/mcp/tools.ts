@@ -21,6 +21,30 @@ function requireFigma(engine: MemoireEngine): void {
   }
 }
 
+/**
+ * Lightweight pre-execution validator for figma_execute.
+ * Blocks patterns that would terminate the bridge, destroy document
+ * structure, or attempt code-in-code execution. The Figma plugin sandbox
+ * has no Node.js access so fs/process/require cannot actually run, but
+ * blocking them here makes the intent explicit.
+ * Returns an error reason string, or null if the code looks safe.
+ */
+function validateFigmaCode(code: string): string | null {
+  const BLOCKED: Array<{ pattern: RegExp; reason: string }> = [
+    { pattern: /figma\s*\.\s*closePlugin\s*\(/, reason: "figma.closePlugin() terminates the bridge connection" },
+    { pattern: /figma\s*\.\s*root\s*\.\s*remove\s*\(/, reason: "Removing document root is not allowed" },
+    { pattern: /\beval\s*\(/, reason: "eval() is not allowed inside figma_execute" },
+    { pattern: /new\s+Function\s*\(/, reason: "new Function() is not allowed inside figma_execute" },
+    { pattern: /\bprocess\s*\./, reason: "process object is not available in the Figma plugin sandbox" },
+    { pattern: /\brequire\s*\(/, reason: "require() is not available in the Figma plugin sandbox" },
+    { pattern: /\bimportScripts\s*\(/, reason: "importScripts() is not allowed" },
+  ];
+  for (const { pattern, reason } of BLOCKED) {
+    if (pattern.test(code)) return reason;
+  }
+  return null;
+}
+
 export function registerTools(server: McpServer, engine: MemoireEngine): void {
   // ── pull_design_system ──────────────────────────────────
   server.tool(
@@ -377,6 +401,10 @@ Example safe reads:
     { code: z.string().describe("JavaScript to execute in the Figma Plugin API sandbox. Must be a valid JS expression or statement block. The return value (last expression result) is JSON-serialized and returned. Has access to the full Figma Plugin API (figma.*, PageNode, FrameNode, etc.) but not Node.js APIs.") },
     async ({ code }) => {
       requireFigma(engine);
+      const violation = validateFigmaCode(code);
+      if (violation) {
+        return { isError: true, content: [{ type: "text" as const, text: `Blocked: ${violation}` }] };
+      }
       const result = await engine.figma.execute(code);
       return { content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }] };
     },

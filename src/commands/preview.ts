@@ -119,7 +119,7 @@ export function registerPreviewCommand(program: Command, engine: MemoireEngine) 
         try {
           const child = spawn("npx", ["-y", "serve", previewDir, "-l", String(port), "--no-clipboard"], {
             stdio: "inherit",
-            shell: true,
+            shell: false,
           });
           child.on("error", (serveErr) => {
             console.log(`  npx serve failed (${serveErr.message}), falling back to python3...`);

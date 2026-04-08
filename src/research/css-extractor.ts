@@ -43,6 +43,39 @@ export interface PageAssets {
   cssBlocks: string[];
 }
 
+// ── SSRF guard ────────────────────────────────────────────
+
+/**
+ * Allow only public http(s) URLs. Blocks loopback, private IPv4 ranges,
+ * link-local (169.254.x.x — AWS/GCP metadata endpoints), and non-http schemes.
+ */
+function assertPublicUrl(rawUrl: string): void {
+  let parsed: URL;
+  try {
+    parsed = new URL(rawUrl);
+  } catch {
+    throw new Error(`Invalid URL: ${rawUrl}`);
+  }
+
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    throw new Error(`Only http(s) URLs are allowed (got ${parsed.protocol})`);
+  }
+
+  const host = parsed.hostname.toLowerCase();
+
+  // IPv6 loopback / unspecified
+  if (host === "::1" || host === "::" || host === "[::1]") {
+    throw new Error("Requests to loopback addresses are not allowed");
+  }
+
+  // IPv4 private / reserved ranges
+  const PRIVATE_IPV4 =
+    /^(127\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|169\.254\.|0\.0\.0\.0)/;
+  if (host === "localhost" || PRIVATE_IPV4.test(host)) {
+    throw new Error("Requests to private/reserved IP ranges are not allowed");
+  }
+}
+
 // ── Fetch ─────────────────────────────────────────────────
 
 async function fetchText(url: string, timeoutMs = FETCH_TIMEOUT_MS): Promise<string | null> {
@@ -99,6 +132,7 @@ function extractImportUrls(css: string, baseUrl: string): string[] {
  * and one level of @import rules within each stylesheet.
  */
 export async function fetchPageAssets(url: string): Promise<PageAssets> {
+  assertPublicUrl(url);
   log.info({ url }, "Fetching page assets");
 
   const html = await fetchText(url);
