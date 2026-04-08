@@ -7,12 +7,21 @@
 <p align="center">
   Design intelligence engine for Figma.<br/>
   Pull your design system. Generate production code. Sync changes bidirectionally.<br/>
-  Works standalone, with Claude Code, or as an MCP server.
+  Works as a CLI, MCP server for Claude Code / Cursor, or fully autonomous agent.
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@sarveshsea/memoire"><img src="https://img.shields.io/npm/v/@sarveshsea/memoire" alt="npm"></a>
-  <a href="https://github.com/sarveshsea/m-moire/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
+  <a href="https://www.npmjs.com/package/@sarveshsea/memoire"><img src="https://img.shields.io/npm/v/@sarveshsea/memoire?color=black" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/@sarveshsea/memoire"><img src="https://img.shields.io/npm/dw/@sarveshsea/memoire?color=black" alt="weekly downloads"></a>
+  <a href="https://github.com/sarveshsea/m-moire/actions/workflows/ci.yml"><img src="https://github.com/sarveshsea/m-moire/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/sarveshsea/m-moire/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-black.svg" alt="License"></a>
+</p>
+
+<p align="center">
+  <a href="https://memoire.cv">memoire.cv</a> &nbsp;·&nbsp;
+  <a href="#mcp-server">MCP Setup</a> &nbsp;·&nbsp;
+  <a href="#quick-start">Quick Start</a> &nbsp;·&nbsp;
+  <a href="CHANGELOG.md">Changelog</a>
 </p>
 
 ---
@@ -37,7 +46,16 @@ All components follow Atomic Design -- atoms, molecules, organisms, templates, p
 npm install -g @sarveshsea/memoire
 ```
 
-Requires Node.js 20+ and Figma Desktop (for the plugin bridge).
+Requires Node.js 20+. Figma Desktop needed only for the real-time WebSocket bridge — REST mode works without it.
+
+### Works with
+
+| Tool | How |
+|------|-----|
+| **Claude Code** | MCP server — 20 tools available in every session |
+| **Cursor** | MCP server — drop config into `.cursor/mcp.json` |
+| **Windsurf** | MCP server — add to MCP settings |
+| **Standalone** | CLI — full pipeline without any AI tool |
 
 ## Quick start
 
@@ -130,15 +148,29 @@ All commands support `--json` for structured output.
 
 ## MCP Server
 
-Memoire works as an MCP server for Claude Code, Cursor, or any MCP-compatible AI tool.
+Memoire exposes 20 tools and 3 resources over stdio. Any MCP-compatible AI tool can use it as a design layer.
 
-```bash
-# Get config for your tool
-memi mcp config --target claude-code
-memi mcp config --target cursor
+**Claude Code** — add to `.mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "memoire": {
+      "command": "memi",
+      "args": ["mcp", "start"]
+    }
+  }
+}
 ```
 
-Drop the output into `.mcp.json` (Claude Code) or `.cursor/mcp.json` (Cursor).
+**Cursor** — add to `.cursor/mcp.json` (same format).
+
+Or generate the config automatically:
+
+```bash
+memi mcp config --target claude-code   # prints .mcp.json block
+memi mcp config --target cursor        # prints .cursor/mcp.json block
+```
 
 ### 20 tools
 
