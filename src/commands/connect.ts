@@ -460,6 +460,7 @@ export function registerConnectCommand(program: Command, engine: MemoireEngine) 
         const connectedClients = engine.figma.wsServer?.connectedClients?.length ?? 0;
 
         if (json) {
+          const connState = engine.figma.getConnectionState();
           console.log(JSON.stringify({
             status: "connected",
             stage: "wait-for-plugin",
@@ -468,6 +469,10 @@ export function registerConnectCommand(program: Command, engine: MemoireEngine) 
               port,
               connectedClients,
               connected: connectedClients > 0,
+              connectionState: connState,
+              ...(connState === "reconnecting" ? { reconnectAttempts: engine.figma.reconnectAttempts } : {}),
+              lastConnectedAt: engine.figma.lastConnectedAt?.toISOString() ?? null,
+              lastDisconnectedAt: engine.figma.lastDisconnectedAt?.toISOString() ?? null,
             },
             plugin: buildPluginPayload(plugin),
             widget: buildWidgetPayload(plugin),
@@ -596,6 +601,9 @@ export function registerConnectCommand(program: Command, engine: MemoireEngine) 
               port: null,
               connectedClients: 0,
               connected: false,
+              connectionState: "disconnected" as const,
+              lastConnectedAt: engine.figma.lastConnectedAt?.toISOString() ?? null,
+              lastDisconnectedAt: engine.figma.lastDisconnectedAt?.toISOString() ?? null,
             },
             plugin: buildPluginPayload(plugin),
             widget: buildWidgetPayload(plugin),

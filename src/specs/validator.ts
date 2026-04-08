@@ -12,6 +12,13 @@ import {
   IASpecSchema,
   AnySpec,
 } from "./types.js";
+import {
+  isComponentSpec,
+  isPageSpec,
+  isDataVizSpec,
+  isDesignSpec,
+  isIASpec,
+} from "./guards.js";
 import { Registry } from "../engine/registry.js";
 
 export interface ValidationResult {
@@ -246,7 +253,7 @@ export async function validateCrossRefs(
 ): Promise<ValidationWarning[]> {
   const warnings: ValidationWarning[] = [];
 
-  if (spec.type === "page") {
+  if (isPageSpec(spec)) {
     for (const section of spec.sections) {
       const componentSpec = await registry.getSpec(section.component);
       if (!componentSpec) {
@@ -259,7 +266,7 @@ export async function validateCrossRefs(
     }
   }
 
-  if (spec.type === "component" && spec.dataviz) {
+  if (isComponentSpec(spec) && spec.dataviz) {
     const dvSpec = await registry.getSpec(spec.dataviz);
     if (!dvSpec) {
       warnings.push({
@@ -271,7 +278,7 @@ export async function validateCrossRefs(
   }
 
   // Atomic Design cross-reference: verify composesSpecs exist and respect hierarchy
-  if (spec.type === "component" && spec.composesSpecs && spec.composesSpecs.length > 0) {
+  if (isComponentSpec(spec) && spec.composesSpecs && spec.composesSpecs.length > 0) {
     const levelOrder = { atom: 0, molecule: 1, organism: 2, template: 3 };
     const currentLevel = levelOrder[spec.level] ?? 0;
 
@@ -280,10 +287,10 @@ export async function validateCrossRefs(
       if (!depSpec) {
         warnings.push({
           path: "composesSpecs",
-          message: `Composed spec "${depName}" not found`,
+          message: `composesSpecs references unknown spec "${depName}" — spec may not exist yet`,
           suggestion: `Create it with: memi spec component ${depName}`,
         });
-      } else if (depSpec.type === "component") {
+      } else if (isComponentSpec(depSpec)) {
         const depLevel = levelOrder[depSpec.level] ?? 0;
         if (depLevel >= currentLevel) {
           warnings.push({
@@ -296,7 +303,7 @@ export async function validateCrossRefs(
     }
   }
 
-  if (spec.type === "design") {
+  if (isDesignSpec(spec)) {
     for (const linked of spec.linkedSpecs) {
       const linkedSpec = await registry.getSpec(linked);
       if (!linkedSpec) {
@@ -309,7 +316,7 @@ export async function validateCrossRefs(
     }
   }
 
-  if (spec.type === "ia") {
+  if (isIASpec(spec)) {
     // Validate that linkedPageSpec references exist
     const checkNode = async (node: { linkedPageSpec?: string; children?: unknown[] }, path: string) => {
       if (node.linkedPageSpec) {

@@ -2,6 +2,9 @@
  * Note Loader — Discovers and loads Mémoire Notes from two sources:
  *   1. Built-in notes: existing skills/ directory (shipped with npm package)
  *   2. Installed notes: .memoire/notes/ in the project workspace
+ *
+ * Notes are cached in memory keyed by their manifest name + file mtime.
+ * The cache is invalidated automatically when a note file changes on disk.
  */
 
 import { readFile, readdir, stat } from "fs/promises";
@@ -22,6 +25,36 @@ const log = createLogger("notes-loader");
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const PACKAGE_ROOT = join(__dirname, "..", "..");
+
+// ── In-memory note cache ──────────────────────────────────
+// Key: "<noteDir>:<mtimeMs>" → InstalledNote
+// Invalidated automatically when the note.json mtime changes.
+const noteCache = new Map<string, InstalledNote>();
+
+async function getCachedNote(noteDir: string, noteJsonPath: string, loader: () => Promise<InstalledNote | null>): Promise<InstalledNote | null> {
+  try {
+    const fileStat = await stat(noteJsonPath);
+    const cacheKey = `${noteDir}:${fileStat.mtimeMs}`;
+
+    if (noteCache.has(cacheKey)) {
+      return noteCache.get(cacheKey)!;
+    }
+
+    const note = await loader();
+    if (note) {
+      // Evict any stale entry for this noteDir before inserting
+      for (const key of noteCache.keys()) {
+        if (key.startsWith(`${noteDir}:`)) {
+          noteCache.delete(key);
+        }
+      }
+      noteCache.set(cacheKey, note);
+    }
+    return note;
+  } catch {
+    return null;
+  }
+}
 
 // ── Built-in Skill → Note Adapter ───────────────────────
 
@@ -153,23 +186,18 @@ export class NoteLoader {
         const noteDir = join(notesDir, entry);
         const noteJsonPath = join(noteDir, "note.json");
 
-        try {
+        const note = await getCachedNote(noteDir, noteJsonPath, async () => {
           const dirStat = await stat(noteDir);
-          if (!dirStat.isDirectory()) continue;
+          if (!dirStat.isDirectory()) return null;
 
           const raw = await readFile(noteJsonPath, "utf-8");
           const parsed = JSON.parse(raw);
           const manifest = NoteManifestSchema.parse(parsed);
 
-          notes.push({
-            manifest,
-            path: noteDir,
-            builtIn: true,
-            enabled: true,
-          });
-        } catch {
-          // Skip directories without valid note.json
-        }
+          return { manifest, path: noteDir, builtIn: true, enabled: true };
+        });
+
+        if (note) notes.push(note);
       }
     } catch {
       // notes/ directory doesn't exist — that's fine
@@ -230,22 +258,25 @@ export class NoteLoader {
         const noteDir = join(notesDir, entry);
         const noteJsonPath = join(noteDir, "note.json");
 
-        try {
+        const note = await getCachedNote(noteDir, noteJsonPath, async () => {
           const dirStat = await stat(noteDir);
-          if (!dirStat.isDirectory()) continue;
+          if (!dirStat.isDirectory()) return null;
 
           const raw = await readFile(noteJsonPath, "utf-8");
           const parsed = JSON.parse(raw);
           const manifest = NoteManifestSchema.parse(parsed);
 
-          notes.push({
-            manifest,
-            path: noteDir,
-            builtIn: false,
-            enabled: true,
-          });
-        } catch (err) {
-          log.warn({ entry, err }, "Skipping invalid note");
+          return { manifest, path: noteDir, builtIn: false, enabled: true };
+        });
+
+        if (note) {
+          notes.push(note);
+        } else if (note === null) {
+          // getCachedNote returns null for directories we can't read — warn only for installed notes
+          const dirStat = await stat(noteDir).catch(() => null);
+          if (dirStat?.isDirectory()) {
+            log.warn({ entry }, "Skipping invalid note (no valid note.json)");
+          }
         }
       }
     } catch {

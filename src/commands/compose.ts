@@ -21,6 +21,7 @@ import type { AgentPlan, SubTask } from "../agents/index.js";
 import { hasAI, getTracker } from "../ai/index.js";
 import { ui } from "../tui/format.js";
 import { checkCapabilities } from "../engine/capabilities.js";
+import { formatElapsed } from "../utils/format.js";
 
 export interface ComposePayload {
   intent: string;
@@ -168,7 +169,7 @@ export function registerComposeCommand(program: Command, engine: MemoireEngine) 
         console.log(ui.dots("Tasks", `${result.completedTasks}/${result.totalTasks}  ${ui.progress(result.completedTasks, result.totalTasks, 12)}`));
         console.log(ui.dots("Mutations", String(result.mutations.length)));
         console.log(ui.dots("Figma synced", result.figmaSynced ? ui.green("yes") : "no"));
-        console.log(ui.dots("Time", `${(elapsedMs / 1000).toFixed(1)}s`));
+        console.log(ui.dots("Time", formatElapsed(elapsedMs)));
 
         if (result.mutations.length > 0) {
           console.log(ui.section("CHANGES"));
