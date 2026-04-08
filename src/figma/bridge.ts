@@ -13,11 +13,12 @@
 
 import { EventEmitter } from "events";
 import { createLogger } from "../engine/logger.js";
-import { MemoireWsServer } from "./ws-server.js";
+import { MemoireWsServer, type ConnectionState } from "./ws-server.js";
 import type { MemoireEvent } from "../engine/core.js";
 import type { DesignSystem, DesignToken, DesignComponent, DesignStyle } from "../engine/registry.js";
 import type { IANode, IASpec } from "../specs/types.js";
 import type { AgentBoxState } from "../plugin/shared/contracts.js";
+import { BRIDGE_PORT_START, BRIDGE_PORT_END } from "./port-scanner.js";
 
 export interface FigmaBridgeConfig {
   token?: string;
@@ -92,6 +93,10 @@ interface RawSticky {
   height: number;
 }
 
+// Re-export so callers don't need a second import.
+export type { ConnectionState };
+export { BRIDGE_PORT_START, BRIDGE_PORT_END };
+
 export class FigmaBridge extends EventEmitter {
   private log = createLogger("figma-bridge");
   private config: FigmaBridgeConfig;
@@ -165,6 +170,29 @@ export class FigmaBridge extends EventEmitter {
 
   get wsServer(): MemoireWsServer {
     return this.server;
+  }
+
+  /**
+   * Logical connection state: "connected" | "reconnecting" | "disconnected".
+   * Delegates to the underlying WS server's backoff tracker.
+   */
+  getConnectionState(): ConnectionState {
+    return this.server.getConnectionState();
+  }
+
+  /** Number of consecutive reconnect attempts since the last successful connection. */
+  get reconnectAttempts(): number {
+    return this.server.reconnectAttempts;
+  }
+
+  /** Timestamp of the last time a Figma plugin connected. */
+  get lastConnectedAt(): Date | null {
+    return this.server.lastConnectedAt;
+  }
+
+  /** Timestamp of the last time all Figma plugins disconnected. */
+  get lastDisconnectedAt(): Date | null {
+    return this.server.lastDisconnectedAt;
   }
 
   /**

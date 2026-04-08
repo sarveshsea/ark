@@ -406,14 +406,21 @@ export class MemoireEngine extends EventEmitter {
     } catch { /* file doesn't exist — skip */ }
   }
 
-  /** Reads `.memoire/bridge.json` written by `memi connect` and returns `{ port, pid }` if the process is still alive, or `null` if the file is absent or the PID is stale. */
+  /** Reads `.memoire/bridge.json` written by `memi connect` and returns `{ port, pid }` if the process is still alive, or `null` if the file is absent or the PID is stale. Deletes stale lock files automatically. */
   private async _readBridgeLock(): Promise<{ port: number; pid: number } | null> {
+    const { unlink } = await import("fs/promises");
+    const lockPath = join(this.config.projectRoot, ".memoire", "bridge.json");
     try {
-      const lockPath = join(this.config.projectRoot, ".memoire", "bridge.json");
       const raw = await readFile(lockPath, "utf-8");
       const lock = JSON.parse(raw) as { pid: number; port: number };
       if (lock.pid) {
-        try { process.kill(lock.pid, 0); } catch { return null; } // stale
+        try {
+          process.kill(lock.pid, 0);
+        } catch {
+          // PID is dead — remove the stale lock before returning null
+          await unlink(lockPath).catch(() => { /* already gone */ });
+          return null;
+        }
       }
       return lock;
     } catch {

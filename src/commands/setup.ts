@@ -18,7 +18,7 @@ import type { MemoireEngine } from "../engine/core.js";
 import { readFile, writeFile, access } from "fs/promises";
 import { join, dirname } from "path";
 import { createInterface } from "readline";
-import { spawn, execFile } from "child_process";
+import { spawn, execFile, spawnSync } from "child_process";
 import { fileURLToPath } from "url";
 import chalk from "chalk";
 import {
@@ -67,8 +67,30 @@ async function writeEnvVar(root: string, key: string, value: string): Promise<vo
 }
 
 function copyToClipboard(text: string): boolean {
+  // Determine the clipboard command for the current platform
+  let cmd: string;
+  let args: string[] = [];
+
+  if (process.platform === "darwin") {
+    // macOS
+    cmd = "pbcopy";
+  } else if (process.platform === "win32") {
+    // Windows
+    cmd = "clip";
+  } else {
+    // Linux — prefer xclip; skip silently if unavailable (xdg-open can't copy to clipboard)
+    const probe = spawnSync("which", ["xclip"], { stdio: ["ignore", "pipe", "ignore"] });
+    if (probe.status === 0 && probe.stdout?.toString().trim()) {
+      cmd = "xclip";
+      args = ["-selection", "clipboard"];
+    } else {
+      // xclip not available — clipboard copy not supported on this system
+      return false;
+    }
+  }
+
   try {
-    const proc = spawn("pbcopy", [], { stdio: ["pipe", "ignore", "ignore"] });
+    const proc = spawn(cmd, args, { stdio: ["pipe", "ignore", "ignore"] });
     proc.stdin.write(text);
     proc.stdin.end();
     return true;
@@ -254,6 +276,7 @@ export function registerSetupCommand(program: Command, engine: MemoireEngine): v
       if (copied) {
         console.log(ui.ok("Manifest path copied to clipboard"));
       }
+      // Do not print a "copy failed" message — just silently skip on unsupported systems
 
       console.log();
       console.log("  To install in Figma:");

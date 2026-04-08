@@ -38,6 +38,10 @@ interface ConnectJsonPayload {
     port: number | null;
     connectedClients: number;
     connected: boolean;
+    connectionState: "connected" | "reconnecting" | "disconnected";
+    reconnectAttempts?: number;
+    lastConnectedAt: string | null;
+    lastDisconnectedAt: string | null;
   };
   plugin: {
     manifestPath: string;
@@ -307,6 +311,7 @@ export function registerConnectCommand(program: Command, engine: MemoireEngine) 
       const plugin = await resolvePluginHealth(root);
 
       if (json && !token.value) {
+        const connState = engine.figma.getConnectionState();
         console.log(JSON.stringify({
           status: "needs-setup",
           stage: "token-check",
@@ -315,6 +320,10 @@ export function registerConnectCommand(program: Command, engine: MemoireEngine) 
             port: null,
             connectedClients: 0,
             connected: false,
+            connectionState: connState,
+            ...(connState === "reconnecting" ? { reconnectAttempts: engine.figma.reconnectAttempts } : {}),
+            lastConnectedAt: engine.figma.lastConnectedAt?.toISOString() ?? null,
+            lastDisconnectedAt: engine.figma.lastDisconnectedAt?.toISOString() ?? null,
           },
           plugin: buildPluginPayload(plugin),
           widget: buildWidgetPayload(plugin),
@@ -498,6 +507,7 @@ export function registerConnectCommand(program: Command, engine: MemoireEngine) 
         const cleanupBridgeLock = () => unlink(bridgeLockPath).catch(() => {});
         process.once("exit", cleanupBridgeLock);
         process.once("SIGTERM", () => { cleanupBridgeLock(); process.exit(0); });
+        process.once("SIGHUP", () => { cleanupBridgeLock(); process.exit(0); });
 
         // ── Event handlers ──────────────────────────────
         engine.figma.on("plugin-connected", (client: BridgeClient) => {
@@ -549,6 +559,7 @@ export function registerConnectCommand(program: Command, engine: MemoireEngine) 
         });
 
         process.once("SIGINT", () => {
+          cleanupBridgeLock();
           engine.figma.disconnect();
           process.exit(0);
         });
