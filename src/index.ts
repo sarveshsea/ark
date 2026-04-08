@@ -25,6 +25,9 @@
 
 import { Command } from "commander";
 import { MemoireEngine } from "./engine/core.js";
+
+// 26 commands each register an exit listener — raise the limit
+process.setMaxListeners(40);
 import { registerConnectCommand } from "./commands/connect.js";
 import { registerPullCommand } from "./commands/pull.js";
 import { registerResearchCommand } from "./commands/research.js";
