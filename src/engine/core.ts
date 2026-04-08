@@ -40,6 +40,7 @@ export interface MemoireEvent {
   data?: unknown;
 }
 
+/** Strip the volatile `detectedAt` timestamp before comparing project contexts to avoid spurious writes. */
 function stripProjectTimestamp(project: ProjectContext): Omit<ProjectContext, "detectedAt"> {
   const { detectedAt: _detectedAt, ...rest } = project;
   return rest;
@@ -116,6 +117,7 @@ export class MemoireEngine extends EventEmitter {
     });
   }
 
+  /** Debounces auto-pull when the Figma document changes — waits DOC_CHANGE_DEBOUNCE_MS before pulling to coalesce rapid edits. */
   private _onDocumentChanged(): void {
     if (this._docChangeTimer) clearTimeout(this._docChangeTimer);
     this._docChangeTimer = setTimeout(async () => {
@@ -148,21 +150,41 @@ export class MemoireEngine extends EventEmitter {
     return this._project;
   }
 
-  /** Deep copy of the current design system, useful for diffing before/after pulls. */
+  /**
+   * Returns a deep-cloned snapshot of the current design system from the registry.
+   *
+   * Used by `memi pull` and `executeRestPull` to capture state immediately before a
+   * pull so the token-differ can produce a human-readable before/after diff. Callers
+   * should snapshot, pull, then diff — never hold a snapshot across multiple pulls.
+   *
+   * @returns A deep copy of the current {@link DesignSystem} (tokens, components, styles).
+   */
   snapshotDesignSystem(): DesignSystem {
     return JSON.parse(JSON.stringify(this.registry.designSystem));
   }
 
   /**
-   * WA-404 — Run a WCAG token audit against the current design system.
-   * Exposes the audit to MCP tools and agents without re-implementing the logic.
-   * Call after pullDesignSystem() or pullDesignSystemREST() for fresh data.
+   * Run a WCAG 2.2 token audit against the design system currently held in the registry.
+   *
+   * Delegates to `auditTokensForWcag` so MCP tools, agents, and CLI commands can all
+   * trigger the audit without re-implementing the logic. Always call after
+   * `pullDesignSystem()` or `pullDesignSystemREST()` to ensure data is fresh.
+   *
+   * @returns A {@link WcagTokenReport} with per-token pass/warn/fail results and
+   *   an aggregate summary. `report.hasFailures` is `true` when at least one token
+   *   fails WCAG AA contrast requirements.
    */
   auditDesignSystemWcag(): WcagTokenReport {
     return auditTokensForWcag(this.registry.designSystem.tokens);
   }
 
-  /** Get or create the agent bridge (lazy — needs connected ws-server). */
+  /**
+   * Returns the singleton {@link AgentBridge}, creating it on first access (lazy init).
+   *
+   * The bridge wires together the WebSocket server, the task queue, and the agent
+   * registry so that plugin-side agent messages are routed to the right task slots.
+   * Requires `connectFigma()` to have been called first so the ws-server exists.
+   */
   get agentBridge(): AgentBridge {
     if (!this._agentBridge) {
       this._agentBridge = new AgentBridge(this.figma.wsServer);
@@ -185,11 +207,31 @@ export class MemoireEngine extends EventEmitter {
     return this._agentBridge;
   }
 
-  /** Design soul — loaded from .memoire/SOUL.md, guides agent output style */
+  /**
+   * The project's design soul string, loaded from `.memoire/SOUL.md` during `init()`.
+   *
+   * Injected into agent prompts to steer output style (voice, density, aesthetic).
+   * Empty string if the soul file does not exist yet.
+   */
   get soul(): string {
     return this._soul;
   }
 
+  /**
+   * Initialize the Mémoire engine — must be called once before any other method.
+   *
+   * Performs the following in order:
+   * 1. Loads `.env.local` then `.env` into `process.env` (FIGMA_TOKEN, FIGMA_FILE_KEY,
+   *    ANTHROPIC_API_KEY are merged into `this.config` if not already set).
+   * 2. Creates `.memoire/` and initializes the workspace skeleton (SOUL.md, etc).
+   * 3. Detects the project framework/type and persists `project.json`.
+   * 4. Loads the existing design system registry from disk.
+   * 5. Reads the design soul string.
+   * 6. Loads bidirectional sync state, starts the agent registry health-check loop,
+   *    starts the task queue, and loads all installed Mémoire Notes.
+   *
+   * Idempotent — safe to call multiple times; subsequent calls are no-ops.
+   */
   async init(): Promise<void> {
     if (this._initialized) return;
 
@@ -236,6 +278,19 @@ export class MemoireEngine extends EventEmitter {
     } satisfies MemoireEvent);
   }
 
+  /**
+   * Start (or reuse) the Figma WebSocket bridge and return the port it is listening on.
+   *
+   * Preference order:
+   * 1. Reuse an existing `memi connect` bridge found in `.memoire/bridge.json`.
+   * 2. Reuse the daemon's bridge port from `.memoire/daemon.json`.
+   * 3. Spin up a fresh bridge on the first available port in 9223-9232.
+   *
+   * Does NOT wait for a plugin to connect — call `ensureFigmaConnected()` for that.
+   *
+   * @returns The port number the bridge is (or was already) listening on.
+   * @throws If no port in the scan range is available.
+   */
   async connectFigma(): Promise<number> {
     // Check if a standalone `memi connect` bridge is already running
     const bridgeLock = await this._readBridgeLock();
@@ -286,8 +341,17 @@ export class MemoireEngine extends EventEmitter {
   }
 
   /**
-   * Connect to Figma and wait for a plugin to actually connect.
-   * Used by commands that need an active plugin (pull, sync, etc).
+   * Ensure a Figma plugin is actively connected, waiting up to `timeoutMs` if needed.
+   *
+   * If the bridge is not yet running it is started via `connectFigma()`. If the plugin
+   * is already attached (`figma.isConnected`) this returns immediately. Otherwise it
+   * registers a one-time `plugin-connected` listener before re-checking state to close
+   * the race window, then rejects with a user-friendly message on timeout.
+   *
+   * Used by commands that require live plugin data (pull, sync, compose, etc).
+   *
+   * @param timeoutMs - Milliseconds to wait for a plugin connection (default 30 000).
+   * @throws {Error} If no plugin connects within the timeout window.
    */
   async ensureFigmaConnected(timeoutMs = 30000): Promise<void> {
     if (this.figma.isConnected) return;
@@ -324,7 +388,7 @@ export class MemoireEngine extends EventEmitter {
     });
   }
 
-  /** Parse and inject a .env file into process.env (no-op if file absent) */
+  /** Reads `filename` from the project root and merges KEY=VALUE pairs into `process.env` — existing keys are never overwritten, absent files are silently skipped. */
   private async _loadEnvFile(filename: string): Promise<void> {
     const envPath = join(this.config.projectRoot, filename);
     try {
@@ -342,7 +406,7 @@ export class MemoireEngine extends EventEmitter {
     } catch { /* file doesn't exist — skip */ }
   }
 
-  /** Read bridge lock written by `memi connect` — lets pull/sync reuse an existing bridge */
+  /** Reads `.memoire/bridge.json` written by `memi connect` and returns `{ port, pid }` if the process is still alive, or `null` if the file is absent or the PID is stale. */
   private async _readBridgeLock(): Promise<{ port: number; pid: number } | null> {
     try {
       const lockPath = join(this.config.projectRoot, ".memoire", "bridge.json");
@@ -358,8 +422,15 @@ export class MemoireEngine extends EventEmitter {
   }
 
   /**
-   * Returns true if a live bridge or daemon is already running.
-   * Used by pull to decide whether to wait for a plugin or fall back to REST.
+   * Returns `true` when a live `memi connect` bridge or a daemon with an active Figma
+   * port is detected on the local machine.
+   *
+   * `memi pull` uses this to decide whether to wait for a plugin connection or to
+   * immediately fall back to the REST API. A `false` return means no WebSocket server
+   * is running — the user either hasn't run `memi connect` yet or the process died.
+   *
+   * @returns `true` if a running bridge or daemon lock file exists and the owning
+   *   process is still alive, `false` otherwise.
    */
   async hasRunningBridge(): Promise<boolean> {
     const [lock, daemon] = await Promise.all([
@@ -369,7 +440,7 @@ export class MemoireEngine extends EventEmitter {
     return !!(lock || daemon);
   }
 
-  /** Read daemon status file if it exists */
+  /** Reads `.memoire/daemon.json` and returns `{ figmaPort }` if the daemon process is alive, or `null` if the file is absent or the PID is stale. */
   private async _readDaemonStatus(): Promise<{ figmaPort: number } | null> {
     try {
       const statusPath = join(this.config.projectRoot, ".memoire", "daemon.json");
@@ -385,6 +456,23 @@ export class MemoireEngine extends EventEmitter {
     }
   }
 
+  /**
+   * Pull the design system from Figma via the active WebSocket plugin connection.
+   *
+   * Requires an open plugin connection (`figma.isConnected`). Extracts tokens,
+   * components, and styles from the live Figma document, persists them to the registry,
+   * and runs `autoSpec()` to create any missing component specs.
+   *
+   * Results are cached for 5 minutes (per `PULL_CACHE_TTL_MS`). Use `force = true` to
+   * bypass the cache — e.g. when the user explicitly runs `memi pull --force`.
+   *
+   * Prefer this path over `pullDesignSystemREST()` when the plugin is available because
+   * it captures richer data (node IDs, variants, layout properties) that the REST API
+   * cannot provide on Free/Starter Figma plans.
+   *
+   * @param force - When `true`, skip the 5-minute pull cache and always re-fetch.
+   * @throws {Error} If no plugin is currently connected.
+   */
   async pullDesignSystem(force = false): Promise<void> {
     if (!this.figma.isConnected) {
       throw new Error("Not connected to Figma. Run `memi connect` first, or use `memi pull` which waits for the plugin.");
@@ -425,8 +513,21 @@ export class MemoireEngine extends EventEmitter {
   }
 
   /**
-   * Pull design system via Figma REST API — no plugin or WebSocket required.
-   * Requires FIGMA_TOKEN and FIGMA_FILE_KEY in config/env.
+   * Pull the design system from Figma via the REST API — no plugin or WebSocket required.
+   *
+   * Use this path in CI environments, headless machines, or when no `memi connect`
+   * bridge is running. Fetches variables/tokens, published components, and styles in
+   * parallel via three separate REST endpoints. Variables require a Figma Professional+
+   * plan — a Free plan returns a `FigmaPlanError` which is absorbed (tokens will be
+   * empty but components/styles are still returned).
+   *
+   * Shares the same 5-minute pull cache as `pullDesignSystem()` so the two methods can
+   * be used interchangeably within a session without triggering duplicate network calls.
+   *
+   * @param force - When `true`, skip the cache and always re-fetch.
+   * @throws {FigmaConfigError} If `FIGMA_TOKEN` is invalid (401), the file key is wrong
+   *   (404), or the token lacks access to the file (403 on non-variables endpoints).
+   * @throws {Error} If `FIGMA_TOKEN` or `FIGMA_FILE_KEY` are not set in config or env.
    */
   async pullDesignSystemREST(force = false): Promise<void> {
     const token = this.config.figmaToken || process.env.FIGMA_TOKEN;
@@ -468,8 +569,15 @@ export class MemoireEngine extends EventEmitter {
   }
 
   /**
-   * Automatically create ComponentSpecs from pulled design system components.
-   * Skips components that already have specs. Returns count of new specs created.
+   * Automatically generate `ComponentSpec` stubs for any Figma components that do not
+   * yet have a corresponding spec in the registry.
+   *
+   * Called automatically at the end of both `pullDesignSystem()` and
+   * `pullDesignSystemREST()`. Can also be called directly after a manual registry
+   * update. Components with names that cannot be turned into valid TypeScript identifiers
+   * are skipped and logged.
+   *
+   * @returns The number of new specs written to disk (0 if nothing was new).
    */
   async autoSpec(): Promise<number> {
     const ds = this.registry.designSystem;
@@ -491,6 +599,17 @@ export class MemoireEngine extends EventEmitter {
     return specs.length;
   }
 
+  /**
+   * Generate React + Tailwind code for a single named spec.
+   *
+   * Looks up the spec in the registry, runs the code generator with the current
+   * project context and design system, writes files to `generated/`, and emits a
+   * `success` event. The engine must be initialized before calling this method.
+   *
+   * @param specName - The spec name as stored in the registry (case-sensitive).
+   * @returns The path to the generated entry file (e.g. `generated/atoms/Button.tsx`).
+   * @throws {Error} If the spec does not exist or the engine has not been initialized.
+   */
   async generateFromSpec(specName: string): Promise<string> {
     const spec = await this.registry.getSpec(specName);
     if (!spec) {
@@ -517,6 +636,13 @@ export class MemoireEngine extends EventEmitter {
     return result.entryFile;
   }
 
+  /**
+   * Run a full sync pipeline: pull the design system from Figma then regenerate code
+   * for all specs in the registry.
+   *
+   * Requires an active plugin connection (calls `pullDesignSystem()` internally).
+   * Equivalent to running `memi pull && memi generate` in sequence.
+   */
   async fullSync(): Promise<void> {
     this.log.info("Starting full sync...");
     await this.pullDesignSystem();
@@ -534,6 +660,7 @@ export class MemoireEngine extends EventEmitter {
     } satisfies MemoireEvent);
   }
 
+  /** Persists the detected project context to `.memoire/project.json`, preserving the original `detectedAt` timestamp if the rest of the context is unchanged. */
   private async saveProjectContext(): Promise<void> {
     if (!this._project) return;
     const path = join(this.config.projectRoot, ".memoire", "project.json");
