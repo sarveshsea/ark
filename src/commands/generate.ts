@@ -41,12 +41,15 @@ export function registerGenerateCommand(program: Command, engine: MemoireEngine)
     .option("-a, --all", "Generate all specs")
     .option("--json", "Output generate results as JSON")
     .option("--preview", "Show generated code diff without writing files")
-    .action(async (specName: string | undefined, opts: { all?: boolean; json?: boolean; preview?: boolean }) => {
+    .option("--no-stories", "Skip Storybook story generation")
+    .action(async (specName: string | undefined, opts: { all?: boolean; json?: boolean; preview?: boolean; stories?: boolean }) => {
       const startedAt = Date.now();
       const generateAll = Boolean(opts.all || !specName);
 
       try {
         await engine.init();
+        // Apply --no-stories flag — Commander's --no-X flags set opts.X to false
+        engine.codegen.setOptions({ noStories: opts.stories === false });
 
         // ── Preview mode — generate in memory, no disk writes ──
         if (opts.preview) {

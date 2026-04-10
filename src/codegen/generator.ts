@@ -37,6 +37,8 @@ export interface CodegenConfig {
   outputDir: string;
   registry: Registry;
   onEvent?: (event: MemoireEvent) => void;
+  /** Skip .stories.tsx generation — useful for projects not using Storybook */
+  noStories?: boolean;
 }
 
 export interface CodegenResult {
@@ -56,6 +58,11 @@ export class CodeGenerator {
 
   constructor(config: CodegenConfig) {
     this.config = config;
+  }
+
+  /** Override generation options at runtime (e.g. --no-stories from CLI). */
+  setOptions(opts: Partial<Pick<CodegenConfig, "noStories">>): void {
+    if (opts.noStories !== undefined) this.config.noStories = opts.noStories;
   }
 
   /**
@@ -207,15 +214,20 @@ export class CodeGenerator {
 
     const code = generateComponent(spec, ctx);
     const dir = this.getAtomicDir(spec);
-    const story = generateStory(spec);
+
+    const files: { path: string; content: string }[] = [
+      { path: `${dir}/${spec.name}.tsx`, content: code.component },
+      { path: `${dir}/index.ts`, content: code.barrel },
+    ];
+
+    if (!this.config.noStories) {
+      const story = generateStory(spec);
+      files.splice(1, 0, { path: `${dir}/${spec.name}.stories.tsx`, content: story });
+    }
 
     return {
       entryFile: `${dir}/${spec.name}.tsx`,
-      files: [
-        { path: `${dir}/${spec.name}.tsx`, content: code.component },
-        { path: `${dir}/${spec.name}.stories.tsx`, content: story },
-        { path: `${dir}/index.ts`, content: code.barrel },
-      ],
+      files,
       spec,
     };
   }

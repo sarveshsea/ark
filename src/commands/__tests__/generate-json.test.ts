@@ -146,6 +146,9 @@ function makeGenerateEngine(input?: {
 }) {
   return {
     async init() {},
+    codegen: {
+      setOptions() {},
+    },
     registry: {
       async getAllSpecs() {
         return input?.specs ?? [{ name: "LoginPage" }];
