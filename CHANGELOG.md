@@ -6,6 +6,33 @@ This changelog tracks Mémoire itself: every version, commit, and architectural 
 
 ---
 
+## v0.10.1 — 2026-04-13 (Architecture + Growth)
+
+### Highlights
+- **Multi-framework codegen** — `memi generate --framework vue|svelte` alongside React
+- **AI retry logic** — exponential backoff (3 retries) for transient API failures
+- **Token-aware codegen** — generated components use CSS variable refs instead of hardcoded hex
+- **`memi diff`** — show what changed since last design system pull
+- **Parallel pipeline** — spec generation and registry loading run concurrently
+- **REST pull MCP tool** — `pull_design_system_rest` (21 tools total)
+- **JSDoc + a11y defaults** — generated components include purpose docs and ARIA attributes
+- **39 new tests** — auto-spec, page-gen, dataviz-gen, tailwind-tokens, AI retry, Penpot SSRF
+- **Glama A A A** — MCP server listed on Glama with full quality score
+
+### Security & Stability
+- Configurable `--timeout` for design-doc fetch
+- Prop name validation (TS identifier check) in MCP `create_spec`
+- Atom composition now an error (not warning) in spec validation
+- `.npmignore` — package 60% smaller, no src/tests/Dockerfile shipped
+
+### Distribution
+- awesome-mcp-servers PR submitted (Glama badge, A A A)
+- awesome-claude-code issue filed
+- README rewritten for viral positioning
+- design-extract skill + registry entry
+
+---
+
 ## v0.10.0 — 2026-04-10 (Growth Sprint)
 
 ### Commits

@@ -185,6 +185,14 @@ Use this tool: to define a new component before calling generate_code, or to upd
           case "dataviz": parsed = DataVizSpecSchema.parse(raw); break;
           default: return { isError: true, content: [{ type: "text" as const, text: `Unknown spec type: ${raw.type}. Must be component, page, or dataviz.` }] };
         }
+        // Validate prop names are valid TypeScript identifiers
+        if (raw.type === "component" && raw.props) {
+          for (const key of Object.keys(raw.props as Record<string, unknown>)) {
+            if (!/^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(key)) {
+              return { isError: true, content: [{ type: "text" as const, text: `Invalid prop name "${key}" — must be a valid TypeScript identifier (letters, numbers, _, $)` }] };
+            }
+          }
+        }
         await engine.registry.saveSpec(parsed);
         return { content: [{ type: "text" as const, text: `Spec "${parsed.name}" saved (${parsed.type})` }] };
       } catch (err) {

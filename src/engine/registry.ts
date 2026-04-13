@@ -231,6 +231,13 @@ export class Registry extends EventEmitter {
 
   async updateDesignSystem(ds: DesignSystem): Promise<void> {
     const previous = this._designSystem;
+
+    // Save previous snapshot for `memi diff` (only if it had real data)
+    if (previous.tokens.length > 0 || previous.components.length > 0) {
+      const prevPath = join(this.arkDir, "design-system.prev.json");
+      await writeFile(prevPath, JSON.stringify(previous, null, 2)).catch(() => {});
+    }
+
     this._designSystem = ds;
     const path = join(this.arkDir, "design-system.json");
     const tmpPath = join(this.arkDir, ".design-system.json.tmp");

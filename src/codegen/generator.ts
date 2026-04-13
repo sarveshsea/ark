@@ -29,6 +29,8 @@ import type { Registry, DesignSystem } from "../engine/registry.js";
 import type { AnySpec, ComponentSpec, PageSpec, DataVizSpec } from "../specs/types.js";
 import type { ProjectContext } from "../engine/project-context.js";
 import { generateComponent, generateStory } from "./shadcn-mapper.js";
+import { generateVueComponent } from "./vue-mapper.js";
+import { generateSvelteComponent } from "./svelte-mapper.js";
 import { generateDataViz } from "./dataviz-generator.js";
 import { generatePage } from "./page-generator.js";
 import { atomicLevelToFolder } from "../utils/naming.js";
@@ -39,6 +41,8 @@ export interface CodegenConfig {
   onEvent?: (event: MemoireEvent) => void;
   /** Skip .stories.tsx generation — useful for projects not using Storybook */
   noStories?: boolean;
+  /** Output framework: react (default), vue, svelte */
+  framework?: "react" | "vue" | "svelte";
 }
 
 export interface CodegenResult {
@@ -60,9 +64,10 @@ export class CodeGenerator {
     this.config = config;
   }
 
-  /** Override generation options at runtime (e.g. --no-stories from CLI). */
-  setOptions(opts: Partial<Pick<CodegenConfig, "noStories">>): void {
+  /** Override generation options at runtime (e.g. --no-stories, --framework from CLI). */
+  setOptions(opts: Partial<Pick<CodegenConfig, "noStories" | "framework">>): void {
     if (opts.noStories !== undefined) this.config.noStories = opts.noStories;
+    if (opts.framework !== undefined) this.config.framework = opts.framework;
   }
 
   /**
@@ -212,17 +217,32 @@ export class CodeGenerator {
     // shadcn install check — warn for any missing base components
     await this.checkShadcnInstalled(spec);
 
-    const code = generateComponent(spec, ctx);
+    const framework = this.config.framework ?? "react";
     const dir = this.getAtomicDir(spec);
+    const files: { path: string; content: string }[] = [];
 
-    const files: { path: string; content: string }[] = [
-      { path: `${dir}/${spec.name}.tsx`, content: code.component },
-      { path: `${dir}/index.ts`, content: code.barrel },
-    ];
-
-    if (!this.config.noStories) {
-      const story = generateStory(spec);
-      files.splice(1, 0, { path: `${dir}/${spec.name}.stories.tsx`, content: story });
+    if (framework === "vue") {
+      const code = generateVueComponent(spec, ctx.designSystem?.tokens);
+      files.push(
+        { path: `${dir}/${spec.name}.vue`, content: code.component },
+        { path: `${dir}/index.ts`, content: code.barrel },
+      );
+    } else if (framework === "svelte") {
+      const code = generateSvelteComponent(spec, ctx.designSystem?.tokens);
+      files.push(
+        { path: `${dir}/${spec.name}.svelte`, content: code.component },
+        { path: `${dir}/index.ts`, content: code.barrel },
+      );
+    } else {
+      const code = generateComponent(spec, ctx);
+      files.push(
+        { path: `${dir}/${spec.name}.tsx`, content: code.component },
+        { path: `${dir}/index.ts`, content: code.barrel },
+      );
+      if (!this.config.noStories) {
+        const story = generateStory(spec);
+        files.splice(1, 0, { path: `${dir}/${spec.name}.stories.tsx`, content: story });
+      }
     }
 
     return {

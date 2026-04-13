@@ -42,14 +42,18 @@ export function registerGenerateCommand(program: Command, engine: MemoireEngine)
     .option("--json", "Output generate results as JSON")
     .option("--preview", "Show generated code diff without writing files")
     .option("--no-stories", "Skip Storybook story generation")
-    .action(async (specName: string | undefined, opts: { all?: boolean; json?: boolean; preview?: boolean; stories?: boolean }) => {
+    .option("--framework <framework>", "Output framework: react (default), vue, svelte")
+    .action(async (specName: string | undefined, opts: { all?: boolean; json?: boolean; preview?: boolean; stories?: boolean; framework?: string }) => {
       const startedAt = Date.now();
       const generateAll = Boolean(opts.all || !specName);
 
       try {
         await engine.init();
         // Apply --no-stories flag — Commander's --no-X flags set opts.X to false
-        engine.codegen.setOptions({ noStories: opts.stories === false });
+        engine.codegen.setOptions({
+          noStories: opts.stories === false,
+          framework: (opts.framework as "react" | "vue" | "svelte") || "react",
+        });
 
         // ── Preview mode — generate in memory, no disk writes ──
         if (opts.preview) {
