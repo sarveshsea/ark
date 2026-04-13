@@ -15,12 +15,12 @@
   <img src="https://img.shields.io/badge/tests-698%20passing-black" alt="698 tests">
   <img src="https://img.shields.io/badge/MCP%20tools-20-black" alt="20 MCP tools">
   <a href="https://github.com/sarveshsea/m-moire/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-black.svg" alt="MIT"></a>
-  <a href="https://glama.ai/mcp/servers/sarveshsea/m-moire"><img src="https://glama.ai/mcp/servers/sarveshsea/m-moire/badges/score.svg" alt="MCP server score"></a>
+  <a href="https://glama.ai/mcp/servers/sarveshsea/m-moire"><img src="https://glama.ai/mcp/servers/sarveshsea/m-moire/badges/score.svg?v=2" alt="MCP server score"></a>
 </p>
 
 <p align="center">
   <a href="https://glama.ai/mcp/servers/sarveshsea/m-moire">
-    <img src="https://glama.ai/mcp/servers/sarveshsea/m-moire/badges/card.svg" alt="m-moire MCP server" width="400" />
+    <img src="https://glama.ai/mcp/servers/sarveshsea/m-moire/badges/card.svg?v=2" alt="m-moire MCP server" width="400" />
   </a>
 </p>
 
