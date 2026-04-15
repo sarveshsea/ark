@@ -27,6 +27,7 @@ import {
   parseColorValue,
   validateScreenshotParams,
 } from "./exec/figma-validators.js";
+import { makeError } from "../shared/errors.js";
 
 interface PluginState {
   sessionId: string;
@@ -47,6 +48,33 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
       timer = setTimeout(() => reject(new Error(`Timeout: ${label} after ${ms}ms`)), ms);
     }),
   ]).finally(() => clearTimeout(timer));
+}
+
+/**
+ * Wraps a font load so a timeout or figma-side failure surfaces as a
+ * structured WidgetError (#35). Callers that batch-load multiple fonts
+ * can pass swallow=true to log-and-continue instead of aborting the
+ * whole command.
+ */
+async function safeLoadFont(
+  fontName: { family: string; style: string },
+  options: { swallow?: boolean } = {},
+): Promise<void> {
+  try {
+    await withTimeout(
+      figma.loadFontAsync(fontName),
+      FONT_TIMEOUT_MS,
+      `loadFont ${fontName.family}/${fontName.style}`,
+    );
+  } catch (cause) {
+    const err = makeError(
+      "E_FIGMA_FONT_FAILED",
+      `Failed to load font ${fontName.family}/${fontName.style}`,
+      { detail: { family: fontName.family, style: fontName.style }, cause },
+    );
+    if (options.swallow) return;
+    throw new Error(JSON.stringify({ code: err.code, message: err.message, detail: err.detail }));
+  }
 }
 
 const FONT_TIMEOUT_MS = 5000;
@@ -715,7 +743,7 @@ async function createNode(params: Record<string, unknown>): Promise<unknown> {
       break;
     case "TEXT":
       node = figma.createText();
-      await withTimeout(figma.loadFontAsync({ family: "Inter", style: "Regular" }), FONT_TIMEOUT_MS, "loadFont Inter/Regular");
+      await safeLoadFont({ family: "Inter", style: "Regular" });
       node.characters = String(params.text || "");
       break;
     case "ELLIPSE":
@@ -813,8 +841,11 @@ async function loadTextNodeFonts(node: any): Promise<void> {
   const characters = node.characters || "";
   if (!characters.length) {
     const fontName = node.fontName;
-    if (fontName && fontName !== figma.mixed) {
-      await withTimeout(figma.loadFontAsync(fontName), FONT_TIMEOUT_MS, `loadFont ${fontName.family}/${fontName.style}`);
+    if (fontName && fontName !== figma.mixed && typeof fontName === "object") {
+      const fn = fontName as { family?: unknown; style?: unknown };
+      if (typeof fn.family === "string" && typeof fn.style === "string") {
+        await safeLoadFont({ family: fn.family, style: fn.style });
+      }
     }
     return;
   }
@@ -822,9 +853,14 @@ async function loadTextNodeFonts(node: any): Promise<void> {
   const uniqueFonts = new Map<string, { family: string; style: string }>();
   for (const font of fonts) {
     if (!font || font === figma.mixed) continue;
-    uniqueFonts.set(`${font.family}::${font.style}`, font);
+    if (typeof font !== "object") continue;
+    const fn = font as { family?: unknown; style?: unknown };
+    if (typeof fn.family !== "string" || typeof fn.style !== "string") continue;
+    uniqueFonts.set(`${fn.family}::${fn.style}`, { family: fn.family, style: fn.style });
   }
-  await Promise.all(Array.from(uniqueFonts.values()).map((font) => withTimeout(figma.loadFontAsync(font), FONT_TIMEOUT_MS, `loadFont ${font.family}/${font.style}`)));
+  // Batch load; if one font fails, the whole createNode/updateNode still
+  // fails (preserving previous semantics) but with a structured error.
+  await Promise.all(Array.from(uniqueFonts.values()).map((font) => safeLoadFont(font)));
 }
 
 async function deleteNode(nodeId: string): Promise<unknown> {
