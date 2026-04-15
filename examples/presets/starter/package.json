@@ -1,0 +1,24 @@
+{
+  "name": "@memoire-examples/starter",
+  "version": "0.1.0",
+  "description": "Starter Memoire Registry — neutral grayscale + one blue accent. Fork me and ship your own.",
+  "homepage": "https://memoire.cv",
+  "license": "MIT",
+  "files": [
+    "registry.json",
+    "tokens/",
+    "components/",
+    "README.md"
+  ],
+  "keywords": [
+    "memoire-registry",
+    "design-system",
+    "design-tokens",
+    "shadcn",
+    "starter"
+  ],
+  "memoire": {
+    "registry": true,
+    "schemaVersion": "v1"
+  }
+}
