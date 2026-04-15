@@ -155,6 +155,7 @@ function bootstrap(): void {
 
   render();
   bindPluginMessages();
+  bindLifecycleCleanup();
   sendToMain({ channel: WIDGET_V2_CHANNEL, source: "ui", type: "ping" });
   window.setTimeout(scanBridge, 200);
   keepaliveInterval = window.setInterval(function keepalive() {
@@ -271,10 +272,15 @@ function scanBridge(): void {
   setBridgeStage("scanning");
   state.bridge.portsTried = [];
   scheduleRender();
-  // Prefer last known port for faster reconnection
-  const startPort = state.bridge.port && state.bridge.port >= PORT_START && state.bridge.port <= PORT_END
-    ? state.bridge.port
-    : PORT_START;
+  // Prefer last known port for faster reconnection. First check the
+  // localStorage cache (survives plugin reloads, N10), then the in-memory
+  // port, and fall back to PORT_START.
+  const cached = readCachedPort();
+  const startPort = cached !== null
+    ? cached
+    : state.bridge.port && state.bridge.port >= PORT_START && state.bridge.port <= PORT_END
+      ? state.bridge.port
+      : PORT_START;
   tryNextPort(startPort);
 }
 
@@ -318,7 +324,15 @@ function tryNextPort(port: number): void {
 
   ws.onmessage = function onScanMessage(event) {
     var payload;
-    try { payload = JSON.parse(event.data); } catch { return; }
+    try { payload = JSON.parse(event.data); } catch (parseError) {
+      // Log instead of silently dropping — malformed frames are often the
+      // first signal of a bridge/protocol mismatch (#14).
+      addLog("warn", "Dropped malformed bridge frame", {
+        port,
+        preview: String(event.data).slice(0, 120),
+      });
+      return;
+    }
 
     if (payload.type === "pong" && state.bridge.lastPingSentAt > 0) {
       state.bridge.latencyMs = Date.now() - state.bridge.lastPingSentAt;
@@ -374,6 +388,7 @@ function adoptBridge(ws: WebSocket, port: number, payload: { name?: string }): v
   state.bridge.port = port;
   state.bridge.name = payload.name || "Mémoire";
   state.bridge.reconnectDelayMs = 2000;
+  writeCachedPort(port);
   setBridgeStage("connected");
   addLog("success", `Connected :${port}`);
   forwardToBridge({
@@ -437,6 +452,52 @@ function cleanupPendingRequests(): void {
   }
   pendingBridgeRequests.clear();
   pendingRequestTimers.clear();
+}
+
+// pagehide fires on plugin UI close / navigation and is more reliable than
+// beforeunload inside the Figma plugin iframe (N4). Releases WebSocket,
+// clears all timers, and drops the pending map so the main thread doesn't
+// ghost-write into a closed iframe.
+function bindLifecycleCleanup(): void {
+  const release = (): void => {
+    cleanupPendingRequests();
+    if (keepaliveInterval !== null) {
+      window.clearInterval(keepaliveInterval);
+      keepaliveInterval = null;
+    }
+    if (state.bridge.scanTimer) {
+      window.clearTimeout(state.bridge.scanTimer);
+      state.bridge.scanTimer = null;
+    }
+    const ws = state.bridge.ws;
+    state.bridge.ws = null;
+    if (ws) {
+      try { ws.close(); } catch { /* ignore */ }
+    }
+  };
+  window.addEventListener("pagehide", release);
+  window.addEventListener("beforeunload", release);
+}
+
+const LAST_PORT_KEY = "memoire.bridge.lastGoodPort";
+
+function readCachedPort(): number | null {
+  try {
+    const raw = window.localStorage.getItem(LAST_PORT_KEY);
+    if (!raw) return null;
+    const n = Number(raw);
+    return Number.isInteger(n) && n >= 9223 && n <= 9232 ? n : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCachedPort(port: number): void {
+  try {
+    window.localStorage.setItem(LAST_PORT_KEY, String(port));
+  } catch {
+    // localStorage may be unavailable (private mode, Figma desktop) — ignore.
+  }
 }
 
 function handleBridgeMessage(payload: unknown): void {
