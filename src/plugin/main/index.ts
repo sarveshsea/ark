@@ -28,6 +28,7 @@ import {
   validateScreenshotParams,
 } from "./exec/figma-validators.js";
 import { makeError } from "../shared/errors.js";
+import { guardExecCode, withExecTimeout } from "./exec/sandbox.js";
 
 interface PluginState {
   sessionId: string;
@@ -563,17 +564,28 @@ function isCodeSafe(code: string): { safe: boolean; reason: string | null } {
 
 async function executeCode(code: string): Promise<unknown> {
   if (typeof code !== "string" || code.trim().length === 0) {
-    throw new Error("Code must be a non-empty string");
+    throw new Error(
+      JSON.stringify({ code: "E_PARAM_INVALID", message: "Code must be a non-empty string", retryable: false }),
+    );
   }
-  if (code.length > 50_000) {
-    throw new Error("Code exceeds maximum length (50KB)");
+  // Phase 5a sandbox: normalize-strip-scan denylist + loop-shape checks +
+  // length/token gates. See main/exec/sandbox.ts. This is layered on top of
+  // the legacy isCodeSafe regex pass as defense-in-depth.
+  const guard = guardExecCode(code);
+  if (!guard.ok && guard.error) {
+    const e = guard.error;
+    throw new Error(
+      JSON.stringify({ code: e.code, message: e.message, detail: e.detail, retryable: e.retryable }),
+    );
   }
-  const check = isCodeSafe(code);
-  if (!check.safe) {
-    throw new Error(`Blocked: ${check.reason}`);
+  const legacy = isCodeSafe(code);
+  if (!legacy.safe) {
+    throw new Error(
+      JSON.stringify({ code: "E_EXEC_REJECTED", message: "Blocked: " + legacy.reason, retryable: false }),
+    );
   }
   const fn = new Function("figma", `"use strict"; return (async () => { ${code} })()`);
-  return await fn(figma);
+  return await withExecTimeout(fn(figma) as Promise<unknown>);
 }
 
 function getPageTree(maxDepth: number): unknown {
