@@ -3,6 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!--
+    Defense-in-depth CSP for the Figma plugin UI iframe (#7).
+    - script-src 'self' 'unsafe-inline': Figma plugin bundler inlines the
+      UI entrypoint as an inline <script> in the built ui.html, so we must
+      allow 'unsafe-inline' for scripts. The build pipeline is
+      trusted-by-design (no user-controlled script content).
+    - connect-src restricted to ws(s)://localhost:9223-9232 for the
+      Mémoire bridge. Wildcard origin is deliberately disallowed.
+    - object-src/base-uri 'none' closes common exfiltration vectors.
+  -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src ws://localhost:9223 ws://localhost:9224 ws://localhost:9225 ws://localhost:9226 ws://localhost:9227 ws://localhost:9228 ws://localhost:9229 ws://localhost:9230 ws://localhost:9231 ws://localhost:9232; object-src 'none'; base-uri 'none'; frame-ancestors *;">
   <title>Mémoire Control Plane</title>
   <link rel="stylesheet" href="./styles.css">
 </head>

@@ -16,6 +16,7 @@ import {
   type WidgetMainEnvelope,
 } from "../shared/contracts.js";
 import { findFirst, findIndexBy } from "../shared/compat.js";
+import { uuidv4 } from "../shared/ids.js";
 import {
   createBridgeResponseEnvelope,
   normalizeBridgeMessage,
@@ -70,6 +71,18 @@ interface UiState {
 const PORT_START = 9223;
 const PORT_END = 9232;
 const LOG_LIMIT = 80;
+
+const TRUSTED_PARENT_ORIGINS = new Set<string>([
+  "https://www.figma.com",
+  "https://figma.com",
+  "https://staging.figma.com",
+  "", // Figma desktop delivers with empty origin
+  "null", // Some desktop builds report literal "null"
+]);
+
+function isTrustedMessageOrigin(origin: string): boolean {
+  return TRUSTED_PARENT_ORIGINS.has(origin);
+}
 const MAX_JOBS = 24;
 const MAX_AGENT_STATUSES = 48;
 const PENDING_REQUEST_TIMEOUT_MS = 35000;
@@ -176,6 +189,13 @@ function bootstrap(): void {
 
 function bindPluginMessages(): void {
   window.onmessage = (event: MessageEvent<{ pluginMessage?: WidgetMainEnvelope }>) => {
+    // Defense-in-depth origin check (#2). Figma desktop delivers postMessage
+    // with a null origin (empty string or 'null'); the web app delivers from
+    // https://www.figma.com. We reject everything outside that set, while
+    // still accepting null for the desktop app's cross-context bridge.
+    if (!isTrustedMessageOrigin(event.origin)) {
+      return;
+    }
     const message = event.data?.pluginMessage;
     if (!message || !isWidgetV2Envelope(message)) {
       return;
@@ -696,34 +716,53 @@ function upsertAgentStatus(status: AgentBoxState): void {
   state.agentStatuses = next.sort(compareAgentStatuses).slice(0, MAX_AGENT_STATUSES);
 }
 
+// Structured log append. Uses UUIDv4 ids so newest-first keying is stable
+// across same-millisecond inserts (#23). Overflow evicts in-place (pop
+// oldest) to avoid the O(n) slice-and-realloc churn the previous impl
+// incurred on every log entry past the limit (#46).
 function addLog(level: WidgetLogEntry["level"], message: string, detail?: unknown): void {
   state.logs.unshift({
-    id: createRunId("log"),
+    id: uuidv4(),
     level,
     message,
     detail,
     timestamp: Date.now(),
   });
-  if (state.logs.length > LOG_LIMIT) {
-    state.logs = state.logs.slice(0, LOG_LIMIT);
+  while (state.logs.length > LOG_LIMIT) {
+    state.logs.pop();
   }
 }
 
+// Dirty-flag render scheduler (#30). Previous implementation dropped any
+// scheduleRender() calls that arrived while a trailing timer was pending;
+// mutations between "timer scheduled" and "timer fires" were therefore
+// applied but never reflected until the NEXT state change. Now we track a
+// `renderDirty` flag: once the trailing render fires, if the dirty flag
+// was set during the throttle window, we render once more.
 let renderScheduled = false;
+let renderDirty = false;
 let lastRenderTime = 0;
 const RENDER_THROTTLE_MS = 80;
 
 function scheduleRender(): void {
-  if (renderScheduled) return;
+  if (renderScheduled) {
+    renderDirty = true;
+    return;
+  }
   const elapsed = Date.now() - lastRenderTime;
   if (elapsed >= RENDER_THROTTLE_MS) {
+    renderDirty = false;
     render();
     return;
   }
   renderScheduled = true;
+  renderDirty = false;
   window.setTimeout(() => {
     renderScheduled = false;
+    const wasDirty = renderDirty;
+    renderDirty = false;
     render();
+    if (wasDirty) scheduleRender();
   }, RENDER_THROTTLE_MS - elapsed);
 }
 
@@ -1227,8 +1266,14 @@ function formatHealSummary(summary: WidgetHealSummary): string {
   return `round ${summary.round} · ${summary.issueCount} issue(s) · ${status}`;
 }
 
+// Normalizes missing fields to a sentinel so two malformed entries cannot
+// collide into the same composite key (#22). Previously ${undefined}:${undefined}:x
+// would collapse many logically distinct agents onto one row.
 function getAgentStatusKey(agent: AgentBoxState): string {
-  return `${agent.runId}:${agent.taskId}:${agent.role}`;
+  const runId = agent.runId ? agent.runId : "∅run";
+  const taskId = agent.taskId ? agent.taskId : "∅task";
+  const role = agent.role ? agent.role : "∅role";
+  return runId + ":" + taskId + ":" + role;
 }
 
 function compareAgentStatuses(left: AgentBoxState, right: AgentBoxState): number {
