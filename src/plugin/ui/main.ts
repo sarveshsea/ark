@@ -981,11 +981,70 @@ function scheduleRender(): void {
   }, RENDER_THROTTLE_MS - elapsed);
 }
 
+// Slot-level render memoization (#42 mitigation without a full VDOM swap).
+// Previously every state change rewrote the entire `app.innerHTML`, tearing
+// down and re-parsing every DOM node including the expensive SVG brand.
+// Now we maintain a static skeleton with one innerHTML slot per high-level
+// surface and only rewrite slots whose *input state hash* has changed. The
+// SVG brand is written once at bootstrap and never touched again.
+const slotSignatures = new Map<string, string>();
+let skeletonMounted = false;
+
+const STATIC_SHELL_HTML = `
+<div class="shell">
+  <div class="topbar">
+    <div class="brand-wrap">
+      <svg class="brand-flower" viewBox="0 0 120 120" width="22" height="22">
+        <defs><mask id="h"><rect width="120" height="120" fill="white"/><ellipse cx="60" cy="34" rx="10" ry="15" fill="black"/><ellipse cx="84" cy="52" rx="10" ry="15" transform="rotate(72 84 52)" fill="black"/><ellipse cx="75" cy="80" rx="10" ry="15" transform="rotate(144 75 80)" fill="black"/><ellipse cx="45" cy="80" rx="10" ry="15" transform="rotate(-144 45 80)" fill="black"/><ellipse cx="36" cy="52" rx="10" ry="15" transform="rotate(-72 36 52)" fill="black"/></mask></defs>
+        <g mask="url(#h)"><circle cx="60" cy="28" r="24" fill="#C24B38"/><circle cx="90" cy="50" r="24" fill="#C24B38"/><circle cx="78" cy="84" r="24" fill="#C24B38"/><circle cx="42" cy="84" r="24" fill="#C24B38"/><circle cx="30" cy="50" r="24" fill="#C24B38"/><circle cx="60" cy="58" r="18" fill="#C24B38"/></g>
+      </svg>
+    </div>
+    <div class="status-cluster" data-slot="status"></div>
+  </div>
+  <div class="context-bar" data-slot="context"></div>
+  <div class="toolbar" data-slot="toolbar"></div>
+  <div class="content">
+    <div class="tabstrip" data-slot="tabstrip"></div>
+    <div class="tab-panel active" data-slot="tab-content"></div>
+  </div>
+  <div class="ticker-wrap" data-slot="ticker"></div>
+</div>
+`;
+
+// fnv-1a over a string; same primitive as nodeFingerprint. We never need
+// cryptographic strength here — any stable hash that avoids collisions for
+// realistic render inputs is sufficient for cache-key comparison.
+function hashString(value: string): string {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < value.length; i += 1) {
+    hash ^= value.charCodeAt(i);
+    hash = (hash + ((hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24))) >>> 0;
+  }
+  return hash.toString(16);
+}
+
+function writeSlotIfChanged(slot: string, html: string): boolean {
+  const sig = hashString(html);
+  if (slotSignatures.get(slot) === sig) return false;
+  slotSignatures.set(slot, sig);
+  if (!app) return false;
+  const el = app.querySelector<HTMLElement>('[data-slot="' + slot + '"]');
+  if (!el) return false;
+  el.innerHTML = html;
+  return true;
+}
+
 function render(): void {
   if (!app) {
     return;
   }
   lastRenderTime = Date.now();
+
+  if (!skeletonMounted) {
+    app.innerHTML = STATIC_SHELL_HTML;
+    skeletonMounted = true;
+    slotSignatures.clear();
+  }
 
   const hasSelection = state.selection.nodes.length > 0;
   const selNode = state.selection.nodes[0];
@@ -995,103 +1054,106 @@ function render(): void {
   const latencyLabel = state.connection.latencyMs ? `${state.connection.latencyMs}ms` : "";
   const connMeta = [portLabel, latencyLabel].filter(Boolean).join(" / ");
 
-  app.innerHTML = `
-    <div class="shell">
-      <div class="topbar">
-        <div class="brand-wrap">
-          <svg class="brand-flower" viewBox="0 0 120 120" width="22" height="22">
-            <defs><mask id="h"><rect width="120" height="120" fill="white"/><ellipse cx="60" cy="34" rx="10" ry="15" fill="black"/><ellipse cx="84" cy="52" rx="10" ry="15" transform="rotate(72 84 52)" fill="black"/><ellipse cx="75" cy="80" rx="10" ry="15" transform="rotate(144 75 80)" fill="black"/><ellipse cx="45" cy="80" rx="10" ry="15" transform="rotate(-144 45 80)" fill="black"/><ellipse cx="36" cy="52" rx="10" ry="15" transform="rotate(-72 36 52)" fill="black"/></mask></defs>
-            <g mask="url(#h)"><circle cx="60" cy="28" r="24" fill="#C24B38"/><circle cx="90" cy="50" r="24" fill="#C24B38"/><circle cx="78" cy="84" r="24" fill="#C24B38"/><circle cx="42" cy="84" r="24" fill="#C24B38"/><circle cx="30" cy="50" r="24" fill="#C24B38"/><circle cx="60" cy="58" r="18" fill="#C24B38"/></g>
-          </svg>
-        </div>
-        <div class="status-cluster">
-          ${connMeta ? `<span class="conn-meta">${escapeHtml(connMeta)}</span>` : ""}
-          <div class="status-pill ${state.connection.stage}">
-            ${escapeHtml(connectionLabel())}
-          </div>
-        </div>
-      </div>
-
-      <div class="context-bar">
-        <div class="ctx-item">
-          <span class="ctx-label">file</span>
-          <span class="ctx-value">${escapeHtml(state.connection.fileName || "--")}</span>
-        </div>
-        <div class="ctx-sep"></div>
-        <div class="ctx-item">
-          <span class="ctx-label">page</span>
-          <span class="ctx-value">${escapeHtml(state.connection.pageName || "--")}</span>
-        </div>
-        ${hasSelection ? `
-          <div class="ctx-sep"></div>
-          <div class="ctx-item">
-            <span class="ctx-label">sel</span>
-            <span class="ctx-value">${escapeHtml(selNode ? selNode.name : `${state.selection.count}`)}${state.selection.count > 1 ? ` +${state.selection.count - 1}` : ""}</span>
-          </div>
-        ` : ""}
-        ${state.bufferedChanges > 0 ? `
-          <div class="ctx-sep"></div>
-          <div class="ctx-item">
-            <span class="ctx-label">buf</span>
-            <span class="ctx-value">${state.bufferedChanges}</span>
-          </div>
-        ` : ""}
-      </div>
-
-      <div class="toolbar">
-        ${ACTIONS.map((a) => renderActionButton(a, { isConnected, hasSelection })).join("")}
-      </div>
-
-      <div class="content">
-        <div class="tabstrip">
-          ${TABS.map((t) => renderTabButton(t)).join("")}
-        </div>
-        <div class="tab-panel ${state.activeTab === "jobs" ? "active" : ""}">
-          <div class="jobs-list">${renderJobs()}</div>
-        </div>
-        <div class="tab-panel ${state.activeTab === "selection" ? "active" : ""}">
-          <div class="selection-list">${renderSelection()}</div>
-        </div>
-        <div class="tab-panel ${state.activeTab === "system" ? "active" : ""}">
-          <div class="system-list">${renderSystem()}</div>
-        </div>
-      </div>
-
-      ${latestLog ? `
-        <div class="ticker ${latestLog.level}">
-          <span class="ticker-dot"></span>
-          <span class="ticker-text">${escapeHtml(latestLog.message)}</span>
-          <span class="ticker-time">${escapeHtml(new Date(latestLog.timestamp).toLocaleTimeString())}</span>
-        </div>
-      ` : ""}
+  const statusHtml = `
+    ${connMeta ? `<span class="conn-meta">${escapeHtml(connMeta)}</span>` : ""}
+    <div class="status-pill ${state.connection.stage}">
+      ${escapeHtml(connectionLabel())}
     </div>
   `;
 
-  app.querySelectorAll<HTMLButtonElement>("[data-tab]").forEach((button) => {
-    button.onclick = () => {
-      state.activeTab = button.dataset.tab as UiState["activeTab"];
-      render();
-    };
-  });
+  const contextHtml = `
+    <div class="ctx-item">
+      <span class="ctx-label">file</span>
+      <span class="ctx-value">${escapeHtml(state.connection.fileName || "--")}</span>
+    </div>
+    <div class="ctx-sep"></div>
+    <div class="ctx-item">
+      <span class="ctx-label">page</span>
+      <span class="ctx-value">${escapeHtml(state.connection.pageName || "--")}</span>
+    </div>
+    ${hasSelection ? `
+      <div class="ctx-sep"></div>
+      <div class="ctx-item">
+        <span class="ctx-label">sel</span>
+        <span class="ctx-value">${escapeHtml(selNode ? selNode.name : `${state.selection.count}`)}${state.selection.count > 1 ? ` +${state.selection.count - 1}` : ""}</span>
+      </div>
+    ` : ""}
+    ${state.bufferedChanges > 0 ? `
+      <div class="ctx-sep"></div>
+      <div class="ctx-item">
+        <span class="ctx-label">buf</span>
+        <span class="ctx-value">${state.bufferedChanges}</span>
+      </div>
+    ` : ""}
+  `;
 
-  app.querySelectorAll<HTMLButtonElement>("[data-action]").forEach((button) => {
-    button.onclick = () => {
-      const action = button.dataset.action || "";
-      if (action === "retry-job") {
-        handleRetryJob({
-          command: button.dataset.jobCommand || "",
-          kind: button.dataset.jobKind || "",
-          label: button.dataset.jobLabel || "",
-        });
-        return;
-      }
-      handleAction(action);
-    };
-  });
+  const toolbarHtml = ACTIONS.map((a) => renderActionButton(a, { isConnected, hasSelection })).join("");
+  const tabstripHtml = TABS.map((t) => renderTabButton(t)).join("");
 
-  app.querySelectorAll<HTMLButtonElement>("[data-node-action]").forEach((button) => {
-    button.onclick = () => handleNodeAction(button.dataset.nodeAction || "", button.dataset.nodeId || "");
-  });
+  const activeTabBody = state.activeTab === "jobs"
+    ? `<div class="jobs-list">${renderJobs()}</div>`
+    : state.activeTab === "selection"
+      ? `<div class="selection-list">${renderSelection()}</div>`
+      : `<div class="system-list">${renderSystem()}</div>`;
+  const tabContentHtml = activeTabBody + `<!-- active:${state.activeTab} -->`;
+
+  const tickerHtml = latestLog ? `
+    <div class="ticker ${latestLog.level}">
+      <span class="ticker-dot"></span>
+      <span class="ticker-text">${escapeHtml(latestLog.message)}</span>
+      <span class="ticker-time">${escapeHtml(new Date(latestLog.timestamp).toLocaleTimeString())}</span>
+    </div>
+  ` : "";
+
+  // Only the slots whose input state changed pay the innerHTML+reparse cost.
+  const statusChanged = writeSlotIfChanged("status", statusHtml);
+  const contextChanged = writeSlotIfChanged("context", contextHtml);
+  const toolbarChanged = writeSlotIfChanged("toolbar", toolbarHtml);
+  const tabstripChanged = writeSlotIfChanged("tabstrip", tabstripHtml);
+  const tabContentChanged = writeSlotIfChanged("tab-content", tabContentHtml);
+  writeSlotIfChanged("ticker", tickerHtml);
+
+  // Only re-attach listeners on slots that actually rewrote their DOM.
+  // Everything else retains its existing listener bindings, which means
+  // every 80ms render that's status-meta-only no longer thrashes the
+  // action toolbar or selection cards (#42 mitigation).
+  if (tabstripChanged) {
+    app.querySelectorAll<HTMLButtonElement>('[data-slot="tabstrip"] [data-tab]').forEach((button) => {
+      button.onclick = () => {
+        state.activeTab = button.dataset.tab as UiState["activeTab"];
+        render();
+      };
+    });
+  }
+
+  if (toolbarChanged || tabContentChanged) {
+    // Action buttons live in both the toolbar and the tab-content offline CTA
+    // / retry card, so we rebind anytime either slot churned.
+    app.querySelectorAll<HTMLButtonElement>("[data-action]").forEach((button) => {
+      button.onclick = () => {
+        const action = button.dataset.action || "";
+        if (action === "retry-job") {
+          handleRetryJob({
+            command: button.dataset.jobCommand || "",
+            kind: button.dataset.jobKind || "",
+            label: button.dataset.jobLabel || "",
+          });
+          return;
+        }
+        handleAction(action);
+      };
+    });
+  }
+
+  if (tabContentChanged) {
+    app.querySelectorAll<HTMLButtonElement>("[data-node-action]").forEach((button) => {
+      button.onclick = () => handleNodeAction(button.dataset.nodeAction || "", button.dataset.nodeId || "");
+    });
+  }
+
+  // Silence the unused-var warning if none of the above branches fired.
+  void statusChanged;
+  void contextChanged;
 }
 
 // Re-dispatches a previously-failed command with identical command/kind/label
