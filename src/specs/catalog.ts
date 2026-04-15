@@ -5,11 +5,7 @@
  * and re-exports the same typed API.
  */
 
-import { readFileSync } from "fs";
-import { fileURLToPath } from "url";
-import { dirname, join } from "path";
-
-const __dir = dirname(fileURLToPath(import.meta.url));
+import catalogData from "./catalog.json" with { type: "json" };
 
 // ── Types ────────────────────────────────────────────
 
@@ -69,7 +65,7 @@ export const CATALOG_CATEGORIES: Record<CatalogCategory, { label: string; descri
 
 type RawEntry = Partial<CatalogComponent> & Pick<CatalogComponent, "name" | "slug" | "level" | "category" | "description" | "prevalence" | "props">;
 
-const raw: RawEntry[] = JSON.parse(readFileSync(join(__dir, "catalog.json"), "utf-8"));
+const raw = catalogData as RawEntry[];
 
 export const COMPONENT_CATALOG: CatalogComponent[] = raw.map(r => ({
   aliases: [],

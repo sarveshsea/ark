@@ -54,7 +54,12 @@ interface ResearchCommandPayload {
 export function registerResearchCommand(program: Command, engine: MemoireEngine) {
   const research = program
     .command("research")
-    .description("Research pipeline — process data from multiple sources");
+    .description("Research pipeline — process data from multiple sources (deprecated, removing in v0.12)");
+
+  research.hook("preAction", () => {
+    // Lazy import avoids circular reference concerns
+    void import("./_deprecated.js").then(m => m.warnDeprecated("research"));
+  });
 
   research
     .command("from-file <path>")

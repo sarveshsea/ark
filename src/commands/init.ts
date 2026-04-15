@@ -3,15 +3,23 @@ import type { MemoireEngine } from "../engine/core.js";
 import type { ComponentSpec, DataVizSpec, PageSpec } from "../specs/types.js";
 import { writeFile, mkdir } from "fs/promises";
 import { existsSync } from "fs";
-import { join } from "path";
+import { join, resolve as resolvePath } from "path";
 import ora from "ora";
 import { ui } from "../tui/format.js";
+import { publishRegistry } from "../registry/publisher.js";
 
 export function registerInitCommand(program: Command, engine: MemoireEngine) {
   program
-    .command("init")
-    .description("Interactive onboarding — set up Mémoire for your project")
-    .action(async () => {
+    .command("init [name]")
+    .description("Scaffold a design system registry package (or initialize a Memoire project)")
+    .option("--dir <path>", "Output directory (defaults to ./<name>)")
+    .action(async (name: string | undefined, opts: { dir?: string }) => {
+      // Registry scaffold mode — `memi init <name>`
+      if (name) {
+        await scaffoldRegistry(engine, name, opts.dir);
+        return;
+      }
+      // Legacy project init — `memi init` (no args)
       const root = engine.config.projectRoot;
 
       // ── Brand ───────────────────────────────────────
@@ -287,4 +295,52 @@ export function registerInitCommand(program: Command, engine: MemoireEngine) {
       console.log("  " + ui.dim("memi --help") + "    " + ui.dim("all commands"));
       console.log();
     });
+}
+
+// ── Registry scaffolder ────────────────────────────────────────
+
+async function scaffoldRegistry(engine: MemoireEngine, name: string, dirOpt?: string): Promise<void> {
+  const validName = /^(@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/.test(name);
+  if (!validName) {
+    console.error(`\n  Invalid name "${name}". Use npm-style: "@scope/name" or "name"\n`);
+    process.exitCode = 1;
+    return;
+  }
+
+  const baseName = name.replace(/^@[^/]+\//, "");
+  const outDir = dirOpt ? resolvePath(dirOpt) : resolvePath(engine.config.projectRoot, baseName);
+
+  await engine.init();
+
+  console.log();
+  console.log(ui.brand("REGISTRY SCAFFOLD"));
+  console.log(ui.dots("Name", name));
+  console.log(ui.dots("Output", outDir));
+  console.log();
+
+  const spinner = ora({ text: "Building registry package...", indent: 2, color: "cyan" }).start();
+
+  const pkgVersion = (await import("../../package.json", { with: { type: "json" } })).default.version;
+
+  const result = await publishRegistry({
+    name,
+    version: "0.1.0",
+    description: `Design system registry`,
+    outDir,
+    designSystem: engine.registry.designSystem,
+    specs: (await engine.registry.getAllSpecs()).filter(s => s.type === "component") as ComponentSpec[],
+    memoireVersion: pkgVersion,
+  });
+
+  spinner.stop();
+
+  console.log(ui.ok(`${result.filesWritten.length} files written`));
+  console.log();
+  console.log(ui.dim("  Next:"));
+  console.log(`    cd ${baseName}`);
+  console.log("    npm publish --access public");
+  console.log();
+  console.log(ui.dim("  Or add components from another source first:"));
+  console.log(`    memi publish --figma <url> --name ${name} --dir ${outDir}`);
+  console.log();
 }

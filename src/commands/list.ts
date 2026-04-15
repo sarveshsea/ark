@@ -15,6 +15,7 @@
 import type { Command } from "commander";
 import type { MemoireEngine } from "../engine/core.js";
 import { formatElapsed } from "../utils/format.js";
+import { warnDeprecated } from "./_deprecated.js";
 
 export interface ListPayload {
   type: string;
@@ -38,6 +39,7 @@ export function registerListCommand(program: Command, engine: MemoireEngine) {
     .description("List specs, tokens, components, or styles (default: specs)")
     .option("--json", "Output as JSON")
     .action(async (type: string | undefined, opts: { json?: boolean }) => {
+      warnDeprecated("list", "status");
       const start = Date.now();
       await engine.init();
       const target = type ?? "specs";

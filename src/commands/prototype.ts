@@ -2,6 +2,7 @@ import type { Command } from "commander";
 import type { MemoireEngine } from "../engine/core.js";
 import { buildScenesFromSpecs, exportPrototype } from "../codegen/prototype-exporter.js";
 import { join } from "path";
+import { warnDeprecated } from "./_deprecated.js";
 
 export function registerPrototypeCommand(program: Command, engine: MemoireEngine) {
   program
@@ -14,6 +15,7 @@ export function registerPrototypeCommand(program: Command, engine: MemoireEngine
     .option("--no-video", "Skip Playwright video recording")
     .option("--preview-url <url>", "Preview server URL", "http://localhost:5173")
     .action(async (opts) => {
+      warnDeprecated("prototype");
       await engine.init();
 
       const outputDir = join(engine.config.projectRoot, opts.output);

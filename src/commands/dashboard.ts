@@ -4,6 +4,7 @@ import { join } from "path";
 import { existsSync } from "fs";
 import { PreviewApiServer } from "../preview/api-server.js";
 import { ui } from "../tui/format.js";
+import { warnDeprecated } from "./_deprecated.js";
 
 export function registerDashboardCommand(program: Command, engine: MemoireEngine) {
   program
@@ -12,6 +13,7 @@ export function registerDashboardCommand(program: Command, engine: MemoireEngine
     .alias("dash")
     .option("-p, --port <port>", "Dashboard port", "3333")
     .action(async (opts) => {
+      warnDeprecated("dashboard", "preview");
       const port = parseInt(opts.port, 10);
       if (isNaN(port) || port < 1024 || port > 65535) {
         console.log(ui.fail("Invalid port. Must be 1024-65535."));

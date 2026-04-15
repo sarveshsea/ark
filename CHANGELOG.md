@@ -6,6 +6,33 @@ This changelog tracks Mémoire itself: every version, commit, and architectural 
 
 ---
 
+## v0.11.0 — 2026-04-15 (The Registry Pivot)
+
+### The shift
+Memoire is no longer a "design system extractor." It's a **registry protocol** — the shadcn pattern, for entire design systems. Every Figma file can now be published to npm and installed anywhere.
+
+### New commands
+- **`memi publish --name @you/ds`** — Figma file → publishable npm package (registry.json + tokens + component specs + README)
+- **`memi add <Component> --from <registry>`** — install a component from any Memoire registry (npm, GitHub, HTTPS, local path)
+- **`memi init <name>`** — scaffold a registry package with your current design system
+- **`memi design-doc <url> --codegen`** — also emit Tailwind v4 `@theme` block
+- **`memi design-doc <url> --init <name>`** — extract URL + immediately build a registry package
+
+### New modules
+- `src/registry/schema.ts` — Memoire Registry Protocol v1 (Zod schemas)
+- `src/registry/publisher.ts` — design system → publishable package
+- `src/registry/resolver.ts` — fetch registries from npm, github:, https://, local path (with SSRF guard)
+- `src/registry/installer.ts` — install components from registries into user projects
+- `src/codegen/tailwind-v4.ts` — Tailwind v4 `@theme` CSS generator
+
+### Deprecations (removing in v0.12.0)
+`memi heartbeat`, `memi prototype`, `memi dashboard`, `memi list`, `memi research`, `memi ia` now emit deprecation warnings. Silence with `MEMOIRE_SILENCE_DEPRECATIONS=1`.
+
+### Tests
+20+ new tests across registry schema, publisher round-trip, and resolver SSRF guards.
+
+---
+
 ## v0.10.1 — 2026-04-13 (Architecture + Growth)
 
 ### Highlights

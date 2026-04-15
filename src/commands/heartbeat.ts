@@ -7,6 +7,7 @@
 import type { Command } from "commander";
 import type { MemoireEngine } from "../engine/core.js";
 import type { ComponentSpec, AnySpec } from "../specs/types.js";
+import { warnDeprecated } from "./_deprecated.js";
 import type { GenerationState } from "../engine/registry.js";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
@@ -266,6 +267,7 @@ export function registerHeartbeatCommand(program: Command, engine: MemoireEngine
     .option("--interval <minutes>", "Interval in minutes for watch mode", String(DEFAULT_INTERVAL_MINUTES))
     .option("--json", "Output heartbeat result as JSON")
     .action(async (opts: { watch?: boolean; interval?: string; json?: boolean }) => {
+      warnDeprecated("heartbeat", "doctor");
       const json = Boolean(opts.json);
       const intervalMinutes = parseInt(opts.interval ?? String(DEFAULT_INTERVAL_MINUTES), 10);
       const intervalMs = intervalMinutes * 60 * 1000;

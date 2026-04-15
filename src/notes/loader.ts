@@ -8,9 +8,9 @@
  */
 
 import { readFile, readdir, stat } from "fs/promises";
-import { join, dirname } from "path";
-import { fileURLToPath } from "url";
+import { join } from "path";
 import { createLogger } from "../engine/logger.js";
+import { packageRoot } from "../utils/asset-path.js";
 import {
   NoteManifestSchema,
   type InstalledNote,
@@ -20,11 +20,6 @@ import {
 import { buildWorkspaceSkillNote } from "./frontmatter.js";
 
 const log = createLogger("notes-loader");
-
-// Resolve the package root (two levels up from src/notes/)
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const PACKAGE_ROOT = join(__dirname, "..", "..");
 
 // ── In-memory note cache ──────────────────────────────────
 // Key: "<noteDir>:<mtimeMs>" → InstalledNote
@@ -192,14 +187,14 @@ export class NoteLoader {
    * Adapts the legacy skill format into the Note manifest format.
    */
   async loadBuiltInNotes(): Promise<InstalledNote[]> {
-    const registryPath = join(PACKAGE_ROOT, "skills", "registry.json");
+    const registryPath = join(packageRoot(), "skills", "registry.json");
     try {
       const raw = await readFile(registryPath, "utf-8");
       const registry: SkillRegistry = JSON.parse(raw);
 
       return registry.skills.map((skill) => ({
         manifest: skillToManifest(skill, registry.version),
-        path: PACKAGE_ROOT,
+        path: packageRoot(),
         builtIn: true,
         enabled: true,
       }));
@@ -214,7 +209,7 @@ export class NoteLoader {
    * These are full Note directories with note.json manifests.
    */
   async loadBuiltInNotePackages(): Promise<InstalledNote[]> {
-    const notesDir = join(PACKAGE_ROOT, "notes");
+    const notesDir = join(packageRoot(), "notes");
     const notes: InstalledNote[] = [];
 
     try {

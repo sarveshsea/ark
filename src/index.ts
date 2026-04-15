@@ -58,6 +58,8 @@ import { registerDesignDocCommand } from "./commands/design-doc.js";
 import { registerSetupCommand } from "./commands/setup.js";
 import { registerAuditCommand } from "./commands/audit.js";
 import { registerDiffCommand } from "./commands/diff.js";
+import { registerAddCommand } from "./commands/add.js";
+import { registerPublishCommand } from "./commands/publish.js";
 import { existsSync, rmSync } from "fs";
 import { join } from "path";
 
@@ -129,6 +131,8 @@ registerDesignDocCommand(program, engine);
 registerSetupCommand(program, engine);
 registerAuditCommand(program, engine);
 registerDiffCommand(program, engine);
+registerAddCommand(program, engine);
+registerPublishCommand(program, engine);
 
 // Uninstall command — removes all Mémoire artifacts
 program

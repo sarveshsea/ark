@@ -13,19 +13,17 @@
 
 import chalk from "chalk";
 import { readFileSync } from "fs";
-import { fileURLToPath } from "url";
-import { dirname, join } from "path";
+import { join } from "path";
+import { packageRoot } from "../utils/asset-path.js";
 
 // ── Version ─────────────────────────────────────────────
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
 
 let _version: string | undefined;
 
 export function getVersion(): string {
   if (!_version) {
     try {
-      const raw = readFileSync(join(__dirname, "../../package.json"), "utf-8");
+      const raw = readFileSync(join(packageRoot(), "package.json"), "utf-8");
       _version = JSON.parse(raw).version as string;
     } catch {
       _version = "0.0.0";

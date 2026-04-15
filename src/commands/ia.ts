@@ -130,7 +130,11 @@ function countNodes(node: IANode): number {
 export function registerIACommand(program: Command, engine: MemoireEngine) {
   const ia = program
     .command("ia")
-    .description("Information architecture — extract, create, and visualize site structure");
+    .description("Information architecture — extract, create, and visualize site structure (deprecated, removing in v0.12)");
+
+  ia.hook("preAction", () => {
+    void import("./_deprecated.js").then(m => m.warnDeprecated("ia"));
+  });
 
   // ── memi ia extract <name> ──────────────────────────────
   ia

@@ -40,7 +40,9 @@ export function registerDesignDocCommand(program: Command, engine: MemoireEngine
     .option("--json", "Output results as JSON")
     .option("--wcag", "Include full contrast table for all extracted color pairs")
     .option("--timeout <ms>", "Fetch timeout in milliseconds", "15000")
-    .action(async (url: string, opts: { output: string; spec?: boolean; json?: boolean; wcag?: boolean; timeout?: string }) => {
+    .option("--codegen", "Also write a Tailwind v4 @theme block (tokens.css)")
+    .option("--init <name>", "Build a full registry package from extracted tokens")
+    .action(async (url: string, opts: { output: string; spec?: boolean; json?: boolean; wcag?: boolean; timeout?: string; codegen?: boolean; init?: string }) => {
       const start = Date.now();
       await engine.init();
 
@@ -116,6 +118,43 @@ export function registerDesignDocCommand(program: Command, engine: MemoireEngine
           const spec = buildDesignSpec(specName, url, tokens);
           await mkdir(dirname(specPath), { recursive: true });
           await writeFile(specPath, JSON.stringify(spec, null, 2), "utf-8");
+        }
+
+        // 6. Optional codegen: write Tailwind v4 @theme tokens.css
+        let tokensCssPath: string | undefined;
+        if (opts.codegen || opts.init) {
+          const { generateTailwindV4Theme } = await import("../codegen/tailwind-v4.js");
+          const designTokens = buildDesignTokensFromRaw(tokens);
+          const css = generateTailwindV4Theme(designTokens);
+          tokensCssPath = isAbsolute(opts.output)
+            ? join(dirname(opts.output), "tokens.css")
+            : join(engine.config.projectRoot, dirname(opts.output), "tokens.css");
+          await writeFile(tokensCssPath, css, "utf-8");
+        }
+
+        // 7. Optional --init: build full registry package
+        let registryDir: string | undefined;
+        if (opts.init) {
+          const { publishRegistry } = await import("../registry/publisher.js");
+          const baseName = opts.init.replace(/^@[^/]+\//, "");
+          registryDir = join(engine.config.projectRoot, baseName);
+          const pkgVersion = (await import("../../package.json", { with: { type: "json" } })).default.version;
+          await publishRegistry({
+            name: opts.init,
+            version: "0.1.0",
+            description: `Design system extracted from ${url}`,
+            homepage: url,
+            outDir: registryDir,
+            designSystem: {
+              tokens: buildDesignTokensFromRaw(tokens),
+              components: [],
+              styles: [],
+              lastSync: new Date().toISOString(),
+            },
+            specs: [],
+            memoireVersion: pkgVersion,
+            sourceDesignDocUrl: url,
+          });
         }
 
         const elapsed = Date.now() - start;
@@ -426,4 +465,35 @@ function buildDesignSpec(name: string, url: string, tokens: RawDesignTokens): ob
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
+}
+
+/** Convert raw CSS tokens into DesignToken[] for codegen consumption. */
+function buildDesignTokensFromRaw(raw: RawDesignTokens): import("../engine/registry.js").DesignToken[] {
+  const tokens: import("../engine/registry.js").DesignToken[] = [];
+  for (const color of raw.colors.slice(0, 30)) {
+    const slug = color.replace(/[^a-z0-9]/gi, "").slice(0, 10) || "color";
+    tokens.push({
+      name: `color-${slug}`,
+      collection: "colors",
+      type: "color",
+      values: { default: color },
+      cssVariable: `--color-${slug}`,
+    });
+  }
+  for (const [key, value] of Object.entries(raw.cssVars).slice(0, 50)) {
+    const type: import("../engine/registry.js").DesignToken["type"] =
+      /color|bg|text|fill|border/i.test(key) ? "color" :
+      /radius/i.test(key) ? "radius" :
+      /shadow/i.test(key) ? "shadow" :
+      /space|gap|pad|margin/i.test(key) ? "spacing" :
+      /font/i.test(key) ? "typography" : "other";
+    tokens.push({
+      name: key.replace(/^--/, ""),
+      collection: "extracted",
+      type,
+      values: { default: value },
+      cssVariable: key.startsWith("--") ? key : `--${key}`,
+    });
+  }
+  return tokens;
 }

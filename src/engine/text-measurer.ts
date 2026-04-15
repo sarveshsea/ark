@@ -11,7 +11,6 @@
  *   // { height: 40, lineCount: 2 }
  */
 
-import { createCanvas } from "@napi-rs/canvas";
 import { prepare, layout, prepareWithSegments, layoutWithLines, clearCache } from "@chenglou/pretext";
 import type { PreparedText } from "@chenglou/pretext";
 import { createLogger } from "./logger.js";
@@ -19,14 +18,22 @@ import { createLogger } from "./logger.js";
 const log = createLogger("text-measurer");
 
 // ── OffscreenCanvas Polyfill ────────────────────────────
+// @napi-rs/canvas is an optional native dependency. When unavailable
+// (binary builds, platforms without a prebuilt .node, hand-installed npm with
+// --no-optional), measurement falls back to a character-width approximation.
 
 let polyfillInstalled = false;
+let canvasUnavailable = false;
 
-function ensurePolyfill(): void {
-  if (polyfillInstalled) return;
-  if (typeof globalThis.OffscreenCanvas === "undefined") {
-    // Pretext checks for globalThis.OffscreenCanvas to get a Canvas2D context.
-    // @napi-rs/canvas provides server-side Canvas with measureText support.
+async function ensurePolyfill(): Promise<void> {
+  if (polyfillInstalled || canvasUnavailable) return;
+  if (typeof globalThis.OffscreenCanvas !== "undefined") {
+    polyfillInstalled = true;
+    return;
+  }
+  try {
+    const canvasMod: { createCanvas: (w: number, h: number) => unknown } =
+      await import("@napi-rs/canvas");
     /* eslint-disable @typescript-eslint/no-explicit-any */
     (globalThis as any).OffscreenCanvas = class OffscreenCanvasPolyfill {
       width: number;
@@ -35,16 +42,33 @@ function ensurePolyfill(): void {
       constructor(w: number, h: number) {
         this.width = w;
         this.height = h;
-        this._canvas = createCanvas(w, h);
+        this._canvas = canvasMod.createCanvas(w, h);
       }
       getContext(type: string) {
         return this._canvas.getContext(type);
       }
     };
     /* eslint-enable @typescript-eslint/no-explicit-any */
+    polyfillInstalled = true;
     log.info("Installed OffscreenCanvas polyfill for server-side text measurement");
+  } catch {
+    canvasUnavailable = true;
+    log.warn(
+      "@napi-rs/canvas not available — text measurement uses character-width approximation",
+    );
   }
-  polyfillInstalled = true;
+}
+
+function approximateLayout(text: string, font: string, maxWidth: number, lineHeight: number) {
+  const fontSize = parseFontSize(font);
+  const avgCharWidth = fontSize * 0.55;
+  const charsPerLine = Math.max(1, Math.floor(maxWidth / avgCharWidth));
+  const paragraphs = text.split("\n");
+  let lineCount = 0;
+  for (const p of paragraphs) {
+    lineCount += Math.max(1, Math.ceil(p.length / charsPerLine));
+  }
+  return { height: lineCount * lineHeight, lineCount };
 }
 
 // ── Types ──────────────────────────────────────────────────

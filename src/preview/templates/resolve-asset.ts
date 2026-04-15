@@ -3,12 +3,16 @@
  * Used by gallery-page.ts and research-page.ts to load extracted static content.
  */
 
-import { readFileSync } from "fs";
+import { existsSync, readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
+import { packageRoot } from "../../utils/asset-path.js";
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 
 export function resolveAsset(relativePath: string): string {
-  return readFileSync(join(__dir, relativePath), "utf-8");
+  const sibling = join(__dir, relativePath);
+  if (existsSync(sibling)) return readFileSync(sibling, "utf-8");
+  // Compiled binary: import.meta.url is virtual; fall back to sidecar assets.
+  return readFileSync(join(packageRoot(), "preview", "templates", relativePath), "utf-8");
 }

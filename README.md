@@ -26,13 +26,22 @@
 
 ---
 
-## Try it now
+## The shadcn pattern, for entire design systems
+
+Every company has 2-3 Figma files that should be **the** design system. Nobody made them distributable. Until now.
 
 ```bash
-npx @sarveshsea/memoire design-doc https://stripe.com
+# 1. Take your Figma file, make it a registry package
+npx @sarveshsea/memoire publish --name @you/design-system --figma https://figma.com/design/xxx
+
+# 2. From any project, install components by name
+npx @sarveshsea/memoire add Button --from @you/design-system
+
+# 3. Or try it on any public URL with no Figma at all
+npx @sarveshsea/memoire design-doc https://stripe.com --codegen
 ```
 
-Extracts colors, typography, spacing, shadows, and component patterns from any public URL. Outputs a `DESIGN.md` with a Tailwind config sketch. 10 seconds. Zero config.
+The registry is a portable package: tokens as W3C DTCG JSON + Tailwind v4 `@theme` CSS + component specs. Publishable to npm, GitHub, or any static host.
 
 <p align="center">
   <img src="assets/demo.gif" alt="memoire extracting a design system from a URL" width="720" />
