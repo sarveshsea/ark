@@ -1,0 +1,25 @@
+{
+  "name": "@memoire-examples/tweakcn-vercel",
+  "version": "0.1.0",
+  "description": "Vercel-inspired dark-minimal Memoire Registry — high-contrast B&W with electric blue accent",
+  "homepage": "https://memoire.cv",
+  "license": "MIT",
+  "files": [
+    "registry.json",
+    "tokens/",
+    "components/",
+    "README.md"
+  ],
+  "keywords": [
+    "memoire-registry",
+    "design-system",
+    "design-tokens",
+    "shadcn",
+    "tweakcn",
+    "vercel"
+  ],
+  "memoire": {
+    "registry": true,
+    "schemaVersion": "v1"
+  }
+}
