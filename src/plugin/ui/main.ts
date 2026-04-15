@@ -66,6 +66,7 @@ interface UiState {
     lastPingSentAt: number;
     scanTimer: number | null;
     offlineSince: number | null;
+    reconnectAttempts: number;
   };
 }
 
@@ -121,6 +122,35 @@ function isTrustedMessageOrigin(origin: string): boolean {
 const MAX_JOBS = 24;
 const MAX_AGENT_STATUSES = 48;
 const PENDING_REQUEST_TIMEOUT_MS = 35000;
+
+// Per-method timeout budgets (#12). Screenshot/export operations can take
+// tens of seconds on large frames; inspect/ping should fail fast so the UI
+// surfaces disconnects quickly.
+const COMMAND_TIMEOUTS_MS: Partial<Record<WidgetCommandName, number>> = {
+  captureScreenshot: 90000,
+  getComponentImage: 60000,
+  getVariables: 60000,
+  getComponents: 60000,
+  getStyles: 60000,
+  getPageTree: 45000,
+  getFileData: 45000,
+  pushTokens: 60000,
+  execute: 30000,
+  getSelection: 8000,
+  getStickies: 10000,
+  getChanges: 8000,
+  getPageList: 8000,
+  createNode: 15000,
+  updateNode: 15000,
+  deleteNode: 10000,
+  setSelection: 8000,
+  navigateTo: 8000,
+};
+
+function timeoutForCommand(command: WidgetCommandName): number {
+  const t = COMMAND_TIMEOUTS_MS[command];
+  return t ?? PENDING_REQUEST_TIMEOUT_MS;
+}
 const pendingBridgeRequests = new Map<string, PendingBridgeRequest>();
 const pendingRequestTimers = new Map<string, number>();
 
@@ -180,6 +210,7 @@ const state: UiState = {
     lastPingSentAt: 0,
     scanTimer: null,
     offlineSince: Date.now(),
+    reconnectAttempts: 0,
   },
 };
 
@@ -321,6 +352,27 @@ function bindPluginMessages(): void {
   };
 }
 
+// Active candidate sockets for the in-flight parallel scan (#10). We open
+// one WebSocket per port and adopt the first one that sends a valid
+// identify/pong; all other candidates are closed immediately.
+let scanCandidates: WebSocket[] = [];
+let scanGenerationId = 0;
+
+function orderedScanPorts(): number[] {
+  const ports: number[] = [];
+  for (let p = PORT_START; p <= PORT_END; p += 1) ports.push(p);
+  const cached = readCachedPort();
+  const preferred = cached !== null ? cached : state.bridge.port;
+  if (preferred && preferred >= PORT_START && preferred <= PORT_END) {
+    const idx = ports.indexOf(preferred);
+    if (idx > 0) {
+      ports.splice(idx, 1);
+      ports.unshift(preferred);
+    }
+  }
+  return ports;
+}
+
 function scanBridge(): void {
   if (state.bridge.stage === "scanning") {
     return;
@@ -328,115 +380,115 @@ function scanBridge(): void {
   setBridgeStage("scanning");
   state.bridge.portsTried = [];
   scheduleRender();
-  // Prefer last known port for faster reconnection. First check the
-  // localStorage cache (survives plugin reloads, N10), then the in-memory
-  // port, and fall back to PORT_START.
-  const cached = readCachedPort();
-  const startPort = cached !== null
-    ? cached
-    : state.bridge.port && state.bridge.port >= PORT_START && state.bridge.port <= PORT_END
-      ? state.bridge.port
-      : PORT_START;
-  tryNextPort(startPort);
-}
 
-function nextScanPort(current: number): number {
-  // Wrap around: after PORT_END, go back to PORT_START
-  // Stop when we've tried all ports in the range
-  const next = current >= PORT_END ? PORT_START : current + 1;
-  return next;
-}
+  scanGenerationId += 1;
+  const generation = scanGenerationId;
+  closeScanCandidates();
 
-function tryNextPort(port: number): void {
-  // Stop if we've tried all ports in the range
-  if (state.bridge.portsTried.length >= (PORT_END - PORT_START + 1)) {
+  const ports = orderedScanPorts();
+  let settledPorts = 0;
+  let adopted = false;
+
+  const scanTimeout = window.setTimeout(() => {
+    if (adopted || generation !== scanGenerationId) return;
+    closeScanCandidates();
     setBridgeStage("offline");
     scheduleReconnect();
-    return;
-  }
+    scheduleRender();
+  }, 3000);
 
-  // Skip ports already tried in this scan cycle
-  if (state.bridge.portsTried.indexOf(port) >= 0) {
-    tryNextPort(nextScanPort(port));
-    return;
-  }
-
-  state.bridge.portsTried.push(port);
-  let ws: WebSocket;
-  try {
-    ws = new WebSocket("ws://localhost:" + port);
-  } catch {
-    tryNextPort(nextScanPort(port));
-    return;
-  }
-  let settled = false;
-
-  const timeout = window.setTimeout(function onScanTimeout() {
-    if (settled) return;
-    settled = true;
-    try { ws.close(); } catch { /* ignore */ }
-    tryNextPort(nextScanPort(port));
-  }, 2500);
-
-  ws.onmessage = function onScanMessage(event) {
-    var payload;
-    try { payload = JSON.parse(event.data); } catch (parseError) {
-      // Log instead of silently dropping — malformed frames are often the
-      // first signal of a bridge/protocol mismatch (#14).
-      addLog("warn", "Dropped malformed bridge frame", {
-        port,
-        preview: String(event.data).slice(0, 120),
-      });
-      return;
+  const onCandidateSettle = (): void => {
+    if (adopted || generation !== scanGenerationId) return;
+    settledPorts += 1;
+    if (settledPorts >= ports.length) {
+      window.clearTimeout(scanTimeout);
+      setBridgeStage("offline");
+      scheduleReconnect();
+      scheduleRender();
     }
+  };
 
-    if (payload.type === "pong" && state.bridge.lastPingSentAt > 0) {
-      state.bridge.latencyMs = Date.now() - state.bridge.lastPingSentAt;
+  for (const port of ports) {
+    state.bridge.portsTried.push(port);
+    let ws: WebSocket;
+    try {
+      ws = new WebSocket("ws://localhost:" + port);
+    } catch {
+      onCandidateSettle();
+      continue;
     }
+    scanCandidates.push(ws);
+    let candidateSettled = false;
 
-    if (!settled) {
-      // Validate identity: must be a proper Mémoire bridge (type=identify with channel field)
-      var isIdentify = payload.type === "identify" && payload.channel === "memoire.bridge.v2";
-      var isPong = payload.type === "pong" && payload.channel === "memoire.bridge.v2";
-      if (isIdentify || isPong) {
-        settled = true;
-        window.clearTimeout(timeout);
-        adoptBridge(ws, port, payload);
+    ws.onmessage = (event) => {
+      if (generation !== scanGenerationId) return;
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(event.data);
+      } catch {
+        addLog("warn", "Dropped malformed bridge frame", {
+          port,
+          preview: String(event.data).slice(0, 120),
+        });
         return;
       }
-    }
+      if (!parsed || typeof parsed !== "object") return;
+      const payload = parsed as { type?: string; channel?: string; name?: string };
 
-    handleBridgeMessage(payload);
-  };
+      if (payload.type === "pong" && state.bridge.lastPingSentAt > 0) {
+        state.bridge.latencyMs = Date.now() - state.bridge.lastPingSentAt;
+      }
 
-  ws.onerror = function onScanError() {
-    if (settled) return;
-    settled = true;
-    window.clearTimeout(timeout);
-    tryNextPort(nextScanPort(port));
-  };
+      if (!adopted) {
+        const isIdentify = payload.type === "identify" && payload.channel === "memoire.bridge.v2";
+        const isPong = payload.type === "pong" && payload.channel === "memoire.bridge.v2";
+        if (isIdentify || isPong) {
+          adopted = true;
+          candidateSettled = true;
+          window.clearTimeout(scanTimeout);
+          // Remove THIS socket from the candidate list, close all others.
+          scanCandidates = scanCandidates.filter((candidate) => candidate !== ws);
+          closeScanCandidates();
+          adoptBridge(ws, port, payload);
+          return;
+        }
+      }
 
-  ws.onclose = function onScanClose() {
-    if (!settled) {
-      settled = true;
-      window.clearTimeout(timeout);
-      tryNextPort(nextScanPort(port));
-      return;
-    }
-    // Active connection lost
-    if (state.bridge.ws === ws) {
-      // Preserve last known port for fast reconnect
-      var lastPort = state.bridge.port;
-      state.bridge.ws = null;
-      state.bridge.port = lastPort;
-      state.jobs = disconnectActiveJobs(state.jobs);
-      cleanupPendingRequests();
-      setBridgeStage("reconnecting");
-      addLog("warn", "Bridge disconnected");
-      scheduleRender();
-      scheduleReconnect();
-    }
-  };
+      handleBridgeMessage(payload);
+    };
+
+    ws.onerror = () => {
+      if (candidateSettled || generation !== scanGenerationId) return;
+      candidateSettled = true;
+      onCandidateSettle();
+    };
+
+    ws.onclose = () => {
+      // If this socket is the adopted bridge, this is a post-connect close.
+      if (state.bridge.ws === ws) {
+        const lastPort = state.bridge.port;
+        state.bridge.ws = null;
+        state.bridge.port = lastPort;
+        state.jobs = disconnectActiveJobs(state.jobs);
+        cleanupPendingRequests();
+        setBridgeStage("reconnecting");
+        addLog("warn", "Bridge disconnected");
+        scheduleRender();
+        scheduleReconnect();
+        return;
+      }
+      if (candidateSettled || generation !== scanGenerationId) return;
+      candidateSettled = true;
+      onCandidateSettle();
+    };
+  }
+}
+
+function closeScanCandidates(): void {
+  for (const ws of scanCandidates) {
+    try { ws.close(); } catch { /* ignore */ }
+  }
+  scanCandidates = [];
 }
 
 function adoptBridge(ws: WebSocket, port: number, payload: { name?: string }): void {
@@ -444,6 +496,7 @@ function adoptBridge(ws: WebSocket, port: number, payload: { name?: string }): v
   state.bridge.port = port;
   state.bridge.name = payload.name || "Mémoire";
   state.bridge.reconnectDelayMs = 2000;
+  state.bridge.reconnectAttempts = 0;
   writeCachedPort(port);
   setBridgeStage("connected");
   addLog("success", `Connected :${port}`);
@@ -460,17 +513,30 @@ function adoptBridge(ws: WebSocket, port: number, payload: { name?: string }): v
   }, 300);
 }
 
+const MAX_RECONNECT_ATTEMPTS = 20;
+
 function scheduleReconnect(): void {
   if (state.bridge.scanTimer) {
     return;
   }
-  const delay = state.bridge.reconnectDelayMs;
+  if (state.bridge.reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+    // Give up the retry loop. User can still click "reconnect" to restart.
+    addLog("error", "Bridge unreachable after " + MAX_RECONNECT_ATTEMPTS + " attempts", {
+      code: "E_BRIDGE_UNREACHABLE",
+    });
+    return;
+  }
+  state.bridge.reconnectAttempts += 1;
+  const base = state.bridge.reconnectDelayMs;
+  // ±20% jitter prevents thundering-herd reconnects when multiple plugin
+  // instances come back at once (N9).
+  const jitter = (Math.random() - 0.5) * 0.4 * base;
+  const delay = Math.max(500, Math.round(base + jitter));
   state.bridge.scanTimer = window.setTimeout(() => {
     state.bridge.scanTimer = null;
     scanBridge();
   }, delay);
-  // Gentler backoff: 2s → 4s → 8s → 12s → 15s (cap)
-  state.bridge.reconnectDelayMs = Math.min(delay * 1.5, 15000);
+  state.bridge.reconnectDelayMs = Math.min(base * 1.5, 15000);
 }
 
 function setBridgeStage(stage: UiState["bridge"]["stage"]): void {
@@ -493,12 +559,29 @@ function setBridgeStage(stage: UiState["bridge"]["stage"]): void {
   };
 }
 
+// WebSocket.send is synchronous from the caller's perspective but pushes
+// into an internal buffer. A stuck peer can balloon bufferedAmount without
+// throwing. Reject sends when the buffer is already very large so a dead
+// bridge cannot silently swallow commands (#34).
+const MAX_WS_BUFFERED_BYTES = 4 * 1024 * 1024;
+
 function forwardToBridge(payload: Record<string, unknown>): boolean {
-  if (!state.bridge.ws || state.bridge.ws.readyState !== WebSocket.OPEN) {
+  const ws = state.bridge.ws;
+  if (!ws || ws.readyState !== WebSocket.OPEN) {
+    return false;
+  }
+  if (ws.bufferedAmount > MAX_WS_BUFFERED_BYTES) {
+    addLog("warn", "Bridge send rejected — socket buffer exceeded threshold", {
+      bufferedAmount: ws.bufferedAmount,
+    });
+    state.bridge.ws = null;
+    try { ws.close(); } catch { /* ignore */ }
+    setBridgeStage("reconnecting");
+    scheduleReconnect();
     return false;
   }
   try {
-    state.bridge.ws.send(JSON.stringify(payload));
+    ws.send(JSON.stringify(payload));
     return true;
   } catch {
     // Send failed — connection is stale, trigger reconnect
@@ -509,13 +592,16 @@ function forwardToBridge(payload: Record<string, unknown>): boolean {
   }
 }
 
+// Drains the pending request map atomically (#37). Previously, concurrent
+// new request registrations during cleanup could race the iteration; we
+// now swap out the underlying storage first and clear in isolation.
 function cleanupPendingRequests(): void {
-  // Clear all pending bridge request tracking on disconnect
-  for (var timerId of pendingRequestTimers.values()) {
-    window.clearTimeout(timerId);
-  }
+  const timers = Array.from(pendingRequestTimers.values());
   pendingBridgeRequests.clear();
   pendingRequestTimers.clear();
+  for (const timerId of timers) {
+    window.clearTimeout(timerId);
+  }
 }
 
 // pagehide fires on plugin UI close / navigation and is more reliable than
@@ -626,18 +712,28 @@ function handleBridgeCommand(message: BridgeCommandEnvelope): void {
   var dispatch = createBridgeCommandDispatch(message);
   trackBridgeRequest(pendingBridgeRequests, dispatch.requestId, message);
 
-  // Auto-cleanup if main thread never responds within timeout
+  // Per-method timeout budget (#12) prevents a fast ping from sharing the
+  // same 35s wait as a heavy screenshot export.
+  var commandTimeout = timeoutForCommand(dispatch.command);
   var timerId = window.setTimeout(function onRequestTimeout() {
     var pending = pendingBridgeRequests.get(dispatch.requestId);
     if (pending) {
       pendingBridgeRequests.delete(dispatch.requestId);
       pendingRequestTimers.delete(dispatch.requestId);
       forwardToBridge(serializeBridgeEnvelope(
-        createBridgeResponseEnvelope(pending.bridgeId, undefined, "Request timed out: " + dispatch.command),
+        createBridgeResponseEnvelope(
+          pending.bridgeId,
+          undefined,
+          JSON.stringify({
+            code: "E_TIMEOUT",
+            message: "Request timed out: " + dispatch.command + " after " + commandTimeout + "ms",
+            retryable: true,
+          }),
+        ),
       ));
-      addLog("warn", "Command timed out: " + dispatch.command);
+      addLog("warn", "Command timed out: " + dispatch.command, { afterMs: commandTimeout });
     }
-  }, PENDING_REQUEST_TIMEOUT_MS);
+  }, commandTimeout);
   pendingRequestTimers.set(dispatch.requestId, timerId);
 
   sendToMain({
@@ -973,6 +1069,7 @@ function handleAction(action: string): void {
         state.bridge.scanTimer = null;
       }
       state.bridge.reconnectDelayMs = 2000;
+      state.bridge.reconnectAttempts = 0;
       scanBridge();
       break;
     default:
