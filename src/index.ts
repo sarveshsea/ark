@@ -67,6 +67,7 @@ const { registerAuditCommand } = await import("./commands/audit.js");
 const { registerDiffCommand } = await import("./commands/diff.js");
 const { registerAddCommand } = await import("./commands/add.js");
 const { registerPublishCommand } = await import("./commands/publish.js");
+const { registerThemeCommand } = await import("./commands/theme.js");
 const { registerViewCommand } = await import("./commands/view.js");
 const { registerUpgradeCommand } = await import("./commands/upgrade.js");
 const { registerUpdateCommand } = await import("./commands/update.js");
@@ -109,6 +110,7 @@ if (!mcpMode) {
 // leads with the core product surface instead of the long tail.
 registerInitCommand(program, engine);
 registerPublishCommand(program, engine);
+registerThemeCommand(program, engine);
 registerAddCommand(program, engine);
 registerUpdateCommand(program, engine);
 registerViewCommand(program, engine);

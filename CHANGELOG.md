@@ -15,6 +15,9 @@ This release closes the remaining gaps between the repo, shipped artifacts, and 
 - **Expanded release guard** — `scripts/check-release.mjs` now validates the shipped plugin bundle metadata, all example registries under `examples/`, the starter preset README version marker, and the synced preview changelog output.
 - **Release checks in more pipelines** — CI and release-binary workflows now run `npm run check:release`, so drift gets caught before tags or binaries are built.
 - **Linux-safe workflow installs** — publish, CI, and release-binary workflows regenerate `package-lock.json` on the runner before `npm install --ignore-scripts`, which restores the platform-native esbuild binaries needed for Ubuntu test and release jobs.
+- **First-class tweakcn workflow** — `memi theme import`, `preview`, `validate`, `diff`, `apply`, `variants`, and `publish` turn tweakcn themes into saved Memoire assets under `.memoire/themes/` instead of a one-off publish flag.
+- **Theme validation + semantic diffing** — imported themes now get contrast-aware validation summaries, dark-mode coverage checks, and semantic diff highlights like `primary changed`, `radius scale changed`, and `contrast regressed`.
+- **Theme packaging artifacts** — `memi theme publish` now adds `theme.json` metadata and a generated `preview/theme-preview.html` so published theme packages carry more than raw tokens.
 
 ### Fixed
 - Aligned `examples/starter-registry/registry.json` to the current Memoire release instead of leaving it pinned to `0.11.0`.

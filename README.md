@@ -37,17 +37,24 @@ A registry bundles tokens (W3C DTCG JSON + Tailwind v4 `@theme` CSS), component 
 
 ### Designed in tweakcn? Publish with Memoire.
 
-[tweakcn](https://tweakcn.com) is the visual theme editor for shadcn/ui. Paint your theme there, ship it with Memoire:
+[tweakcn](https://tweakcn.com) is the visual theme editor for shadcn/ui. Memoire now treats tweakcn as a full workflow, not just a publish flag:
 
 ```bash
-# From a tweakcn CSS export
-memi publish --name @you/theme --theme ./tweakcn-export.css --push
+# Import from a tweakcn CSS export or share URL
+memi theme import ./tweakcn-export.css --name "Acme Theme"
+memi theme import https://tweakcn.com/r/themes/xxx --name "Acme Theme"
 
-# Or straight from a tweakcn share URL
-memi publish --name @you/theme --theme https://tweakcn.com/r/themes/xxx --push
+# Validate, preview, diff, and generate packaged variants
+memi theme validate "Acme Theme"
+memi theme preview "Acme Theme"
+memi theme variants "Acme Theme"
+
+# Apply it into the current workspace or publish it to npm
+memi theme apply "Acme Theme"
+memi theme publish "Acme Theme" --package @you/theme
 ```
 
-The `--theme` flag parses both Tailwind v3 (`:root { --primary: ... }`) and v4 (`@theme { --color-primary: ... }`) exports, including `:root` + `.dark` multi-mode themes.
+Theme import handles both Tailwind v3 (`:root { --primary: ... }`) and v4 (`@theme { --color-primary: ... }`) exports, including `:root` + `.dark` multi-mode themes. If you want the one-shot path, `memi publish --theme <path-or-url>` still works.
 
 <p align="center">
   <img src="assets/demo.gif" alt="memoire extracting a design system from a URL" width="720" />
@@ -60,7 +67,7 @@ The `--theme` flag parses both Tailwind v3 (`:root { --primary: ... }`) and v4 (
 | Input | Output |
 |-------|--------|
 | Figma file | npm-ready design system registry with tokens, specs, and real components |
-| tweakcn theme | Parsed tokens you can publish as a reusable registry |
+| tweakcn theme | A first-class workflow: import, preview, diff, validate, apply, variants, publish |
 | Any public URL | `DESIGN.md` plus an optional starter registry scaffold |
 | JSON specs | React + TypeScript + Tailwind components (shadcn/ui) |
 | Generated registries | Installable components for React / Vue / Svelte |
@@ -153,6 +160,7 @@ Or add manually to `.mcp.json`:
 | `memi generate [name]` | Generate shadcn/ui code + Storybook stories from specs |
 | `memi generate --no-stories` | Generate without Storybook stories |
 | `memi preview` | Start preview gallery + shadcn registry server |
+| `memi theme <subcommand>` | tweakcn workflow: import, preview, validate, diff, apply, variants, publish |
 | `memi go` | Full pipeline in one command |
 | `memi export` | Export generated code into your project |
 | `memi tokens` | Export tokens as CSS / Tailwind / JSON / Style Dictionary (W3C DTCG) |
