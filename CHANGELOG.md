@@ -11,7 +11,21 @@ This changelog tracks Mémoire itself: every version, commit, and architectural 
 ### The fix
 This release aligns the npm package, repo docs, example catalog, and launch assets around one public wedge: publish Figma or tweakcn design systems as installable shadcn registries.
 
+### Commits
+| Hash | Message |
+|------|---------|
+| `66ed209c` | feat(engine): add design ci research v2 and token intelligence |
+
+### Key Design Decisions
+- **Lead with code-native Design CI** — Memoire now starts from the app developers already have, then moves into registry publishing once the system has been diagnosed and improved.
+- **Make research decision-grade, not experimental** — Research V2 uses auditable observations, descriptive quantitative metrics, quality scoring, and explicit methods/caveats instead of untraceable insight blobs.
+- **Treat token extraction as an audit surface** — Token extraction now reports semantic coverage, mode parity, alias graph health, duplicates, recommendations, and inferred literals before saving anything as canonical.
+- **Keep one-shot CLI commands process-safe** — Background agent timers are unref'ed so extraction and diagnosis commands exit cleanly after writing their artifacts.
+
 ### New
+- **Design CI diagnosis command** — `memi diagnose [target]` audits real shadcn/Tailwind apps from source code or a URL, scores UI debt, and writes `.memoire/app-quality/diagnosis.{json,md}`.
+- **Code-first token intelligence** — `memi tokens --from <file|dir|url>` extracts CSS variables, Tailwind `@theme` tokens, modes, aliases, repeated literals, utility patterns, semantic coverage, mode coverage, duplicate groups, and recommendations.
+- **Auditable token reports** — `memi tokens --from ./src --report` writes `token-extraction.report.md` and `token-extraction.report.json` alongside CSS, Tailwind, JSON, and Style Dictionary exports.
 - **Featured registry catalog** — `examples/featured-registries.json` now ships a machine-readable fallback list for the website with three first-party showcases: `starter-saas`, `docs-blog`, and `dashboard`.
 - **Three first-party showcase registries** — `examples/presets/starter-saas`, `docs-blog`, and `dashboard` give new users installable packages with screenshots, install commands, and source links instead of an empty marketplace story.
 - **Growth docs pack** — new `docs/README.md`, `docs/DEMOS.md`, and `docs/LAUNCH.md` define the quickstart, demo scripts, and distribution copy around the registry-first pitch.
@@ -19,6 +33,7 @@ This release aligns the npm package, repo docs, example catalog, and launch asse
 - **Release guard for featured content** — `scripts/check-release.mjs` now validates that the featured registry catalog exists, carries at least three entries, and points at real source folders and screenshots.
 
 ### Fixed
+- `memi tokens --from ... --json` and other initialized one-shot commands now exit cleanly instead of being held open by agent health timers.
 - Tightened npm metadata, CLI help text, and first-run messaging to the same installable-registry story.
 - Bumped every shipped example registry and starter README marker to `v0.12.4` so release checks stay green.
 
