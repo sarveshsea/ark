@@ -1,7 +1,11 @@
 import type { Command } from "commander";
+import { access, readFile } from "node:fs/promises";
+import { join } from "node:path";
 
-import { loadMarketplaceCatalog } from "../marketplace/catalog-loader.js";
+import { loadMarketplaceCatalog, resolveMarketplaceAlias } from "../marketplace/catalog-loader.js";
 import type { MarketplaceCatalogEntry } from "../marketplace/catalog.js";
+import { packagePath } from "../utils/asset-path.js";
+import { readRegistryFile, resolveRegistry } from "../registry/resolver.js";
 
 export interface RegistryDiscoveryEntry {
   slug: string;
@@ -16,6 +20,22 @@ export interface RegistryDiscoveryEntry {
   components: Array<{ name: string; level?: string; category?: string }>;
   screenshotUrl: string;
   sourceUrl: string;
+}
+
+export interface RegistryDoctorCheck {
+  name: string;
+  status: "passed" | "failed" | "skipped";
+  message?: string;
+}
+
+export interface RegistryDoctorPayload {
+  status: "passed" | "failed";
+  ref: string;
+  resolvedRef?: string;
+  registry?: string;
+  version?: string;
+  checks: RegistryDoctorCheck[];
+  errors: string[];
 }
 
 export function toRegistryDiscoveryEntry(entry: MarketplaceCatalogEntry): RegistryDiscoveryEntry {
@@ -144,6 +164,134 @@ export function registerRegistryCommand(program: Command) {
       }
       printRegistryInfo(payload);
     });
+
+  registry
+    .command("doctor")
+    .argument("<ref>", "Registry slug, package name, local path, GitHub ref, or registry URL")
+    .description("Validate registry package files and marketplace metadata")
+    .option("--json", "Output CI-friendly JSON")
+    .action(async (ref: string, opts: { json?: boolean }) => {
+      const payload = await doctorRegistryRef(ref);
+      if (opts.json) {
+        console.log(JSON.stringify(payload, null, 2));
+      } else {
+        printDoctorPayload(payload);
+      }
+      if (payload.status === "failed") {
+        process.exitCode = 1;
+      }
+    });
+}
+
+export async function doctorRegistryRef(ref: string, cwd: string = process.cwd()): Promise<RegistryDoctorPayload> {
+  const checks: RegistryDoctorCheck[] = [];
+  const errors: string[] = [];
+  const catalogEntry = await resolveMarketplaceAlias(ref).catch(() => undefined);
+
+  let resolvedRef = ref;
+  try {
+    if (catalogEntry) {
+      const localSource = join(cwd, catalogEntry.sourcePath);
+      if (await fileExists(localSource)) {
+        resolvedRef = localSource;
+      } else {
+        const packagedSource = packagePath(catalogEntry.sourcePath);
+        resolvedRef = await fileExists(packagedSource) ? packagedSource : catalogEntry.packageName;
+      }
+    }
+
+    const resolved = await resolveRegistry(resolvedRef, cwd);
+    checks.push({ name: "registry.json", status: "passed", message: `${resolved.registry.name}@${resolved.registry.version}` });
+
+    if (resolved.registry.tokens?.href) {
+      try {
+        const tokenRaw = await readRegistryFile(resolved, resolved.registry.tokens.href);
+        if (resolved.registry.tokens.href.endsWith(".json")) JSON.parse(tokenRaw);
+        checks.push({ name: "tokens", status: "passed", message: resolved.registry.tokens.href });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        checks.push({ name: "tokens", status: "failed", message });
+        errors.push(message);
+      }
+    } else {
+      checks.push({ name: "tokens", status: "skipped", message: "registry has no tokens ref" });
+    }
+
+    for (const component of resolved.registry.components) {
+      try {
+        JSON.parse(await readRegistryFile(resolved, component.href));
+        checks.push({ name: `component:${component.name}`, status: "passed", message: component.href });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        checks.push({ name: `component:${component.name}`, status: "failed", message });
+        errors.push(message);
+      }
+
+      if (component.code?.href) {
+        try {
+          await readRegistryFile(resolved, component.code.href);
+          checks.push({ name: `code:${component.name}`, status: "passed", message: component.code.href });
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          checks.push({ name: `code:${component.name}`, status: "failed", message });
+          errors.push(message);
+        }
+      }
+    }
+
+    if (/^https?:\/\//.test(resolved.baseUrl)) {
+      checks.push({ name: "package.json", status: "skipped", message: "remote registry package metadata not fetched" });
+    } else {
+      try {
+        const pkg = JSON.parse(await readFile(join(resolved.baseUrl, "package.json"), "utf8"));
+        if (pkg.name !== resolved.registry.name) {
+          throw new Error(`package name ${pkg.name} does not match registry name ${resolved.registry.name}`);
+        }
+        if (pkg.memoire?.registry !== true) {
+          throw new Error("package.json missing memoire.registry = true");
+        }
+        checks.push({ name: "package.json", status: "passed", message: pkg.name });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        checks.push({ name: "package.json", status: "failed", message });
+        errors.push(message);
+      }
+    }
+
+    if (catalogEntry) {
+      const installComponent = catalogEntry.installCommand.match(/memi add ([^\s]+)/)?.[1];
+      const hasInstallComponent = resolved.registry.components.some((component) => component.name === installComponent);
+      if (catalogEntry.installCommand.includes(catalogEntry.packageName) && hasInstallComponent) {
+        checks.push({ name: "install-command", status: "passed", message: catalogEntry.installCommand });
+      } else {
+        const message = `catalog install command is not viable: ${catalogEntry.installCommand}`;
+        checks.push({ name: "install-command", status: "failed", message });
+        errors.push(message);
+      }
+    } else {
+      checks.push({ name: "install-command", status: "skipped", message: "not a catalog registry" });
+    }
+
+    return {
+      status: errors.length === 0 ? "passed" : "failed",
+      ref,
+      resolvedRef,
+      registry: resolved.registry.name,
+      version: resolved.registry.version,
+      checks,
+      errors,
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    checks.push({ name: "resolve", status: "failed", message });
+    return {
+      status: "failed",
+      ref,
+      resolvedRef,
+      checks,
+      errors: [message],
+    };
+  }
 }
 
 function printRegistryTable(entries: RegistryDiscoveryEntry[]): void {
@@ -171,4 +319,27 @@ function printRegistryInfo(entry: RegistryDiscoveryEntry): void {
   console.log(`  Components:  ${entry.components.map((component) => component.name).join(", ")}`);
   console.log(`  Tags:        ${entry.tags.join(", ")}`);
   console.log();
+}
+
+function printDoctorPayload(payload: RegistryDoctorPayload): void {
+  console.log();
+  console.log(`  Registry doctor: ${payload.ref}`);
+  if (payload.registry) console.log(`  Registry: ${payload.registry}@${payload.version}`);
+  console.log();
+  for (const check of payload.checks) {
+    const marker = check.status === "passed" ? "+" : check.status === "failed" ? "x" : "-";
+    console.log(`  ${marker} ${check.name}${check.message ? ` - ${check.message}` : ""}`);
+  }
+  console.log();
+  console.log(`  Result: ${payload.status}`);
+  console.log();
+}
+
+async function fileExists(path: string): Promise<boolean> {
+  try {
+    await access(path);
+    return true;
+  } catch {
+    return false;
+  }
 }
