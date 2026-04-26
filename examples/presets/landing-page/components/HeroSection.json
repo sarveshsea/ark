@@ -1,0 +1,37 @@
+{
+  "name": "HeroSection",
+  "type": "component",
+  "level": "organism",
+  "purpose": "Conversion-focused landing page hero with badge, headline, CTA pair, signup input, and proof cards",
+  "researchBacking": [],
+  "designTokens": { "source": "manual", "mapped": true },
+  "variants": ["default", "split"],
+  "props": {
+    "eyebrow": "string",
+    "headline": "string",
+    "description": "string",
+    "primaryCta": "string",
+    "secondaryCta": "string?",
+    "emailPlaceholder": "string?",
+    "proofPoints": "string[]?"
+  },
+  "shadcnBase": ["Button", "Card", "Badge", "Input"],
+  "composesSpecs": ["Badge", "Button", "Input", "Card"],
+  "codeConnect": { "props": {}, "mapped": false },
+  "accessibility": {
+    "role": "region",
+    "ariaLabel": "required",
+    "keyboardNav": true,
+    "focusStyle": "ring",
+    "focusWidth": "2px",
+    "focusContrastRatio": 3,
+    "touchTarget": "min-44",
+    "reducedMotion": true,
+    "liveRegion": "off",
+    "colorIndependent": true
+  },
+  "dataviz": null,
+  "tags": ["marketing", "hero", "conversion"],
+  "createdAt": "2026-04-26T00:00:00.000Z",
+  "updatedAt": "2026-04-26T00:00:00.000Z"
+}

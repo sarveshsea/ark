@@ -1,0 +1,26 @@
+{
+  "name": "@memoire-examples/landing-page",
+  "version": "0.1.0",
+  "description": "Landing Page Memoire Registry - conversion-focused hero, CTA, and form primitives for shadcn apps.",
+  "homepage": "https://memoire.cv",
+  "license": "MIT",
+  "files": [
+    "registry.json",
+    "tokens/",
+    "components/",
+    "README.md"
+  ],
+  "keywords": [
+    "memoire-registry",
+    "design-system",
+    "design-tokens",
+    "shadcn",
+    "landing-page",
+    "marketing",
+    "conversion"
+  ],
+  "memoire": {
+    "registry": true,
+    "schemaVersion": "v1"
+  }
+}

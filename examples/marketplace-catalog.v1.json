@@ -133,6 +133,54 @@
       "screenshotUrl": "https://raw.githubusercontent.com/sarveshsea/m-moire/main/assets/showcases/dashboard.svg"
     },
     {
+      "slug": "landing-page",
+      "title": "Landing Page",
+      "packageName": "@memoire-examples/landing-page",
+      "description": "Conversion-focused landing page registry with hero, CTA, and form primitives.",
+      "category": "marketing",
+      "tags": [
+        "landing-page",
+        "marketing",
+        "conversion",
+        "hero",
+        "waitlist"
+      ],
+      "featured": false,
+      "installCommand": "memi add Button --from @memoire-examples/landing-page",
+      "componentCount": 5,
+      "components": [
+        {
+          "name": "Button",
+          "level": "atom",
+          "category": "action"
+        },
+        {
+          "name": "Card",
+          "level": "molecule",
+          "category": "surface"
+        },
+        {
+          "name": "Badge",
+          "level": "atom",
+          "category": "status"
+        },
+        {
+          "name": "Input",
+          "level": "atom",
+          "category": "form"
+        },
+        {
+          "name": "HeroSection",
+          "level": "organism",
+          "category": "marketing"
+        }
+      ],
+      "sourcePath": "examples/presets/landing-page",
+      "sourceUrl": "https://github.com/sarveshsea/m-moire/tree/main/examples/presets/landing-page",
+      "screenshotPath": "assets/showcases/landing-page.svg",
+      "screenshotUrl": "https://raw.githubusercontent.com/sarveshsea/m-moire/main/assets/showcases/landing-page.svg"
+    },
+    {
       "slug": "starter",
       "title": "Starter",
       "packageName": "@memoire-examples/starter",

@@ -1,0 +1,38 @@
+/* @memoire-examples/landing-page - Tailwind v4 @theme */
+@import "tailwindcss";
+
+@theme {
+  /* Colors */
+  --color-background: oklch(99% 0.01 80);
+  --color-foreground: oklch(18% 0.03 270);
+  --color-card: oklch(100% 0 0);
+  --color-card-foreground: oklch(18% 0.03 270);
+  --color-primary: oklch(58% 0.23 25);
+  --color-primary-foreground: oklch(99% 0.01 80);
+  --color-muted: oklch(95% 0.03 80);
+  --color-muted-foreground: oklch(44% 0.04 270);
+  --color-accent: oklch(72% 0.19 85);
+  --color-accent-foreground: oklch(18% 0.03 270);
+  --color-border: oklch(88% 0.03 80);
+  --color-input: oklch(88% 0.03 80);
+  --color-ring: oklch(58% 0.23 25);
+
+  /* Typography */
+  --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  /* Radii */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}

@@ -40,6 +40,7 @@ describe("marketplace catalog v1", () => {
       "starter-saas",
       "docs-blog",
       "dashboard",
+      "landing-page",
       "starter",
       "tweakcn-vercel",
       "tweakcn-supabase",

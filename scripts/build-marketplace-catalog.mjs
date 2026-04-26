@@ -41,6 +41,14 @@ const presetMeta = {
     screenshotPath: "assets/showcases/dashboard.svg",
     description: "High-contrast analytics dashboard starter for admin and ops products.",
   },
+  "landing-page": {
+    title: "Landing Page",
+    category: "marketing",
+    tags: ["landing-page", "marketing", "conversion", "hero", "waitlist"],
+    featured: false,
+    screenshotPath: "assets/showcases/landing-page.svg",
+    description: "Conversion-focused landing page registry with hero, CTA, and form primitives.",
+  },
   starter: {
     title: "Starter",
     category: "starter",
@@ -79,6 +87,7 @@ const priority = [
   "starter-saas",
   "docs-blog",
   "dashboard",
+  "landing-page",
   "starter",
   "tweakcn-vercel",
   "tweakcn-supabase",
