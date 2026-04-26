@@ -9,7 +9,7 @@
  *   - Local path:             "./path/to/registry" or "/abs/path"
  */
 
-import { readFile } from "fs/promises";
+import { access, readFile } from "fs/promises";
 import { join, isAbsolute, resolve } from "path";
 import {
   parseRegistry,
@@ -19,6 +19,7 @@ import {
 } from "./schema.js";
 import { resolveMarketplaceAlias } from "../marketplace/catalog-loader.js";
 import { fetchNpmPackageToCache } from "./npm-fetch.js";
+import { packagePath } from "../utils/asset-path.js";
 
 export interface ResolvedRegistry {
   /** The parsed registry document */
@@ -77,6 +78,14 @@ export async function resolveRegistry(ref: string, cwd: string = process.cwd(), 
   const marketplaceEntry = await resolveMarketplaceAlias(ref);
   if (marketplaceEntry && marketplaceEntry.packageName !== ref) {
     try {
+      const localSource = resolve(cwd, marketplaceEntry.sourcePath);
+      if (await fileExists(localSource)) {
+        return await resolveLocal(localSource, cwd);
+      }
+      const packagedSource = packagePath(marketplaceEntry.sourcePath);
+      if (await fileExists(packagedSource)) {
+        return await resolveLocal(packagedSource, cwd);
+      }
       return await resolveNpm(marketplaceEntry.packageName, cwd, options);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -87,6 +96,15 @@ export async function resolveRegistry(ref: string, cwd: string = process.cwd(), 
   }
   // Default: treat as npm package name — look in node_modules
   return resolveNpm(ref, cwd, options);
+}
+
+async function fileExists(path: string): Promise<boolean> {
+  try {
+    await access(path);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 async function resolveLocal(ref: string, cwd: string): Promise<ResolvedRegistry> {

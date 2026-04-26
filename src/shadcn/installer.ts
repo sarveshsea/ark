@@ -4,7 +4,9 @@ import { basename, dirname, isAbsolute, join, resolve } from "node:path";
 import type { MemoireEngine } from "../engine/core.js";
 import type { ComponentSpec } from "../specs/types.js";
 import { ComponentSpecSchema } from "../specs/types.js";
+import { resolveMarketplaceAlias } from "../marketplace/catalog-loader.js";
 import { fetchNpmPackageToCache } from "../registry/npm-fetch.js";
+import { packagePath } from "../utils/asset-path.js";
 import {
   type ShadcnRegistry,
   type ShadcnRegistryFile,
@@ -91,8 +93,21 @@ export async function resolveShadcnRegistryItem(
     return resolveLocalShadcnItem(from, name, cwd);
   }
 
-  const cached = await fetchNpmPackageToCache(from, cwd, "latest", { refresh: options.refresh });
-  return resolveLocalShadcnItem(cached.packageDir, name, cwd, `npm:${from}@${cached.version}`);
+  const catalogEntry = await resolveMarketplaceAlias(from).catch(() => undefined);
+  const packageName = catalogEntry?.packageName ?? from;
+  if (catalogEntry) {
+    const localSource = resolve(cwd, catalogEntry.sourcePath);
+    if (await exists(localSource)) {
+      return resolveLocalShadcnItem(localSource, name, cwd, `catalog:${catalogEntry.slug}`);
+    }
+    const packagedSource = packagePath(catalogEntry.sourcePath);
+    if (await exists(packagedSource)) {
+      return resolveLocalShadcnItem(packagedSource, name, cwd, `catalog:${catalogEntry.slug}`);
+    }
+  }
+
+  const cached = await fetchNpmPackageToCache(packageName, cwd, "latest", { refresh: options.refresh });
+  return resolveLocalShadcnItem(cached.packageDir, name, cwd, `npm:${packageName}@${cached.version}`);
 }
 
 function itemToSyntheticSpec(item: ShadcnRegistryItem): ComponentSpec {
