@@ -15,7 +15,7 @@ This tracker keeps achievement work tied to real Memoire distribution. The goal 
 | Item | Status | Next action |
 | --- | --- | --- |
 | Memoire repo stars | 4 | Drive Starstruck through launch and directory distribution |
-| Memoire discussions | Enabled on GitHub | Add Q&A-focused categories in repository settings |
+| Memoire discussions | Enabled on GitHub | `Q&A` and `Show and tell` are active; add `Registry help` and `MCP setup` in repository settings |
 | npm latest | Requires manual auth and publish | Publish 0.14.1 before directory announcements |
 | Sandbox repo | `sarveshsea/memoire-achievements-lab` | Use only for harmless workflow checks |
 | GitHub metadata | Updated to shadcn-native Design CI | Keep npm, README, and directory copy aligned |
@@ -34,14 +34,14 @@ This tracker keeps achievement work tied to real Memoire distribution. The goal 
 
 ## Discussion Categories To Configure
 
-GitHub category forms live in `.github/DISCUSSION_TEMPLATE/`, but categories themselves must exist in the repository settings before the forms are used. Configure these categories after enabling Discussions:
+GitHub category forms live in `.github/DISCUSSION_TEMPLATE/`, but categories themselves must exist in the repository settings before the forms are used. GitHub created `Q&A` and `Show and tell` when Discussions were enabled. Add the remaining categories in the GitHub UI:
 
 | Category | Suggested slug | Format | Purpose |
 | --- | --- | --- | --- |
-| Q&A | `q-a` | Question and answer | Support, accepted answers, Galaxy Brain path |
-| Show and tell | `show-and-tell` | Open-ended discussion | User demos, registries, launch proof |
-| Registry help | `registry-help` | Question and answer | `memi shadcn export`, `memi add`, registry install issues |
-| MCP setup | `mcp-setup` | Question and answer | Claude Code, Cursor, Codex, and MCP client setup |
+| Q&A | `q-a` | Question and answer | Active |
+| Show and tell | `show-and-tell` | Open-ended discussion | Active |
+| Registry help | `registry-help` | Question and answer | Add in UI |
+| MCP setup | `mcp-setup` | Question and answer | Add in UI |
 
 ## Weekly Review
 
