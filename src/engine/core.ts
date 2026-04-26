@@ -42,6 +42,17 @@ export interface MemoireEvent {
   data?: unknown;
 }
 
+export type MemoireInitProfile = "minimal" | "registry" | "full";
+
+type RuntimeInitProfile = "none" | MemoireInitProfile;
+
+const INIT_PROFILE_RANK: Record<RuntimeInitProfile, number> = {
+  none: 0,
+  minimal: 1,
+  registry: 2,
+  full: 3,
+};
+
 /** Strip the volatile `detectedAt` timestamp before comparing project contexts to avoid spurious writes. */
 function stripProjectTimestamp(project: ProjectContext): Omit<ProjectContext, "detectedAt"> {
   const { detectedAt: _detectedAt, ...rest } = project;
@@ -66,7 +77,7 @@ export class MemoireEngine extends EventEmitter {
   private static readonly PULL_CACHE_TTL_MS = 300_000; // 5 minutes
 
   private _project: ProjectContext | null = null;
-  private _initialized = false;
+  private _initProfile: RuntimeInitProfile = "none";
   private _soul = "";
 
   /** Debounced auto-pull on Figma document changes */
@@ -220,9 +231,18 @@ export class MemoireEngine extends EventEmitter {
   }
 
   /**
-   * Initialize the Mémoire engine — must be called once before any other method.
+   * Initialize the Mémoire engine — must be called before methods that need project,
+   * registry, notes, agents, or research state.
    *
-   * Performs the following in order:
+   * Profiles:
+   * - `minimal`: env, workspace skeleton, project detection, and project persistence.
+   * - `registry`: minimal + registry/spec load, design soul, and sync state.
+   * - `full`: registry + agent registry, task queue, health loop, and Notes.
+   *
+   * The default remains `full` for backward compatibility. Calls can upgrade an
+   * existing engine from a lighter profile to a heavier one without re-running work.
+   *
+   * Full initialization performs the following in order:
    * 1. Loads `.env.local` then `.env` into `process.env` (FIGMA_TOKEN, FIGMA_FILE_KEY,
    *    ANTHROPIC_API_KEY are merged into `this.config` if not already set).
    * 2. Creates `.memoire/` and initializes the workspace skeleton (SOUL.md, etc).
@@ -232,37 +252,57 @@ export class MemoireEngine extends EventEmitter {
    * 6. Loads bidirectional sync state, starts the agent registry health-check loop,
    *    starts the task queue, and loads all installed Mémoire Notes.
    *
-   * Idempotent — safe to call multiple times; subsequent calls are no-ops.
+   * Idempotent — safe to call multiple times; subsequent calls are no-ops unless they
+   * request a heavier profile than the one already loaded.
    */
-  async init(): Promise<void> {
-    if (this._initialized) return;
+  async init(profile: MemoireInitProfile = "full"): Promise<void> {
+    if (INIT_PROFILE_RANK[this._initProfile] >= INIT_PROFILE_RANK[profile]) return;
 
-    this.log.info("Initializing Mémoire engine...");
+    this.log.info({ profile }, "Initializing Mémoire engine...");
 
-    // Load .env.local / .env so FIGMA_TOKEN etc. are available without shell export
-    await loadEnvFile(this.config.projectRoot, ".env.local");
-    await loadEnvFile(this.config.projectRoot, ".env");
-    if (!this.config.figmaToken && process.env.FIGMA_TOKEN) this.config.figmaToken = process.env.FIGMA_TOKEN;
-    if (!this.config.figmaFileKey && process.env.FIGMA_FILE_KEY) this.config.figmaFileKey = process.env.FIGMA_FILE_KEY;
-    if (!this.config.anthropicApiKey && process.env.ANTHROPIC_API_KEY) this.config.anthropicApiKey = process.env.ANTHROPIC_API_KEY;
-
-    // Ensure .memoire directory exists and initialize workspace
     const memoireDir = join(this.config.projectRoot, ".memoire");
-    await mkdir(memoireDir, { recursive: true });
-    await initWorkspace(memoireDir);
 
-    // Detect project context
-    this._project = await detectProject(this.config.projectRoot);
-    await this.saveProjectContext();
+    if (INIT_PROFILE_RANK[this._initProfile] < INIT_PROFILE_RANK.minimal) {
+      // Load .env.local / .env so FIGMA_TOKEN etc. are available without shell export
+      await loadEnvFile(this.config.projectRoot, ".env.local");
+      await loadEnvFile(this.config.projectRoot, ".env");
+      if (!this.config.figmaToken && process.env.FIGMA_TOKEN) this.config.figmaToken = process.env.FIGMA_TOKEN;
+      if (!this.config.figmaFileKey && process.env.FIGMA_FILE_KEY) this.config.figmaFileKey = process.env.FIGMA_FILE_KEY;
+      if (!this.config.anthropicApiKey && process.env.ANTHROPIC_API_KEY) this.config.anthropicApiKey = process.env.ANTHROPIC_API_KEY;
 
-    // Load existing registry
-    await this.registry.load();
+      // Ensure .memoire directory exists and initialize workspace
+      await mkdir(memoireDir, { recursive: true });
+      await initWorkspace(memoireDir);
 
-    // Load design soul for agent context
-    this._soul = await readSoul(memoireDir);
+      // Detect project context
+      this._project = await detectProject(this.config.projectRoot);
+      await this.saveProjectContext();
+      this._initProfile = "minimal";
+    }
+
+    if (profile === "minimal") {
+      this.emitInitialized(profile);
+      return;
+    }
+
+    if (INIT_PROFILE_RANK[this._initProfile] < INIT_PROFILE_RANK.registry) {
+      // Load existing registry
+      await this.registry.load();
+
+      // Load design soul for agent context
+      this._soul = await readSoul(memoireDir);
+
+      // Load sync state without starting agent or task infrastructure.
+      await this.sync.loadState();
+      this._initProfile = "registry";
+    }
+
+    if (profile === "registry") {
+      this.emitInitialized(profile);
+      return;
+    }
 
     // Load sync state and agent registry
-    await this.sync.loadState();
     await this.agentRegistry.load();
     this.agentRegistry.startHealthCheck();
     await this.taskQueue.start();
@@ -270,11 +310,15 @@ export class MemoireEngine extends EventEmitter {
     // Load Mémoire Notes
     await this.notes.loadAll();
 
-    this._initialized = true;
+    this._initProfile = "full";
+    this.emitInitialized(profile);
+  }
+
+  private emitInitialized(profile: MemoireInitProfile): void {
     this.emit("event", {
       type: "success",
       source: "engine",
-      message: `Mémoire initialized — detected ${this._project?.framework ?? "unknown"} project`,
+      message: `Mémoire initialized (${profile}) — detected ${this._project?.framework ?? "unknown"} project`,
       timestamp: new Date(),
       data: this._project,
     } satisfies MemoireEvent);
