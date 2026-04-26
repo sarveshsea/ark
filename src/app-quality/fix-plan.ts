@@ -1,5 +1,5 @@
-import { mkdir, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { join, resolve } from "node:path";
 import { buildAppGraph, type AppGraph } from "./app-graph.js";
 import { diagnoseAppQuality, type AppQualityDiagnosis, type AppQualityIssue } from "./engine.js";
 
@@ -48,6 +48,18 @@ export interface BuildUiFixPlanOptions {
   write?: boolean;
 }
 
+export interface ApplyUiFixOptions extends BuildUiFixPlanOptions {
+  yes?: boolean;
+}
+
+export interface ApplyUiFixResult {
+  status: "applied" | "blocked" | "noop";
+  appliedPatches: string[];
+  skippedPatches: string[];
+  filesChanged: string[];
+  plan: UiFixPlan;
+}
+
 export async function buildUiFixPlan(options: BuildUiFixPlanOptions): Promise<UiFixPlan> {
   const target = options.target ?? options.projectRoot;
   const diagnosis = await diagnoseAppQuality({
@@ -90,6 +102,51 @@ export async function buildUiFixPlan(options: BuildUiFixPlanOptions): Promise<Ui
   }
 
   return plan;
+}
+
+export async function applyUiFixPlan(options: ApplyUiFixOptions): Promise<ApplyUiFixResult> {
+  const plan = await buildUiFixPlan({ ...options, write: false });
+  if (!options.yes) {
+    return {
+      status: "blocked",
+      appliedPatches: [],
+      skippedPatches: plan.patches.map((patch) => patch.id),
+      filesChanged: [],
+      plan,
+    };
+  }
+
+  const appliedPatches: string[] = [];
+  const skippedPatches: string[] = [];
+  const filesChanged = new Set<string>();
+
+  for (const patch of plan.patches) {
+    if (!patch.writeSafe) {
+      skippedPatches.push(patch.id);
+      continue;
+    }
+
+    if (patch.id === "a11y.add-image-alt-hints") {
+      const changed = await applyImageAltHints(options.projectRoot, patch);
+      if (changed.length > 0) {
+        appliedPatches.push(patch.id);
+        changed.forEach((file) => filesChanged.add(file));
+      } else {
+        skippedPatches.push(patch.id);
+      }
+      continue;
+    }
+
+    skippedPatches.push(patch.id);
+  }
+
+  return {
+    status: appliedPatches.length > 0 ? "applied" : "noop",
+    appliedPatches,
+    skippedPatches,
+    filesChanged: [...filesChanged].sort(),
+    plan,
+  };
 }
 
 function patchesForIssue(issue: AppQualityIssue): UiFixPatch[] {
@@ -245,6 +302,41 @@ function dedupePatches(patches: UiFixPatch[]): UiFixPatch[] {
     result.push(patch);
   }
   return result;
+}
+
+async function applyImageAltHints(projectRoot: string, patch: UiFixPatch): Promise<string[]> {
+  const changed: string[] = [];
+  for (const file of patch.affectedFiles) {
+    const path = safeProjectPath(projectRoot, file);
+    const before = await readFile(path, "utf8").catch(() => "");
+    if (!before) continue;
+    const after = addMissingAltPlaceholders(before);
+    if (after === before) continue;
+    await writeFile(path, after);
+    changed.push(path);
+  }
+  return changed;
+}
+
+export function addMissingAltPlaceholders(content: string): string {
+  return content.replace(/<(img|Image)\b([^>]*)>/g, (full, tag: string, attrs: string) => {
+    if (/\salt\s*=/.test(attrs)) return full;
+    const trimmed = attrs.trimEnd();
+    if (trimmed.endsWith("/")) {
+      const withoutSlash = attrs.replace(/\/\s*$/, "").trimEnd();
+      return `<${tag}${withoutSlash} alt="" />`;
+    }
+    return `<${tag}${attrs} alt="">`;
+  });
+}
+
+function safeProjectPath(projectRoot: string, file: string): string {
+  const root = resolve(projectRoot);
+  const resolved = resolve(root, file);
+  if (!resolved.startsWith(`${root}/`) && resolved !== root) {
+    throw new Error(`Refusing to modify file outside project root: ${file}`);
+  }
+  return resolved;
 }
 
 async function writeFixPlan(projectRoot: string, plan: UiFixPlan): Promise<void> {
