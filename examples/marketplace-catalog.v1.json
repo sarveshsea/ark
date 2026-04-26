@@ -146,7 +146,7 @@
         "waitlist"
       ],
       "featured": false,
-      "installCommand": "memi add Button --from @memoire-examples/landing-page",
+      "installCommand": "memi add HeroSection --from @memoire-examples/landing-page",
       "componentCount": 5,
       "components": [
         {
@@ -194,7 +194,7 @@
         "shadcn"
       ],
       "featured": false,
-      "installCommand": "memi add Button --from @memoire-examples/auth-flow",
+      "installCommand": "memi add AuthCard --from @memoire-examples/auth-flow",
       "componentCount": 5,
       "components": [
         {
@@ -242,7 +242,7 @@
         "shadcn"
       ],
       "featured": false,
-      "installCommand": "memi add Button --from @memoire-examples/ai-chat",
+      "installCommand": "memi add ChatComposer --from @memoire-examples/ai-chat",
       "componentCount": 6,
       "components": [
         {
@@ -295,7 +295,7 @@
         "shadcn"
       ],
       "featured": false,
-      "installCommand": "memi add Button --from @memoire-examples/ecommerce",
+      "installCommand": "memi add ProductCard --from @memoire-examples/ecommerce",
       "componentCount": 5,
       "components": [
         {

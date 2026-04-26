@@ -20,6 +20,7 @@
  *    memoire dataviz <name>    Create a dataviz spec
  *    memoire page <name>       Create a page spec
  *    memoire tokens            Export design tokens
+ *    memoire registry          Discover installable registries
  *    memoire pull --rest       Pull design system via Figma REST API (no plugin)
  *    memoire design-doc <url>  Extract design system from any URL → DESIGN.md
  *    memoire extract <url>    Alias for design-doc
@@ -84,6 +85,7 @@ const [
   { registerPublishCommand },
   { registerThemeCommand },
   { registerViewCommand },
+  { registerRegistryCommand },
   { registerUpgradeCommand },
   { registerUpdateCommand },
   { registerDiagnoseCommand },
@@ -123,6 +125,7 @@ const [
   import("./commands/publish.js"),
   import("./commands/theme.js"),
   import("./commands/view.js"),
+  import("./commands/registry.js"),
   import("./commands/upgrade.js"),
   import("./commands/update.js"),
   import("./commands/diagnose.js"),
@@ -169,6 +172,7 @@ registerInitCommand(program, engine);
 registerPublishCommand(program, engine);
 registerThemeCommand(program, engine);
 registerAddCommand(program, engine);
+registerRegistryCommand(program);
 registerUpdateCommand(program, engine);
 registerViewCommand(program, engine);
 registerDesignDocCommand(program, engine);
@@ -283,6 +287,7 @@ function printFastHelp(version: string): void {
     "  tokens                  Extract or export design tokens",
     "  publish                 Package the design system as an installable registry",
     "  add <component>         Install a component from a registry",
+    "  registry <subcommand>   List, search, and inspect installable registries",
     "  theme <subcommand>      Import, preview, validate, diff, apply, and publish tweakcn themes",
     "",
     "Registry and code:",

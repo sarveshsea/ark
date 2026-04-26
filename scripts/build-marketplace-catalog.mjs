@@ -49,6 +49,7 @@ const presetMeta = {
     category: "marketing",
     tags: ["landing-page", "marketing", "conversion", "hero", "waitlist"],
     featured: false,
+    installComponent: "HeroSection",
     screenshotPath: "assets/showcases/landing-page.svg",
     description: "Conversion-focused landing page registry with hero, CTA, and form primitives.",
   },
@@ -57,6 +58,7 @@ const presetMeta = {
     category: "auth",
     tags: ["auth", "login", "signup", "settings", "shadcn"],
     featured: false,
+    installComponent: "AuthCard",
     screenshotPath: "assets/showcases/auth-flow.svg",
     description: "Install login, signup, and account-settings UI into shadcn apps.",
   },
@@ -65,6 +67,7 @@ const presetMeta = {
     category: "ai-chat",
     tags: ["ai-chat", "chat-ui", "llm", "assistant", "shadcn"],
     featured: false,
+    installComponent: "ChatComposer",
     screenshotPath: "assets/showcases/ai-chat.svg",
     description: "AI chat registry with composer, message, card, and prompt primitives.",
   },
@@ -73,6 +76,7 @@ const presetMeta = {
     category: "ecommerce",
     tags: ["ecommerce", "product", "conversion", "storefront", "shadcn"],
     featured: false,
+    installComponent: "ProductCard",
     screenshotPath: "assets/showcases/ecommerce.svg",
     description: "Product card, badge, input, and button patterns for shadcn stores.",
   },
@@ -202,7 +206,10 @@ async function buildEntry(slug) {
     };
   });
 
-  const installComponent = registry.components.find((component) => component.name === "Button") ?? registry.components[0];
+  const installComponent =
+    registry.components.find((component) => component.name === meta.installComponent) ??
+    registry.components.find((component) => component.name === "Button") ??
+    registry.components[0];
   const installCommand = `memi add ${installComponent.name} --from ${pkg.name}`;
   if (!installCommand.includes(pkg.name)) {
     fail(`${slug}: installCommand must include package name`);
