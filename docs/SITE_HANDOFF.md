@@ -4,15 +4,15 @@ These are the exact external-surface updates that still need credentials or the 
 
 ## GitHub repo metadata
 
-- Description: `Design CI for web apps: diagnose UI debt, improve shadcn/Tailwind systems, and publish installable registries.`
-- Topics: `design-ci`, `ui-audit`, `design-system`, `tailwind`, `shadcn`, `registry`, `figma`, `tweakcn`, `npm`, `mcp`
+- Description: `Design CI for shadcn/Tailwind apps: diagnose UI debt, extract tokens, and publish installable registries.`
+- Topics: `design-ci`, `ui-quality`, `ui-audit`, `shadcn-audit`, `tailwind-audit`, `design-quality`, `frontend-quality`, `token-extraction`, `design-tokens`, `shadcn-registry`, `tweakcn`, `registry`
 
 ## Homepage hero
 
-- Heading: `Design CI for web apps.`
-- Subhead: `Diagnose UI debt in real shadcn/Tailwind apps, improve the visual system, then publish it as an installable registry.`
+- Heading: `Design CI for shadcn/Tailwind apps.`
+- Subhead: `Diagnose UI debt in real code, extract tokens, and publish the improved system as an installable registry.`
 - Primary CTA: `https://www.npmjs.com/package/@sarveshsea/memoire`
-- Secondary CTA: `https://github.com/sarveshsea/m-moire/tree/main/examples`
+- Secondary CTA: omit until `/components` is reliable. If one is required, use `https://github.com/sarveshsea/m-moire#no-figma-required`.
 
 ## Docs landing
 
@@ -28,3 +28,4 @@ These are the exact external-surface updates that still need credentials or the 
 
 - npm link: `https://www.npmjs.com/package/@sarveshsea/memoire`
 - Version string: only show the currently released package version
+- OpenGraph, Twitter card, sitemap, and JSON-LD copy: [`docs/SEO.md`](./SEO.md)
