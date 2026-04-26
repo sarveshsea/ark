@@ -12,6 +12,10 @@ Use this for the website repo, npm README sections, GitHub discussions, launch p
 | `Design CI for shadcn` | Teams diagnosing UI quality in code. | Homepage and npm README |
 | `token extraction for Tailwind` | Developers extracting CSS variables and theme tokens. | Docs and npm README |
 | `tweakcn registry publishing` | tweakcn users turning themes into packages. | Theme docs and npm README |
+| `shadcn registry generator` | Developers converting existing apps into registry item JSON. | Homepage, docs, and npm README |
+| `v0 design system registry` | Teams giving v0 branded shadcn/Tailwind context. | `/components` and v0 workflow docs |
+| `install shadcn registry from npm` | Developers installing registries without preinstalled node_modules. | npm README and docs |
+| `UI fix plan` | Teams wanting evidence-backed, safe UI repair plans. | Docs and launch page |
 
 ## `/components` Page Copy
 
@@ -23,7 +27,7 @@ Hero:
 
 ```text
 Installable shadcn registries for real apps.
-Browse tokenized design systems, install components with memi add, and fork the registries for your own product.
+Browse tokenized design systems, install components with memi add or shadcn, open registry items in v0, and fork the registries for your own product.
 ```
 
 Primary CTA:
@@ -35,7 +39,7 @@ npm i -g @sarveshsea/memoire
 Secondary command:
 
 ```text
-memi registry list
+memi shadcn export --out public/r
 ```
 
 ## Individual Registry Page Template
@@ -62,6 +66,8 @@ Required links:
 - npm package page for the registry package
 - Source path from `examples/marketplace-catalog.v1.json`
 - Screenshot URL from `examples/marketplace-catalog.v1.json`
+- `registryItemUrl` from `examples/site-bundle/catalog.json`
+- `openInV0Url` from `examples/site-bundle/catalog.json`
 - Main Memoire npm package: `https://www.npmjs.com/package/@sarveshsea/memoire`
 
 ## Registry Page Keywords
