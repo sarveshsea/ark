@@ -1,0 +1,37 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "input",
+  "type": "registry:ui",
+  "title": "Input",
+  "description": "Single-line text input with label, error state, and accessible focus ring",
+  "registryDependencies": [
+    "input"
+  ],
+  "files": [
+    {
+      "path": "registry/ai-chat/input.tsx",
+      "type": "registry:component",
+      "target": "components/ui/input.tsx",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\nimport { Input as ShadcnInput } from \"@/components/ui/input\"\nimport { cn } from \"@/lib/utils\"\n\nexport interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {\n  label?: string\n  error?: string\n}\n\n/**\n * Input — a single-line text field with optional label and error message.\n *\n * @purpose Text input with accessible labelling and error state.\n * @variants default, error\n * @props label, placeholder, value, error, type\n * @a11y aria-invalid and aria-describedby wired when error is present.\n */\nexport const Input = React.forwardRef<HTMLInputElement, InputProps>(function Input(\n  { label, error, id, className, ...props },\n  ref,\n) {\n  const autoId = React.useId()\n  const inputId = id ?? autoId\n  const errorId = error ? `${inputId}-error` : undefined\n\n  return (\n    <div className=\"flex flex-col gap-1\">\n      {label && (\n        <label htmlFor={inputId} className=\"text-sm font-medium text-[var(--color-foreground)]\">\n          {label}\n        </label>\n      )}\n      <ShadcnInput\n        id={inputId}\n        ref={ref}\n        aria-invalid={error ? true : undefined}\n        aria-describedby={errorId}\n        className={cn(\n          \"min-h-[44px] px-3 rounded-[var(--radius-md)]\",\n          \"bg-[var(--color-background)] text-[var(--color-foreground)]\",\n          \"border border-[var(--color-input)]\",\n          \"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:ring-offset-2\",\n          error && \"border-red-600 focus-visible:ring-red-600\",\n          className,\n        )}\n        {...props}\n      />\n      {error && (\n        <p id={errorId} role=\"alert\" className=\"text-xs text-red-600\">\n          {error}\n        </p>\n      )}\n    </div>\n  )\n})\n"
+    }
+  ],
+  "categories": [
+    "ai-chat",
+    "atom",
+    "ai-chat",
+    "chat-ui",
+    "llm",
+    "assistant",
+    "shadcn"
+  ],
+  "meta": {
+    "memoire": {
+      "sourcePackage": "@memoire-examples/ai-chat",
+      "sourcePath": "examples/presets/ai-chat",
+      "itemRoute": "/r/ai-chat/input.json",
+      "registryItemUrl": "https://www.memoire.cv/r/ai-chat/input.json",
+      "openInV0Url": "https://v0.dev/chat/api/open?url=https%3A%2F%2Fwww.memoire.cv%2Fr%2Fai-chat%2Finput.json",
+      "atomicLevel": "atom"
+    }
+  }
+}

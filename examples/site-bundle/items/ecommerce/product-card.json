@@ -1,0 +1,39 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "product-card",
+  "type": "registry:block",
+  "title": "ProductCard",
+  "description": "Conversion-focused product card for ecommerce grids, pricing cards, and storefront surfaces",
+  "registryDependencies": [
+    "button",
+    "card",
+    "badge"
+  ],
+  "files": [
+    {
+      "path": "registry/ecommerce/product-card.tsx",
+      "type": "registry:component",
+      "target": "components/organisms/product-card.tsx",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\nimport { cn } from \"@/lib/utils\"\nimport { Badge } from \"./Badge\"\nimport { Button } from \"./Button\"\nimport { Card } from \"./Card\"\n\nexport interface ProductCardProps extends React.HTMLAttributes<HTMLElement> {\n  name: string\n  description?: string\n  price: string\n  badge?: string\n  rating?: string\n  cta: string\n}\n\n/**\n * ProductCard - conversion-focused ecommerce surface.\n *\n * @purpose Product card for storefront and pricing surfaces.\n * @variants default, featured, compact\n * @props name, description, price, badge, rating, cta\n */\nexport function ProductCard({\n  name,\n  description,\n  price,\n  badge = \"Best seller\",\n  rating = \"4.9 average rating\",\n  cta,\n  className,\n  ...props\n}: ProductCardProps) {\n  return (\n    <article className={className} aria-label={name} {...props}>\n      <Card variant=\"elevated\" className=\"overflow-hidden\">\n        <div className=\"mb-[var(--spacing-md)] aspect-[4/3] rounded-[var(--radius-lg)] bg-[var(--color-muted)]\" aria-hidden=\"true\" />\n        <div className=\"flex items-start justify-between gap-3\">\n          <div>\n            <h3 className=\"text-lg font-semibold text-[var(--color-card-foreground)]\">{name}</h3>\n            {description && (\n              <p className=\"mt-1 text-sm text-[var(--color-muted-foreground)]\">{description}</p>\n            )}\n          </div>\n          {badge && <Badge label={badge} variant=\"accent\" />}\n        </div>\n        <div className=\"mt-[var(--spacing-md)] flex items-end justify-between gap-4\">\n          <div>\n            <p className=\"text-2xl font-semibold text-[var(--color-foreground)]\">{price}</p>\n            <p className=\"text-xs text-[var(--color-muted-foreground)]\">{rating}</p>\n          </div>\n          <Button label={cta} variant=\"primary\" />\n        </div>\n      </Card>\n    </article>\n  )\n}\n"
+    }
+  ],
+  "categories": [
+    "ecommerce",
+    "organism",
+    "ecommerce",
+    "product",
+    "conversion",
+    "storefront",
+    "shadcn"
+  ],
+  "meta": {
+    "memoire": {
+      "sourcePackage": "@memoire-examples/ecommerce",
+      "sourcePath": "examples/presets/ecommerce",
+      "itemRoute": "/r/ecommerce/product-card.json",
+      "registryItemUrl": "https://www.memoire.cv/r/ecommerce/product-card.json",
+      "openInV0Url": "https://v0.dev/chat/api/open?url=https%3A%2F%2Fwww.memoire.cv%2Fr%2Fecommerce%2Fproduct-card.json",
+      "atomicLevel": "organism"
+    }
+  }
+}

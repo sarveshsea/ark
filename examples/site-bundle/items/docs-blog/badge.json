@@ -1,0 +1,37 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "badge",
+  "type": "registry:ui",
+  "title": "Badge",
+  "description": "Linear-style pill-shaped label with default/muted/accent (violet) variants",
+  "registryDependencies": [
+    "badge"
+  ],
+  "files": [
+    {
+      "path": "registry/docs-blog/badge.tsx",
+      "type": "registry:component",
+      "target": "components/ui/badge.tsx",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\nimport { cn } from \"@/lib/utils\"\n\nexport type BadgeVariant = \"default\" | \"muted\" | \"accent\"\n\nexport interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {\n  label: string\n  variant?: BadgeVariant\n}\n\n/**\n * Badge — Linear-style pill label with indigo-violet accent.\n *\n * @purpose Fully-rounded compact status label.\n * @variants default, muted, accent (indigo-violet)\n * @props label, variant\n * @a11y role=status; announces updates politely.\n */\nexport function Badge({ label, variant = \"default\", className, ...props }: BadgeProps) {\n  const variantClasses: Record<BadgeVariant, string> = {\n    default:\n      \"bg-[var(--color-foreground)] text-[var(--color-background)]\",\n    muted:\n      \"bg-[var(--color-muted)] text-[var(--color-muted-foreground)] border border-[var(--color-border)]\",\n    accent:\n      \"bg-[var(--color-accent)] text-[var(--color-accent-foreground)]\",\n  }\n\n  return (\n    <span\n      role=\"status\"\n      aria-live=\"polite\"\n      className={cn(\n        \"inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium rounded-full\",\n        variantClasses[variant],\n        className,\n      )}\n      {...props}\n    >\n      {label}\n    </span>\n  )\n}\n"
+    }
+  ],
+  "categories": [
+    "content",
+    "atom",
+    "docs",
+    "blog",
+    "editorial",
+    "content",
+    "reading"
+  ],
+  "meta": {
+    "memoire": {
+      "sourcePackage": "@memoire-examples/docs-blog",
+      "sourcePath": "examples/presets/docs-blog",
+      "itemRoute": "/r/docs-blog/badge.json",
+      "registryItemUrl": "https://www.memoire.cv/r/docs-blog/badge.json",
+      "openInV0Url": "https://v0.dev/chat/api/open?url=https%3A%2F%2Fwww.memoire.cv%2Fr%2Fdocs-blog%2Fbadge.json",
+      "atomicLevel": "atom"
+    }
+  }
+}

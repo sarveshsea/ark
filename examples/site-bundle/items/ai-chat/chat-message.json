@@ -1,0 +1,38 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "chat-message",
+  "type": "registry:component",
+  "title": "ChatMessage",
+  "description": "Tokenized AI chat message surface for assistant, user, and system messages",
+  "registryDependencies": [
+    "card",
+    "badge"
+  ],
+  "files": [
+    {
+      "path": "registry/ai-chat/chat-message.tsx",
+      "type": "registry:component",
+      "target": "components/molecules/chat-message.tsx",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\nimport { cn } from \"@/lib/utils\"\nimport { Badge } from \"./Badge\"\n\nexport type ChatMessageRole = \"assistant\" | \"user\" | \"system\"\n\nexport interface ChatMessageProps extends React.HTMLAttributes<HTMLElement> {\n  role: ChatMessageRole\n  content: React.ReactNode\n  timestamp?: string\n  status?: string\n}\n\n/**\n * ChatMessage - tokenized AI chat message surface.\n *\n * @purpose Assistant, user, and system message display.\n * @variants assistant, user, system\n * @props role, content, timestamp, status\n */\nexport function ChatMessage({\n  role,\n  content,\n  timestamp,\n  status,\n  className,\n  ...props\n}: ChatMessageProps) {\n  const isUser = role === \"user\"\n  const label = role === \"assistant\" ? \"AI\" : role === \"user\" ? \"You\" : \"System\"\n\n  return (\n    <article\n      className={cn(\n        \"flex w-full\",\n        isUser ? \"justify-end\" : \"justify-start\",\n        className,\n      )}\n      {...props}\n    >\n      <div\n        className={cn(\n          \"max-w-[82%] rounded-[var(--radius-lg)] border border-[var(--color-border)] p-[var(--spacing-md)]\",\n          isUser\n            ? \"bg-[var(--color-primary)] text-[var(--color-primary-foreground)]\"\n            : \"bg-[var(--color-card)] text-[var(--color-card-foreground)]\",\n        )}\n      >\n        <div className=\"mb-2 flex items-center gap-2\">\n          <Badge label={label} variant={isUser ? \"default\" : \"accent\"} />\n          {status && <span className=\"text-xs opacity-75\">{status}</span>}\n        </div>\n        <div className=\"text-sm leading-6\">{content}</div>\n        {timestamp && <p className=\"mt-2 text-xs opacity-60\">{timestamp}</p>}\n      </div>\n    </article>\n  )\n}\n"
+    }
+  ],
+  "categories": [
+    "ai-chat",
+    "molecule",
+    "ai-chat",
+    "chat-ui",
+    "llm",
+    "assistant",
+    "shadcn"
+  ],
+  "meta": {
+    "memoire": {
+      "sourcePackage": "@memoire-examples/ai-chat",
+      "sourcePath": "examples/presets/ai-chat",
+      "itemRoute": "/r/ai-chat/chat-message.json",
+      "registryItemUrl": "https://www.memoire.cv/r/ai-chat/chat-message.json",
+      "openInV0Url": "https://v0.dev/chat/api/open?url=https%3A%2F%2Fwww.memoire.cv%2Fr%2Fai-chat%2Fchat-message.json",
+      "atomicLevel": "molecule"
+    }
+  }
+}

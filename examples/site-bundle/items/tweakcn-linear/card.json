@@ -1,0 +1,37 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "card",
+  "type": "registry:component",
+  "title": "Card",
+  "description": "Linear-style editorial surface with soft radii and violet-tinted elevated shadow",
+  "registryDependencies": [
+    "card"
+  ],
+  "files": [
+    {
+      "path": "registry/tweakcn-linear/card.tsx",
+      "type": "registry:component",
+      "target": "components/molecules/card.tsx",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\nimport { cn } from \"@/lib/utils\"\n\nexport type CardVariant = \"default\" | \"elevated\"\n\nexport interface CardProps extends React.HTMLAttributes<HTMLDivElement> {\n  variant?: CardVariant\n  title?: string\n  description?: string\n  children?: React.ReactNode\n}\n\n/**\n * Card — Linear-style editorial content surface.\n *\n * @purpose Soft-radii warm-white surface with violet-tinted elevated shadow.\n * @variants default, elevated\n * @props variant, title, description, children\n */\nexport function Card({\n  variant = \"default\",\n  title,\n  description,\n  className,\n  children,\n  ...props\n}: CardProps) {\n  const variantClasses: Record<CardVariant, string> = {\n    default: \"border border-[var(--color-border)]\",\n    elevated: \"border border-[var(--color-border)] shadow-[var(--shadow-md)]\",\n  }\n\n  return (\n    <div\n      role=\"region\"\n      aria-label={title}\n      className={cn(\n        \"bg-[var(--color-card)] text-[var(--color-card-foreground)]\",\n        \"rounded-[var(--radius-lg)] p-[var(--spacing-lg)]\",\n        variantClasses[variant],\n        className,\n      )}\n      {...props}\n    >\n      {(title || description) && (\n        <header className=\"mb-[var(--spacing-md)]\">\n          {title && (\n            <h3 className=\"text-base font-semibold tracking-[-0.01em]\">{title}</h3>\n          )}\n          {description && (\n            <p className=\"text-sm text-[var(--color-muted-foreground)] mt-1 leading-relaxed\">\n              {description}\n            </p>\n          )}\n        </header>\n      )}\n      {children}\n    </div>\n  )\n}\n"
+    }
+  ],
+  "categories": [
+    "tweakcn",
+    "molecule",
+    "tweakcn",
+    "linear",
+    "indigo",
+    "productivity",
+    "editorial"
+  ],
+  "meta": {
+    "memoire": {
+      "sourcePackage": "@memoire-examples/tweakcn-linear",
+      "sourcePath": "examples/presets/tweakcn-linear",
+      "itemRoute": "/r/tweakcn-linear/card.json",
+      "registryItemUrl": "https://www.memoire.cv/r/tweakcn-linear/card.json",
+      "openInV0Url": "https://v0.dev/chat/api/open?url=https%3A%2F%2Fwww.memoire.cv%2Fr%2Ftweakcn-linear%2Fcard.json",
+      "atomicLevel": "molecule"
+    }
+  }
+}

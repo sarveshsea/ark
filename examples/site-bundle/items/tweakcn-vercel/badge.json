@@ -1,0 +1,37 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "badge",
+  "type": "registry:ui",
+  "title": "Badge",
+  "description": "Tight mono-label badge with default/muted/accent variants",
+  "registryDependencies": [
+    "badge"
+  ],
+  "files": [
+    {
+      "path": "registry/tweakcn-vercel/badge.tsx",
+      "type": "registry:component",
+      "target": "components/ui/badge.tsx",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\nimport { cn } from \"@/lib/utils\"\n\nexport type BadgeVariant = \"default\" | \"muted\" | \"accent\"\n\nexport interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {\n  label: string\n  variant?: BadgeVariant\n}\n\n/**\n * Badge — Vercel-style compact label with monospace treatment.\n *\n * @purpose Tight uppercase mono status label.\n * @variants default, muted, accent (electric blue)\n * @props label, variant\n * @a11y role=status; announces updates politely.\n */\nexport function Badge({ label, variant = \"default\", className, ...props }: BadgeProps) {\n  const variantClasses: Record<BadgeVariant, string> = {\n    default:\n      \"bg-[var(--color-primary)] text-[var(--color-primary-foreground)]\",\n    muted:\n      \"bg-[var(--color-muted)] text-[var(--color-muted-foreground)] border border-[var(--color-border)]\",\n    accent:\n      \"bg-[var(--color-accent)] text-[var(--color-accent-foreground)]\",\n  }\n\n  return (\n    <span\n      role=\"status\"\n      aria-live=\"polite\"\n      className={cn(\n        \"inline-flex items-center gap-1 px-2 py-0.5 text-[10px] uppercase tracking-wider font-medium\",\n        \"font-[var(--font-mono,ui-monospace)] rounded-[var(--radius-sm)]\",\n        variantClasses[variant],\n        className,\n      )}\n      {...props}\n    >\n      {label}\n    </span>\n  )\n}\n"
+    }
+  ],
+  "categories": [
+    "tweakcn",
+    "atom",
+    "tweakcn",
+    "vercel",
+    "dark",
+    "minimal",
+    "blue"
+  ],
+  "meta": {
+    "memoire": {
+      "sourcePackage": "@memoire-examples/tweakcn-vercel",
+      "sourcePath": "examples/presets/tweakcn-vercel",
+      "itemRoute": "/r/tweakcn-vercel/badge.json",
+      "registryItemUrl": "https://www.memoire.cv/r/tweakcn-vercel/badge.json",
+      "openInV0Url": "https://v0.dev/chat/api/open?url=https%3A%2F%2Fwww.memoire.cv%2Fr%2Ftweakcn-vercel%2Fbadge.json",
+      "atomicLevel": "atom"
+    }
+  }
+}

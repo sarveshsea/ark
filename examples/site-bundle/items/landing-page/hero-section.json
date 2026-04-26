@@ -1,0 +1,40 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "hero-section",
+  "type": "registry:block",
+  "title": "HeroSection",
+  "description": "Conversion-focused landing page hero with badge, headline, CTA pair, signup input, and proof cards",
+  "registryDependencies": [
+    "button",
+    "card",
+    "badge",
+    "input"
+  ],
+  "files": [
+    {
+      "path": "registry/landing-page/hero-section.tsx",
+      "type": "registry:component",
+      "target": "components/organisms/hero-section.tsx",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\nimport { cn } from \"@/lib/utils\"\nimport { Badge } from \"./Badge\"\nimport { Button } from \"./Button\"\nimport { Card } from \"./Card\"\nimport { Input } from \"./Input\"\n\nexport interface HeroSectionProps extends React.HTMLAttributes<HTMLElement> {\n  eyebrow: string\n  headline: string\n  description: string\n  primaryCta: string\n  secondaryCta?: string\n  emailPlaceholder?: string\n  proofPoints?: string[]\n}\n\n/**\n * HeroSection - conversion-first landing page organism.\n *\n * @purpose Above-the-fold launch section with CTA, capture input, and proof.\n * @variants default, split\n * @props eyebrow, headline, description, primaryCta, secondaryCta, emailPlaceholder, proofPoints\n */\nexport function HeroSection({\n  eyebrow,\n  headline,\n  description,\n  primaryCta,\n  secondaryCta = \"View demo\",\n  emailPlaceholder = \"you@company.com\",\n  proofPoints = [\"Installable shadcn registry\", \"Tokenized Tailwind theme\", \"Copy-paste launch section\"],\n  className,\n  ...props\n}: HeroSectionProps) {\n  return (\n    <section\n      aria-label={headline}\n      className={cn(\n        \"relative overflow-hidden rounded-[calc(var(--radius-lg)*2)] border border-[var(--color-border)]\",\n        \"bg-[var(--color-background)] px-[var(--spacing-lg)] py-[calc(var(--spacing-xl)*2)]\",\n        className,\n      )}\n      {...props}\n    >\n      <div className=\"absolute inset-x-10 top-8 h-40 rounded-full bg-[var(--color-accent)] opacity-30 blur-3xl\" aria-hidden=\"true\" />\n      <div className=\"relative grid gap-[var(--spacing-xl)] lg:grid-cols-[1.1fr_0.9fr] lg:items-center\">\n        <div className=\"max-w-2xl\">\n          <Badge label={eyebrow} variant=\"accent\" />\n          <h1 className=\"mt-[var(--spacing-md)] text-4xl font-semibold tracking-tight text-[var(--color-foreground)] md:text-6xl\">\n            {headline}\n          </h1>\n          <p className=\"mt-[var(--spacing-md)] text-lg leading-8 text-[var(--color-muted-foreground)]\">\n            {description}\n          </p>\n          <div className=\"mt-[var(--spacing-lg)] flex flex-col gap-[var(--spacing-sm)] sm:flex-row\">\n            <Button label={primaryCta} variant=\"primary\" />\n            <Button label={secondaryCta} variant=\"ghost\" />\n          </div>\n          <div className=\"mt-[var(--spacing-lg)] max-w-md\">\n            <Input label=\"Join the launch list\" placeholder={emailPlaceholder} type=\"email\" />\n          </div>\n        </div>\n        <Card variant=\"elevated\" title=\"Launch proof\" description=\"Everything above the fold is tokenized.\">\n          <ul className=\"space-y-3\">\n            {proofPoints.map((point) => (\n              <li key={point} className=\"flex items-start gap-3 text-sm text-[var(--color-muted-foreground)]\">\n                <span className=\"mt-1 h-2 w-2 rounded-full bg-[var(--color-primary)]\" aria-hidden=\"true\" />\n                <span>{point}</span>\n              </li>\n            ))}\n          </ul>\n        </Card>\n      </div>\n    </section>\n  )\n}\n"
+    }
+  ],
+  "categories": [
+    "marketing",
+    "organism",
+    "landing-page",
+    "marketing",
+    "conversion",
+    "hero",
+    "waitlist"
+  ],
+  "meta": {
+    "memoire": {
+      "sourcePackage": "@memoire-examples/landing-page",
+      "sourcePath": "examples/presets/landing-page",
+      "itemRoute": "/r/landing-page/hero-section.json",
+      "registryItemUrl": "https://www.memoire.cv/r/landing-page/hero-section.json",
+      "openInV0Url": "https://v0.dev/chat/api/open?url=https%3A%2F%2Fwww.memoire.cv%2Fr%2Flanding-page%2Fhero-section.json",
+      "atomicLevel": "organism"
+    }
+  }
+}

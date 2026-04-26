@@ -1,0 +1,37 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "card",
+  "type": "registry:component",
+  "title": "Card",
+  "description": "Vercel-style bordered surface with tight radii and deep dark-mode shadow",
+  "registryDependencies": [
+    "card"
+  ],
+  "files": [
+    {
+      "path": "registry/tweakcn-vercel/card.tsx",
+      "type": "registry:component",
+      "target": "components/molecules/card.tsx",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\nimport { cn } from \"@/lib/utils\"\n\nexport type CardVariant = \"default\" | \"elevated\"\n\nexport interface CardProps extends React.HTMLAttributes<HTMLDivElement> {\n  variant?: CardVariant\n  title?: string\n  description?: string\n  children?: React.ReactNode\n}\n\n/**\n * Card — Vercel-style bordered content surface.\n *\n * @purpose Near-black/near-white content surface with tight radii.\n * @variants default, elevated\n * @props variant, title, description, children\n */\nexport function Card({\n  variant = \"default\",\n  title,\n  description,\n  className,\n  children,\n  ...props\n}: CardProps) {\n  const variantClasses: Record<CardVariant, string> = {\n    default: \"border border-[var(--color-border)]\",\n    elevated: \"border border-[var(--color-border)] shadow-[var(--shadow-md)]\",\n  }\n\n  return (\n    <div\n      role=\"region\"\n      aria-label={title}\n      className={cn(\n        \"bg-[var(--color-card)] text-[var(--color-card-foreground)]\",\n        \"rounded-[var(--radius-lg)] p-[var(--spacing-lg)]\",\n        variantClasses[variant],\n        className,\n      )}\n      {...props}\n    >\n      {(title || description) && (\n        <header className=\"mb-[var(--spacing-md)]\">\n          {title && <h3 className=\"text-sm font-semibold tracking-tight\">{title}</h3>}\n          {description && (\n            <p className=\"text-xs text-[var(--color-muted-foreground)] mt-1\">{description}</p>\n          )}\n        </header>\n      )}\n      {children}\n    </div>\n  )\n}\n"
+    }
+  ],
+  "categories": [
+    "tweakcn",
+    "molecule",
+    "tweakcn",
+    "vercel",
+    "dark",
+    "minimal",
+    "blue"
+  ],
+  "meta": {
+    "memoire": {
+      "sourcePackage": "@memoire-examples/tweakcn-vercel",
+      "sourcePath": "examples/presets/tweakcn-vercel",
+      "itemRoute": "/r/tweakcn-vercel/card.json",
+      "registryItemUrl": "https://www.memoire.cv/r/tweakcn-vercel/card.json",
+      "openInV0Url": "https://v0.dev/chat/api/open?url=https%3A%2F%2Fwww.memoire.cv%2Fr%2Ftweakcn-vercel%2Fcard.json",
+      "atomicLevel": "molecule"
+    }
+  }
+}

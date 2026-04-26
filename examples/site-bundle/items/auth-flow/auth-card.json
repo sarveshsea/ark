@@ -1,0 +1,40 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "auth-card",
+  "type": "registry:block",
+  "title": "AuthCard",
+  "description": "Authentication card for login, signup, and account settings entry points",
+  "registryDependencies": [
+    "button",
+    "card",
+    "badge",
+    "input"
+  ],
+  "files": [
+    {
+      "path": "registry/auth-flow/auth-card.tsx",
+      "type": "registry:component",
+      "target": "components/organisms/auth-card.tsx",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\nimport { cn } from \"@/lib/utils\"\nimport { Badge } from \"./Badge\"\nimport { Button } from \"./Button\"\nimport { Card } from \"./Card\"\nimport { Input } from \"./Input\"\n\nexport type AuthCardMode = \"login\" | \"signup\" | \"settings\"\n\nexport interface AuthCardProps extends React.FormHTMLAttributes<HTMLFormElement> {\n  title: string\n  description?: string\n  mode?: AuthCardMode\n  primaryCta: string\n  secondaryAction?: string\n}\n\n/**\n * AuthCard - login/signup/settings organism.\n *\n * @purpose Tokenized auth form for shadcn apps.\n * @variants login, signup, settings\n * @props title, description, mode, primaryCta, secondaryAction\n */\nexport function AuthCard({\n  title,\n  description,\n  mode = \"login\",\n  primaryCta,\n  secondaryAction = mode === \"login\" ? \"Create account\" : \"Already have an account?\",\n  className,\n  ...props\n}: AuthCardProps) {\n  const showName = mode === \"signup\" || mode === \"settings\"\n\n  return (\n    <Card variant=\"elevated\" className=\"mx-auto max-w-md\">\n      <form\n        aria-label={title}\n        className={cn(\"flex flex-col gap-[var(--spacing-md)]\", className)}\n        {...props}\n      >\n        <div className=\"flex items-center justify-between gap-3\">\n          <div>\n            <h2 className=\"text-2xl font-semibold tracking-tight text-[var(--color-foreground)]\">{title}</h2>\n            {description && (\n              <p className=\"mt-1 text-sm text-[var(--color-muted-foreground)]\">{description}</p>\n            )}\n          </div>\n          <Badge label=\"Secure\" variant=\"accent\" />\n        </div>\n        {showName && <Input label=\"Full name\" placeholder=\"Ada Lovelace\" autoComplete=\"name\" />}\n        <Input label=\"Email\" placeholder=\"you@company.com\" type=\"email\" autoComplete=\"email\" />\n        {mode !== \"settings\" && (\n          <Input label=\"Password\" placeholder=\"Enter password\" type=\"password\" autoComplete=\"current-password\" />\n        )}\n        <Button label={primaryCta} variant=\"primary\" />\n        <button\n          type=\"button\"\n          className=\"min-h-[44px] rounded-[var(--radius-md)] text-sm font-medium text-[var(--color-muted-foreground)] transition-colors hover:text-[var(--color-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]\"\n        >\n          {secondaryAction}\n        </button>\n      </form>\n    </Card>\n  )\n}\n"
+    }
+  ],
+  "categories": [
+    "auth",
+    "organism",
+    "auth",
+    "login",
+    "signup",
+    "settings",
+    "shadcn"
+  ],
+  "meta": {
+    "memoire": {
+      "sourcePackage": "@memoire-examples/auth-flow",
+      "sourcePath": "examples/presets/auth-flow",
+      "itemRoute": "/r/auth-flow/auth-card.json",
+      "registryItemUrl": "https://www.memoire.cv/r/auth-flow/auth-card.json",
+      "openInV0Url": "https://v0.dev/chat/api/open?url=https%3A%2F%2Fwww.memoire.cv%2Fr%2Fauth-flow%2Fauth-card.json",
+      "atomicLevel": "organism"
+    }
+  }
+}

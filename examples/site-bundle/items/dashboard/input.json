@@ -1,0 +1,37 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "input",
+  "type": "registry:ui",
+  "title": "Input",
+  "description": "Sharp-edged Vercel-style text input with electric blue focus ring",
+  "registryDependencies": [
+    "input"
+  ],
+  "files": [
+    {
+      "path": "registry/dashboard/input.tsx",
+      "type": "registry:component",
+      "target": "components/ui/input.tsx",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\nimport { Input as ShadcnInput } from \"@/components/ui/input\"\nimport { cn } from \"@/lib/utils\"\n\nexport interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {\n  label?: string\n  error?: string\n}\n\n/**\n * Input — Vercel-style text field with electric blue focus ring.\n *\n * @purpose Sharp-edged single-line text input.\n * @variants default, error\n * @props label, placeholder, value, error, type\n * @a11y aria-invalid and aria-describedby wired when error is present.\n */\nexport const Input = React.forwardRef<HTMLInputElement, InputProps>(function Input(\n  { label, error, id, className, ...props },\n  ref,\n) {\n  const autoId = React.useId()\n  const inputId = id ?? autoId\n  const errorId = error ? `${inputId}-error` : undefined\n\n  return (\n    <div className=\"flex flex-col gap-1\">\n      {label && (\n        <label htmlFor={inputId} className=\"text-xs font-medium tracking-tight text-[var(--color-foreground)]\">\n          {label}\n        </label>\n      )}\n      <ShadcnInput\n        id={inputId}\n        ref={ref}\n        aria-invalid={error ? true : undefined}\n        aria-describedby={errorId}\n        className={cn(\n          \"min-h-[44px] px-3 rounded-[var(--radius-md)] text-sm\",\n          \"bg-[var(--color-background)] text-[var(--color-foreground)]\",\n          \"border border-[var(--color-input)] placeholder:text-[var(--color-muted-foreground)]\",\n          \"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-background)]\",\n          error && \"border-red-500 focus-visible:ring-red-500\",\n          className,\n        )}\n        {...props}\n      />\n      {error && (\n        <p id={errorId} role=\"alert\" className=\"text-[11px] text-red-500\">\n          {error}\n        </p>\n      )}\n    </div>\n  )\n})\n"
+    }
+  ],
+  "categories": [
+    "dashboard",
+    "atom",
+    "dashboard",
+    "analytics",
+    "admin",
+    "ops",
+    "dark"
+  ],
+  "meta": {
+    "memoire": {
+      "sourcePackage": "@memoire-examples/dashboard",
+      "sourcePath": "examples/presets/dashboard",
+      "itemRoute": "/r/dashboard/input.json",
+      "registryItemUrl": "https://www.memoire.cv/r/dashboard/input.json",
+      "openInV0Url": "https://v0.dev/chat/api/open?url=https%3A%2F%2Fwww.memoire.cv%2Fr%2Fdashboard%2Finput.json",
+      "atomicLevel": "atom"
+    }
+  }
+}

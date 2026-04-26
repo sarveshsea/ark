@@ -1,0 +1,191 @@
+{
+  "pages": [
+    {
+      "slug": "starter-saas",
+      "title": "Starter SaaS shadcn registry | Memoire",
+      "description": "Neutral SaaS starter with blue product accents and clean app-shell primitives.",
+      "canonicalUrl": "https://www.memoire.cv/components/starter-saas",
+      "keywords": [
+        "shadcn registry",
+        "Tailwind design system",
+        "installable components",
+        "saas",
+        "starter",
+        "app-shell",
+        "blue",
+        "neutral"
+      ],
+      "ogImage": "https://www.memoire.cv/screenshots/starter-saas.svg"
+    },
+    {
+      "slug": "docs-blog",
+      "title": "Docs Blog shadcn registry | Memoire",
+      "description": "Editorial docs/blog kit with softer surfaces and reading-friendly accents.",
+      "canonicalUrl": "https://www.memoire.cv/components/docs-blog",
+      "keywords": [
+        "shadcn registry",
+        "Tailwind design system",
+        "installable components",
+        "docs",
+        "blog",
+        "editorial",
+        "content",
+        "reading"
+      ],
+      "ogImage": "https://www.memoire.cv/screenshots/docs-blog.svg"
+    },
+    {
+      "slug": "dashboard",
+      "title": "Dashboard shadcn registry | Memoire",
+      "description": "High-contrast analytics dashboard starter for admin and ops products.",
+      "canonicalUrl": "https://www.memoire.cv/components/dashboard",
+      "keywords": [
+        "shadcn registry",
+        "Tailwind design system",
+        "installable components",
+        "dashboard",
+        "analytics",
+        "admin",
+        "ops",
+        "dark"
+      ],
+      "ogImage": "https://www.memoire.cv/screenshots/dashboard.svg"
+    },
+    {
+      "slug": "landing-page",
+      "title": "Landing Page shadcn registry | Memoire",
+      "description": "Conversion-focused landing page registry with hero, CTA, and form primitives.",
+      "canonicalUrl": "https://www.memoire.cv/components/landing-page",
+      "keywords": [
+        "shadcn registry",
+        "Tailwind design system",
+        "installable components",
+        "landing-page",
+        "marketing",
+        "conversion",
+        "hero",
+        "waitlist"
+      ],
+      "ogImage": "https://www.memoire.cv/screenshots/landing-page.svg"
+    },
+    {
+      "slug": "auth-flow",
+      "title": "Auth Flow shadcn registry | Memoire",
+      "description": "Install login, signup, and account-settings UI into shadcn apps.",
+      "canonicalUrl": "https://www.memoire.cv/components/auth-flow",
+      "keywords": [
+        "shadcn registry",
+        "Tailwind design system",
+        "installable components",
+        "auth",
+        "login",
+        "signup",
+        "settings",
+        "shadcn"
+      ],
+      "ogImage": "https://www.memoire.cv/screenshots/auth-flow.svg"
+    },
+    {
+      "slug": "ai-chat",
+      "title": "AI Chat shadcn registry | Memoire",
+      "description": "AI chat registry with composer, message, card, and prompt primitives.",
+      "canonicalUrl": "https://www.memoire.cv/components/ai-chat",
+      "keywords": [
+        "shadcn registry",
+        "Tailwind design system",
+        "installable components",
+        "ai-chat",
+        "chat-ui",
+        "llm",
+        "assistant",
+        "shadcn"
+      ],
+      "ogImage": "https://www.memoire.cv/screenshots/ai-chat.svg"
+    },
+    {
+      "slug": "ecommerce",
+      "title": "Ecommerce shadcn registry | Memoire",
+      "description": "Product card, badge, input, and button patterns for shadcn stores.",
+      "canonicalUrl": "https://www.memoire.cv/components/ecommerce",
+      "keywords": [
+        "shadcn registry",
+        "Tailwind design system",
+        "installable components",
+        "ecommerce",
+        "product",
+        "conversion",
+        "storefront",
+        "shadcn"
+      ],
+      "ogImage": "https://www.memoire.cv/screenshots/ecommerce.svg"
+    },
+    {
+      "slug": "starter",
+      "title": "Starter shadcn registry | Memoire",
+      "description": "Minimal neutral registry for teams that want a clean shadcn starting point.",
+      "canonicalUrl": "https://www.memoire.cv/components/starter",
+      "keywords": [
+        "shadcn registry",
+        "Tailwind design system",
+        "installable components",
+        "starter",
+        "minimal",
+        "shadcn",
+        "tailwind",
+        "neutral"
+      ],
+      "ogImage": "https://www.memoire.cv/screenshots/starter.svg"
+    },
+    {
+      "slug": "tweakcn-vercel",
+      "title": "tweakcn Vercel shadcn registry | Memoire",
+      "description": "Vercel-inspired dark registry with sharp surfaces and electric-blue actions.",
+      "canonicalUrl": "https://www.memoire.cv/components/tweakcn-vercel",
+      "keywords": [
+        "shadcn registry",
+        "Tailwind design system",
+        "installable components",
+        "tweakcn",
+        "vercel",
+        "dark",
+        "minimal",
+        "blue"
+      ],
+      "ogImage": "https://www.memoire.cv/screenshots/tweakcn-vercel.svg"
+    },
+    {
+      "slug": "tweakcn-supabase",
+      "title": "tweakcn Supabase shadcn registry | Memoire",
+      "description": "Supabase-inspired registry for technical products with green-on-dark contrast.",
+      "canonicalUrl": "https://www.memoire.cv/components/tweakcn-supabase",
+      "keywords": [
+        "shadcn registry",
+        "Tailwind design system",
+        "installable components",
+        "tweakcn",
+        "supabase",
+        "green",
+        "technical",
+        "dark"
+      ],
+      "ogImage": "https://www.memoire.cv/screenshots/tweakcn-supabase.svg"
+    },
+    {
+      "slug": "tweakcn-linear",
+      "title": "tweakcn Linear shadcn registry | Memoire",
+      "description": "Linear-inspired registry with warm surfaces and focused indigo-violet accents.",
+      "canonicalUrl": "https://www.memoire.cv/components/tweakcn-linear",
+      "keywords": [
+        "shadcn registry",
+        "Tailwind design system",
+        "installable components",
+        "tweakcn",
+        "linear",
+        "indigo",
+        "productivity",
+        "editorial"
+      ],
+      "ogImage": "https://www.memoire.cv/screenshots/tweakcn-linear.svg"
+    }
+  ]
+}

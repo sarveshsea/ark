@@ -1,0 +1,38 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "chat-composer",
+  "type": "registry:component",
+  "title": "ChatComposer",
+  "description": "Prompt composer with accessible text input, send action, and optional attachment hint",
+  "registryDependencies": [
+    "input",
+    "button"
+  ],
+  "files": [
+    {
+      "path": "registry/ai-chat/chat-composer.tsx",
+      "type": "registry:component",
+      "target": "components/molecules/chat-composer.tsx",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\nimport { cn } from \"@/lib/utils\"\nimport { Button } from \"./Button\"\nimport { Input } from \"./Input\"\n\nexport interface ChatComposerProps extends React.FormHTMLAttributes<HTMLFormElement> {\n  placeholder?: string\n  sendLabel?: string\n  attachmentHint?: string\n  disabled?: boolean\n}\n\n/**\n * ChatComposer - prompt input and send action.\n *\n * @purpose Accessible composer for AI chat products.\n * @variants default, compact\n * @props placeholder, sendLabel, attachmentHint, disabled\n */\nexport function ChatComposer({\n  placeholder = \"Ask the assistant...\",\n  sendLabel = \"Send\",\n  attachmentHint = \"Shift + Enter for a new line\",\n  disabled,\n  className,\n  ...props\n}: ChatComposerProps) {\n  return (\n    <form\n      aria-label=\"AI chat composer\"\n      className={cn(\n        \"rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-[var(--spacing-sm)]\",\n        className,\n      )}\n      {...props}\n    >\n      <div className=\"flex flex-col gap-[var(--spacing-sm)] sm:flex-row sm:items-end\">\n        <Input\n          label=\"Prompt\"\n          placeholder={placeholder}\n          disabled={disabled}\n          className=\"bg-[var(--color-background)]\"\n        />\n        <Button label={sendLabel} variant=\"primary\" disabled={disabled} />\n      </div>\n      <p className=\"mt-2 text-xs text-[var(--color-muted-foreground)]\">{attachmentHint}</p>\n    </form>\n  )\n}\n"
+    }
+  ],
+  "categories": [
+    "ai-chat",
+    "molecule",
+    "ai-chat",
+    "chat-ui",
+    "llm",
+    "assistant",
+    "shadcn"
+  ],
+  "meta": {
+    "memoire": {
+      "sourcePackage": "@memoire-examples/ai-chat",
+      "sourcePath": "examples/presets/ai-chat",
+      "itemRoute": "/r/ai-chat/chat-composer.json",
+      "registryItemUrl": "https://www.memoire.cv/r/ai-chat/chat-composer.json",
+      "openInV0Url": "https://v0.dev/chat/api/open?url=https%3A%2F%2Fwww.memoire.cv%2Fr%2Fai-chat%2Fchat-composer.json",
+      "atomicLevel": "molecule"
+    }
+  }
+}

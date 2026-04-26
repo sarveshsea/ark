@@ -1,0 +1,37 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "button",
+  "type": "registry:ui",
+  "title": "Button",
+  "description": "Primary action button with default/primary/ghost variants, a loading state, and accessible focus",
+  "registryDependencies": [
+    "button"
+  ],
+  "files": [
+    {
+      "path": "registry/ecommerce/button.tsx",
+      "type": "registry:component",
+      "target": "components/ui/button.tsx",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\nimport { Button as ShadcnButton } from \"@/components/ui/button\"\nimport { cn } from \"@/lib/utils\"\n\nexport type ButtonVariant = \"default\" | \"primary\" | \"ghost\"\n\nexport interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {\n  label: string\n  variant?: ButtonVariant\n  loading?: boolean\n  icon?: React.ReactNode\n}\n\n/**\n * Button — primary action control.\n *\n * @purpose Primary action button with variants, a loading state, and accessible focus.\n * @variants default, primary, ghost\n * @props label, variant, loading, disabled, icon\n * @a11y role=button; aria-busy when loading; 44px min touch target.\n */\nexport function Button({\n  label,\n  variant = \"default\",\n  loading = false,\n  disabled,\n  icon,\n  className,\n  ...props\n}: ButtonProps) {\n  const variantClasses: Record<ButtonVariant, string> = {\n    default:\n      \"bg-[var(--color-muted)] text-[var(--color-foreground)] hover:bg-[color-mix(in_oklch,var(--color-muted),black_5%)] border border-[var(--color-border)]\",\n    primary:\n      \"bg-[var(--color-primary)] text-[var(--color-primary-foreground)] hover:opacity-90\",\n    ghost:\n      \"bg-transparent text-[var(--color-foreground)] hover:bg-[var(--color-muted)]\",\n  }\n\n  return (\n    <ShadcnButton\n      type=\"button\"\n      className={cn(\n        \"inline-flex items-center justify-center gap-2 min-h-[44px] px-4 rounded-[var(--radius-md)] font-medium\",\n        \"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:ring-offset-2\",\n        \"disabled:opacity-50 disabled:cursor-not-allowed transition-colors motion-reduce:transition-none\",\n        variantClasses[variant],\n        className,\n      )}\n      disabled={disabled || loading}\n      aria-busy={loading || undefined}\n      aria-label={props[\"aria-label\"] ?? label}\n      {...props}\n    >\n      {loading ? (\n        <span\n          className=\"inline-block h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin motion-reduce:animate-none\"\n          aria-hidden=\"true\"\n        />\n      ) : (\n        icon && <span aria-hidden=\"true\">{icon}</span>\n      )}\n      <span>{loading ? \"Loading\\u2026\" : label}</span>\n    </ShadcnButton>\n  )\n}\n"
+    }
+  ],
+  "categories": [
+    "ecommerce",
+    "atom",
+    "ecommerce",
+    "product",
+    "conversion",
+    "storefront",
+    "shadcn"
+  ],
+  "meta": {
+    "memoire": {
+      "sourcePackage": "@memoire-examples/ecommerce",
+      "sourcePath": "examples/presets/ecommerce",
+      "itemRoute": "/r/ecommerce/button.json",
+      "registryItemUrl": "https://www.memoire.cv/r/ecommerce/button.json",
+      "openInV0Url": "https://v0.dev/chat/api/open?url=https%3A%2F%2Fwww.memoire.cv%2Fr%2Fecommerce%2Fbutton.json",
+      "atomicLevel": "atom"
+    }
+  }
+}
