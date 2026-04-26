@@ -24,6 +24,7 @@ This release line rebuilds Mémoire around shadcn-native registry export: diagno
 - Added an achievement-safe community growth kit with GitHub issue forms, discussion category forms, PR template guidance, a directory submission matrix, and a GitHub achievement tracker.
 - Added official MCP Registry metadata with `package.json#mcpName`, root `server.json`, npm stdio package arguments, and release checks for registry consistency.
 - Tracked shadcn directory submissions for `bytefer/awesome-shadcn-ui` and `birobirobiro/awesome-shadcn-ui` as legitimate Pull Shark candidates.
+- Added a Starstruck distribution plan that prioritizes a `0.14.2` MCP metadata patch, official MCP Registry publish, MCP directory refreshes, useful awesome-list PRs, demo copy, and a legitimate GitHub star CTA.
 
 ### Public API Changes
 - New commands: `memi shadcn export`, `memi shadcn serve`, `memi shadcn doctor`, `memi fix plan`, `memi fix apply`, and `memi registry install <component> --from <ref>`.
@@ -76,6 +77,7 @@ This release line rebuilds Mémoire around shadcn-native registry export: diagno
 | `a4445945` | docs: add achievement-safe community growth kit |
 | `8ad7b719` | feat(mcp): add official registry metadata |
 | `cfa22797` | docs: track shadcn directory submissions |
+| `01a213b0` | docs: add starstruck distribution plan |
 | `pending` | chore(release): tag v0.14.1 |
 
 ### Key Design Decisions
