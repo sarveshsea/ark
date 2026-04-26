@@ -5,8 +5,8 @@
 <h1 align="center">memoire</h1>
 
 <p align="center">
-  <strong>Design CI for shadcn/Tailwind apps.</strong><br/>
-  Diagnose UI debt in real code, extract tokens, and publish the improved system as an installable registry.
+  <strong>Shadcn-native Design CI for Tailwind apps.</strong><br/>
+  Turn an existing app into a registry that works with <code>shadcn</code>, v0, AI editors, npm, and Mémoire.
 </p>
 
 <p align="center">
@@ -19,21 +19,36 @@
 
 ## 60-second quickstart
 
-Memoire starts from the app you already have. Install the npm package, run a code-first audit, then turn the cleaned-up system into a registry.
+Memoire starts from the app you already have. Install the npm package, audit the codebase, export a shadcn-native registry, then install the same components with `shadcn`, v0, or `memi`.
 
 ```bash
 npm i -g @sarveshsea/memoire
 
 memi diagnose
 memi tokens --from ./src --report
+memi shadcn export --out public/r
 memi publish --name @you/ds
 ```
 
 Primary CTA: [`@sarveshsea/memoire` on npm](https://www.npmjs.com/package/@sarveshsea/memoire).
 
+### Install the output anywhere
+
+```bash
+# shadcn-compatible registry item
+npx shadcn@latest add https://your-site.com/r/button.json
+
+# v0 / AI-editor context
+memi shadcn serve --port 4014
+
+# Mémoire install path with aliases, npm packages, URLs, GitHub, or local paths
+memi registry install Button --from @you/ds
+memi add Button --from ./public/r
+```
+
 ## No Figma required
 
-Most developer teams do not start in Figma. Memoire reads the codebase directly: Tailwind classes, shadcn usage, CSS variables, routes, markup, repeated literals, dark-mode coverage, token aliases, and registry shape.
+Most developer teams do not start in Figma. Memoire reads the codebase directly: Tailwind classes, shadcn usage, CSS variables, routes, markup, repeated literals, dark-mode coverage, token aliases, component targets, and registry shape.
 
 ```bash
 # Diagnose an existing app from code
@@ -45,27 +60,45 @@ memi diagnose http://localhost:3000
 # Extract the token system from the app and write audit reports
 memi tokens --from ./src --output generated/tokens --report
 
+# Export shadcn-compatible registry.json and /r/*.json items
+memi shadcn export --out public/r
+
 # Save extracted tokens into .memoire/design-system.json for publish/codegen flows
 memi tokens --from ./src --save
 ```
 
-Reports are written to `.memoire/app-quality/diagnosis.{json,md}` and token extraction emits CSS, Tailwind, JSON, Style Dictionary, semantic coverage, scale-health notes, alias graph validation, duplicate-value groups, recommendations, and inferred token candidates.
+Reports are written to `.memoire/app-quality/diagnosis.{json,md}` and token extraction emits CSS, Tailwind, JSON, Style Dictionary, semantic coverage, scale-health notes, alias graph validation, duplicate-value groups, recommendations, and inferred token candidates. Shadcn export emits `registry.json` plus installable item JSON files under `/r`.
 
 ## Registry workflow
 
-After diagnosis, the registry loop is simple: publish the improved design system, install real components anywhere, then keep the registry updated as the source changes.
+After diagnosis, the registry loop is simple: publish the improved design system, mirror shadcn-native registry files, install real components anywhere, then keep the registry updated as the source changes.
 
-### Existing app/CSS -> tokens -> registry
+### Existing app/CSS -> tokens -> shadcn registry
 
 ```bash
 npm i -g @sarveshsea/memoire
 
 memi tokens --from ./src --report
+memi shadcn doctor
+memi shadcn export --out public/r
 memi publish --name @you/ds
 memi add Button --from @you/ds
 ```
 
 Point Memoire at `src/`, `app/globals.css`, a built CSS file, `http://localhost:3000`, or a public URL.
+
+### Published registry -> shadcn/v0/AI editors
+
+```bash
+# Install through shadcn directly
+npx shadcn@latest add https://cdn.example.com/r/button.json
+
+# Use the same registry as AI design-system context
+memi shadcn serve --from @you/ds
+
+# Install through Memoire when you want alias/package/URL/GitHub resolution
+memi registry install Button --from @you/ds
+```
 
 ### Figma -> npm -> shadcn app
 
