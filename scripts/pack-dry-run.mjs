@@ -1,0 +1,89 @@
+#!/usr/bin/env node
+
+import { spawn } from "node:child_process";
+import { cp, mkdtemp, readFile, rm } from "node:fs/promises";
+import { dirname, join, resolve } from "node:path";
+import { tmpdir } from "node:os";
+import { fileURLToPath } from "node:url";
+
+const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const maxSizeBytes = Number.parseInt(process.env.MEMOIRE_PACK_MAX_BYTES || "1250000", 10);
+const tempRoot = await mkdtemp(join(tmpdir(), "memoire-pack-"));
+
+try {
+  const packageJson = JSON.parse(await readFile(join(root, "package.json"), "utf-8"));
+  const includePaths = [
+    "package.json",
+    "package-lock.json",
+    "scripts/prepare.mjs",
+    ...packageJson.files.filter((entry) => !entry.startsWith("!")),
+  ];
+
+  for (const entry of new Set(includePaths)) {
+    await cp(resolve(root, entry), resolve(tempRoot, entry), {
+      recursive: true,
+      force: true,
+      errorOnExist: false,
+    }).catch((error) => {
+      if (error?.code === "ENOENT") return;
+      throw error;
+    });
+  }
+
+  const pack = await run("npm", ["pack", "--dry-run", "--ignore-scripts", "--json"], tempRoot);
+  const payload = JSON.parse(pack.stdout);
+  const summary = Array.isArray(payload) ? payload[0] : payload;
+  const size = Number(summary?.size ?? 0);
+  const unpackedSize = Number(summary?.unpackedSize ?? 0);
+  const files = Array.isArray(summary?.files) ? summary.files.length : 0;
+
+  const result = {
+    name: summary?.name ?? packageJson.name,
+    version: summary?.version ?? packageJson.version,
+    filename: summary?.filename ?? null,
+    size,
+    unpackedSize,
+    files,
+    maxSizeBytes,
+    passed: size <= maxSizeBytes,
+  };
+
+  console.log(JSON.stringify(result, null, 2));
+
+  if (!result.passed) {
+    console.error(`npm pack dry-run exceeded ${maxSizeBytes} bytes: ${size} bytes`);
+    process.exitCode = 1;
+  }
+} finally {
+  await rm(tempRoot, { recursive: true, force: true });
+}
+
+async function run(command, args, cwd) {
+  const child = spawn(command, args, {
+    cwd,
+    stdio: ["ignore", "pipe", "pipe"],
+    env: {
+      ...process.env,
+      npm_config_ignore_scripts: "true",
+    },
+  });
+
+  let stdout = "";
+  let stderr = "";
+  child.stdout.on("data", (chunk) => {
+    stdout += chunk.toString();
+  });
+  child.stderr.on("data", (chunk) => {
+    stderr += chunk.toString();
+  });
+
+  const code = await new Promise((resolve) => {
+    child.on("close", resolve);
+  });
+
+  if (code !== 0) {
+    throw new Error(`${command} ${args.join(" ")} failed with ${code}\n${stderr || stdout}`);
+  }
+
+  return { stdout, stderr };
+}

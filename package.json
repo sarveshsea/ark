@@ -21,6 +21,7 @@
     "build:changelog": "node scripts/build-changelog-preview.mjs",
     "build:plugin": "node scripts/build-plugin.mjs",
     "bench:cli": "node scripts/bench-cli.mjs",
+    "pack:dry-run": "node scripts/pack-dry-run.mjs",
     "check:release": "node scripts/check-release.mjs",
     "validate:presets": "node scripts/build-presets.mjs",
     "dev": "tsx watch src/index.ts",
@@ -30,7 +31,7 @@
     "lint": "tsc --noEmit && tsc -p tsconfig.plugin.json --noEmit",
     "typecheck": "tsc --noEmit --strict && tsc -p tsconfig.plugin.json --noEmit",
     "prepublishOnly": "npm run check:release && npm run typecheck && npm run test && npm run build",
-    "prepare": "[ -d .git ] && npm run build || true",
+    "prepare": "node scripts/prepare.mjs",
     "postinstall": "node scripts/postinstall.mjs"
   },
   "repository": {
