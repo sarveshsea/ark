@@ -10,6 +10,7 @@ export interface AppGraphFile {
   imports: string[];
   importedBy: string[];
   shadcnImports: string[];
+  hexColors: string[];
   cssVariables: string[];
   tailwindClasses: string[];
   componentRefs: string[];
@@ -165,6 +166,7 @@ function analyzeGraphFile(path: string, content: string): AppGraphFile {
     imports: extractImports(content),
     importedBy: [],
     shadcnImports: extractShadcnImports(content),
+    hexColors: unique([...content.matchAll(/#[0-9a-fA-F]{3,8}\b/g)].map((match) => match[0])),
     cssVariables: unique([...content.matchAll(/--[a-zA-Z0-9-_]+/g)].map((match) => match[0])),
     tailwindClasses: extractClassTokens(content),
     componentRefs: unique([...content.matchAll(/<([A-Z][A-Za-z0-9]*)\b/g)].map((match) => match[1])),

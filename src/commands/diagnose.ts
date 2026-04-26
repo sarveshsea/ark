@@ -66,6 +66,15 @@ function printDiagnosis(diagnosis: AppQualityDiagnosis, wroteReports: boolean): 
       const label = `${issue.severity.toUpperCase()} ${issue.category}`;
       console.log(`  [${label}] ${issue.title}`);
       console.log(`      ${issue.recommendation}`);
+      if (issue.affectedFiles?.[0]) {
+        const location = issue.evidenceLocations?.[0];
+        console.log(ui.dim(`      evidence: ${location?.file ?? issue.affectedFiles[0]}${location?.line ? `:${location.line}` : ""}`));
+      }
+      if (issue.confidence !== undefined || issue.estimatedEffort) {
+        const confidence = issue.confidence !== undefined ? `${Math.round(issue.confidence * 100)}% confidence` : "";
+        const effort = issue.estimatedEffort ? `${issue.estimatedEffort} effort` : "";
+        console.log(ui.dim(`      ${[confidence, effort, issue.fixCategory].filter(Boolean).join(" · ")}`));
+      }
     }
   }
 

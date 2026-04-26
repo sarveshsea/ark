@@ -1,6 +1,7 @@
 import { access, mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { scanSources } from "../utils/source-scanner.js";
+import { buildAppGraph, type AppGraph } from "./app-graph.js";
 
 export type AppQualitySeverity = "critical" | "high" | "medium" | "low";
 export type AppQualityCategory =
@@ -21,6 +22,11 @@ export interface AppQualityIssue {
   detail: string;
   evidence: string[];
   recommendation: string;
+  evidenceLocations?: Array<{ file: string; line?: number; excerpt?: string }>;
+  affectedFiles?: string[];
+  confidence?: number;
+  estimatedEffort?: "small" | "medium" | "large";
+  fixCategory?: "tokens" | "components" | "accessibility" | "responsive" | "code-health";
 }
 
 export interface AppQualityDirection {
@@ -62,6 +68,13 @@ export interface AppQualityDiagnosis {
   issues: AppQualityIssue[];
   directions: AppQualityDirection[];
   nextActions: string[];
+  appGraph?: {
+    routes: number;
+    components: number;
+    imports: number;
+    shadcnComponents: string[];
+    package: AppGraph["package"];
+  };
 }
 
 interface ScanOptions {
@@ -106,9 +119,14 @@ const CATEGORY_BASE: Record<AppQualityCategory, number> = {
 export async function diagnoseAppQuality(options: ScanOptions): Promise<AppQualityDiagnosis> {
   const target = options.target ?? options.projectRoot;
   const files = await loadTargetFiles(options.projectRoot, target, options.maxFiles ?? DEFAULT_MAX_FILES);
+  const appGraph = await buildAppGraph({
+    projectRoot: options.projectRoot,
+    target,
+    maxFiles: options.maxFiles ?? DEFAULT_MAX_FILES,
+  });
   const fileSignals = files.map(analyzeFile);
   const aggregate = aggregateSignals(files, fileSignals);
-  const issues = buildIssues(aggregate);
+  const issues = enrichIssues(buildIssues(aggregate), appGraph, files);
   const scores = scoreCategories(issues);
   const score = Math.round(Object.values(scores).reduce((sum, value) => sum + value, 0) / Object.values(scores).length);
 
@@ -137,6 +155,13 @@ export async function diagnoseAppQuality(options: ScanOptions): Promise<AppQuali
       "Start with the highest-severity issue before applying visual directions.",
       "Use `memi theme import` or `memi publish` after the improved system is stable.",
     ],
+    appGraph: {
+      routes: appGraph.summary.routes,
+      components: appGraph.summary.components,
+      imports: appGraph.summary.imports,
+      shadcnComponents: appGraph.shadcn.components,
+      package: appGraph.package,
+    },
   };
 
   if (options.write !== false) {
@@ -317,6 +342,87 @@ function issue(
   return { id, category, severity, title, detail, evidence, recommendation };
 }
 
+function enrichIssues(issues: AppQualityIssue[], graph: AppGraph, files: RawFile[]): AppQualityIssue[] {
+  return issues.map((current) => {
+    const affectedFiles = affectedFilesForIssue(current, graph);
+    const evidenceLocations = evidenceLocationsForIssue(current, files, affectedFiles);
+    return {
+      ...current,
+      affectedFiles,
+      evidenceLocations,
+      confidence: confidenceForIssue(current, evidenceLocations.length),
+      estimatedEffort: effortForIssue(current, affectedFiles.length),
+      fixCategory: fixCategoryForIssue(current),
+    };
+  });
+}
+
+function affectedFilesForIssue(issue: AppQualityIssue, graph: AppGraph): string[] {
+  const files = graph.files.filter((file) => {
+    if (issue.id === "color.raw-hex") return file.hexColors.length > 0;
+    if (issue.id === "maintainability.arbitrary-tailwind") return file.tailwindClasses.some((token) => /\[[^\]]+\]/.test(token));
+    if (issue.id.startsWith("a11y.")) return file.componentRefs.length > 0 || file.kind === "route" || file.kind === "component";
+    if (issue.category === "components") return file.kind === "component" || file.shadcnImports.length > 0;
+    if (issue.category === "responsive") return file.kind === "route";
+    if (issue.category === "spacing" || issue.category === "typography") return file.tailwindClasses.length > 0;
+    return file.kind === "route" || file.kind === "component" || file.kind === "style";
+  });
+  return files.map((file) => file.path).slice(0, 12);
+}
+
+function evidenceLocationsForIssue(issue: AppQualityIssue, files: RawFile[], affectedFiles: string[]): Array<{ file: string; line?: number; excerpt?: string }> {
+  const pattern = patternForIssue(issue);
+  if (!pattern) {
+    return affectedFiles.slice(0, 5).map((file) => ({ file }));
+  }
+
+  const locations: Array<{ file: string; line?: number; excerpt?: string }> = [];
+  const affected = new Set(affectedFiles);
+  for (const file of files) {
+    if (affected.size > 0 && !affected.has(file.path)) continue;
+    const lines = file.content.split(/\r?\n/);
+    for (let index = 0; index < lines.length; index += 1) {
+      if (!pattern.test(lines[index])) continue;
+      pattern.lastIndex = 0;
+      locations.push({ file: file.path, line: index + 1, excerpt: lines[index].trim().slice(0, 160) });
+      break;
+    }
+    if (locations.length >= 5) break;
+  }
+  return locations;
+}
+
+function patternForIssue(issue: AppQualityIssue): RegExp | null {
+  if (issue.id === "color.raw-hex") return /#[0-9a-fA-F]{3,8}\b/g;
+  if (issue.id === "maintainability.arbitrary-tailwind") return /\[[^\]]+\]/g;
+  if (issue.id === "a11y.image-alt") return /<(img|Image)\b(?![^>]*\salt=)/g;
+  if (issue.id === "a11y.focus-missing") return /onClick=|<button\b|<Button\b|role=["']button/g;
+  if (issue.category === "spacing") return /class(Name)?=.*\b(p|px|py|m|mx|my|gap)-/g;
+  if (issue.category === "typography") return /class(Name)?=.*\btext-/g;
+  return null;
+}
+
+function confidenceForIssue(issue: AppQualityIssue, evidenceLocationCount: number): number {
+  const base = issue.evidence.length > 0 ? 0.78 : 0.62;
+  const locationBoost = Math.min(0.17, evidenceLocationCount * 0.04);
+  const severityBoost = issue.severity === "high" || issue.severity === "critical" ? 0.05 : 0;
+  return Math.min(0.97, Number((base + locationBoost + severityBoost).toFixed(2)));
+}
+
+function effortForIssue(issue: AppQualityIssue, affectedFileCount: number): AppQualityIssue["estimatedEffort"] {
+  if (issue.severity === "critical" || affectedFileCount > 8) return "large";
+  if (issue.severity === "high" || affectedFileCount > 3) return "medium";
+  return "small";
+}
+
+function fixCategoryForIssue(issue: AppQualityIssue): AppQualityIssue["fixCategory"] {
+  if (issue.id.includes("token") || issue.category === "color" || issue.category === "spacing" || issue.category === "typography") return "tokens";
+  if (issue.category === "components" || issue.category === "visual-system") return "components";
+  if (issue.category === "accessibility") return "accessibility";
+  if (issue.category === "responsive") return "responsive";
+  return "code-health";
+}
+
 function scoreCategories(issues: AppQualityIssue[]): Record<AppQualityCategory, number> {
   const scores = { ...CATEGORY_BASE };
   for (const current of issues) {
@@ -419,6 +525,13 @@ function renderDiagnosisMarkdown(diagnosis: AppQualityDiagnosis): string {
       lines.push(`- **${current.severity.toUpperCase()} ${current.category}: ${current.title}**`);
       lines.push(`  ${current.detail}`);
       lines.push(`  Recommendation: ${current.recommendation}`);
+      if (current.confidence !== undefined) lines.push(`  Confidence: ${Math.round(current.confidence * 100)}%`);
+      if (current.estimatedEffort) lines.push(`  Estimated effort: ${current.estimatedEffort}`);
+      if (current.affectedFiles && current.affectedFiles.length > 0) lines.push(`  Affected files: ${current.affectedFiles.slice(0, 5).join(", ")}`);
+      if (current.evidenceLocations && current.evidenceLocations.length > 0) {
+        const location = current.evidenceLocations[0];
+        lines.push(`  Evidence: ${location.file}${location.line ? `:${location.line}` : ""}${location.excerpt ? ` — ${location.excerpt}` : ""}`);
+      }
     }
   }
 
