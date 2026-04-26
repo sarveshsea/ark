@@ -12,8 +12,11 @@ import type { MemoireEngine } from "../engine/core.js";
 import { AgentOrchestrator } from "../agents/orchestrator.js";
 import { DesignAnalyzer } from "../agents/design-analyzer.js";
 import { getAI, getTracker } from "../ai/index.js";
-import { ComponentSpecSchema, PageSpecSchema, DataVizSpecSchema } from "../specs/types.js";
+import { ComponentSpecSchema, PageSpecSchema, DataVizSpecSchema, type ComponentSpec } from "../specs/types.js";
 import { fetchPageAssets, parseCSSTokens } from "../research/css-extractor.js";
+import { buildShadcnRegistry, toShadcnItemName } from "../shadcn/index.js";
+import { diagnoseAppQuality } from "../app-quality/engine.js";
+import { buildUiFixPlan } from "../app-quality/fix-plan.js";
 
 function requireFigma(engine: MemoireEngine): void {
   if (!engine.figma.isConnected) {
@@ -249,6 +252,109 @@ Use this tool: to inspect available tokens before writing code (e.g. find the ex
         text: JSON.stringify(engine.registry.designSystem.tokens, null, 2),
       }],
     }),
+  );
+
+  // ── get_shadcn_registry ────────────────────────────────
+  server.tool(
+    "get_shadcn_registry",
+    `Build and return a shadcn-native registry index from the current Memoire workspace.
+
+Prerequisites: Component specs must exist in the local registry. Tokens are optional but will be mapped into a registry:theme item when present.
+
+Returns on success: shadcn registry.json-compatible data with { $schema, name, homepage, items[] }. Items include file targets, registryDependencies, cssVars, and Memoire metadata.
+
+Use this tool: to provide AI editors and v0-compatible workflows with a registry context without writing files to disk. For an individual item, use get_registry_item.`,
+    {
+      name: z.string().default("memoire").describe("Registry name to embed in the shadcn registry index."),
+      homepage: z.string().url().optional().describe("Public homepage used to generate /r/*.json and Open-in-v0 metadata."),
+    },
+    async ({ name, homepage }) => {
+      const specs = (await engine.registry.getAllSpecs()).filter((spec): spec is ComponentSpec => spec.type === "component");
+      const registry = buildShadcnRegistry({
+        name,
+        homepage,
+        designSystem: engine.registry.designSystem,
+        specs,
+      });
+      return { content: [{ type: "text" as const, text: JSON.stringify(registry, null, 2) }] };
+    },
+  );
+
+  // ── get_registry_item ──────────────────────────────────
+  server.tool(
+    "get_registry_item",
+    `Return one shadcn-native registry item generated from the current Memoire workspace.
+
+Prerequisites: The requested component spec must exist. Use get_specs to list available specs or get_shadcn_registry to inspect generated item names.
+
+Returns on success: registry-item.json-compatible data with files, targets, dependencies, cssVars metadata when applicable, and Memoire Atomic Design metadata.
+
+Use this tool: when an AI editor needs the exact installable context for one component or block.`,
+    {
+      name: z.string().describe("Component spec name or shadcn item slug, e.g. Button or button."),
+      homepage: z.string().url().optional().describe("Public homepage used to generate item URL and Open-in-v0 metadata."),
+    },
+    async ({ name, homepage }) => {
+      const specs = (await engine.registry.getAllSpecs()).filter((spec): spec is ComponentSpec => spec.type === "component");
+      const registry = buildShadcnRegistry({
+        name: "memoire",
+        homepage,
+        designSystem: engine.registry.designSystem,
+        specs,
+      });
+      const itemName = toShadcnItemName(name);
+      const item = registry.items.find((candidate) => toShadcnItemName(candidate.name) === itemName);
+      if (!item) {
+        return { isError: true, content: [{ type: "text" as const, text: `Registry item "${name}" not found` }] };
+      }
+      return { content: [{ type: "text" as const, text: JSON.stringify(item, null, 2) }] };
+    },
+  );
+
+  // ── diagnose_app_quality ───────────────────────────────
+  server.tool(
+    "diagnose_app_quality",
+    `Diagnose UI quality for an existing shadcn/Tailwind app from code or a public URL.
+
+Returns on success: App-quality diagnosis V2 with scores, issues, evidence locations, affected files, confidence, effort estimates, fix categories, and app graph summary.
+
+Use this tool: before planning UI fixes, exporting a registry, or giving an AI editor context on real app design debt.`,
+    {
+      target: z.string().optional().describe("Local path or public URL to scan. Defaults to the current project root."),
+      maxFiles: z.number().default(500).describe("Maximum source files to scan."),
+    },
+    async ({ target, maxFiles }) => {
+      const diagnosis = await diagnoseAppQuality({
+        projectRoot: engine.config.projectRoot,
+        target,
+        maxFiles,
+        write: false,
+      });
+      return { content: [{ type: "text" as const, text: JSON.stringify(diagnosis, null, 2) }] };
+    },
+  );
+
+  // ── plan_ui_fixes ──────────────────────────────────────
+  server.tool(
+    "plan_ui_fixes",
+    `Build a dry-run UI fix plan from diagnosis evidence and app graph data.
+
+Returns on success: { patches[], summary, caveats[] } where every patch includes risk, confidence, affected files, operations, and writeSafe. This tool never modifies source files.
+
+Use this tool: to decide what a human or coding agent should patch before calling memi fix apply or making manual edits.`,
+    {
+      target: z.string().optional().describe("Local path or public URL to scan. Defaults to the current project root."),
+      maxFiles: z.number().default(500).describe("Maximum source files to scan."),
+    },
+    async ({ target, maxFiles }) => {
+      const plan = await buildUiFixPlan({
+        projectRoot: engine.config.projectRoot,
+        target,
+        maxFiles,
+        write: false,
+      });
+      return { content: [{ type: "text" as const, text: JSON.stringify(plan, null, 2) }] };
+    },
   );
 
   // ── update_token ────────────────────────────────────────
