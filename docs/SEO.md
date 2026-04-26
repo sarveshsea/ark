@@ -45,7 +45,7 @@ Use this copy on the website repo, GitHub metadata, and launch pages until `memo
   "applicationCategory": "DeveloperApplication",
   "operatingSystem": "macOS, Linux, Windows",
   "description": "Design CI for shadcn/Tailwind apps: diagnose UI debt, extract tokens, and publish installable registries.",
-  "softwareVersion": "0.13.0",
+  "softwareVersion": "0.13.1",
   "url": "https://www.npmjs.com/package/@sarveshsea/memoire",
   "codeRepository": "https://github.com/sarveshsea/m-moire",
   "programmingLanguage": "TypeScript",

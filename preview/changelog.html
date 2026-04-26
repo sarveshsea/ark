@@ -391,7 +391,7 @@ a:hover { text-decoration: underline; }
     </nav>
     <div class="hdr-stats">
       <span><span class="n" id="stat-commits">174</span> commits</span>
-      <span><span class="n" id="stat-versions">11</span> versions</span>
+      <span><span class="n" id="stat-versions">12</span> versions</span>
       <span><span class="n" id="stat-latest">2026-04-26</span> latest</span>
     </div>
   </header>
@@ -407,8 +407,8 @@ a:hover { text-decoration: underline; }
         <div class="hero-kpis">
           <div class="summary-card">
             <span class="summary-kicker">Current release</span>
-            <strong class="summary-value">v0.13.0</strong>
-            <div class="summary-caption">18 commits tracked in v0.13.0 from CHANGELOG.md.</div>
+            <strong class="summary-value">v0.13.1</strong>
+            <div class="summary-caption">0 commits tracked in v0.13.1 from CHANGELOG.md.</div>
           </div>
           <div class="summary-card">
             <span class="summary-kicker">Biggest theme</span>
@@ -434,10 +434,31 @@ a:hover { text-decoration: underline; }
     <section class="release-list" id="release-list"></section>
   </main>
 
-  <footer class="footer">memoire changelog - synced with CHANGELOG.md through v0.13.0</footer>
+  <footer class="footer">memoire changelog - synced with CHANGELOG.md through v0.13.1</footer>
 
 <script>
 const releases = [
+  {
+    "version": "v0.13.1",
+    "date": "2026-04-26",
+    "tag": "fix",
+    "summary": "Started the 0.13.1 marketplace release line and aligned package, plugin, preview, and example registry markers; Added release workflow verification so npm latest, README positioning, and install commands are checked after publish.",
+    "commits": [],
+    "decisions": [
+      [
+        "Lead with installable inventory",
+        "Marketplace growth depends on useful registries users can install immediately."
+      ],
+      [
+        "Keep changes additive",
+        "0.13.1 is a patch release, so existing memi add, publish, view, tokens, and diagnose behavior remains compatible."
+      ]
+    ],
+    "changes": [
+      "Started the 0.13.1 marketplace release line and aligned package, plugin, preview, and example registry markers.",
+      "Added release workflow verification so npm latest, README positioning, and install commands are checked after publish."
+    ]
+  },
   {
     "version": "v0.13.0",
     "date": "2026-04-26",

@@ -6,6 +6,19 @@ This changelog tracks Mémoire itself: every version, commit, and architectural 
 
 ---
 
+## v0.13.1 — 2026-04-26
+
+### The fix
+This patch release turns the registry marketplace into the growth wedge: more installable example registries, catalog data the website can mirror, discovery commands, and stronger registry package proof.
+
+### New
+- Started the `0.13.1` marketplace release line and aligned package, plugin, preview, and example registry markers.
+- Added release workflow verification so npm latest, README positioning, and install commands are checked after publish.
+
+### Key Design Decisions
+- **Lead with installable inventory** — Marketplace growth depends on useful registries users can install immediately.
+- **Keep changes additive** — `0.13.1` is a patch release, so existing `memi add`, `publish`, `view`, `tokens`, and `diagnose` behavior remains compatible.
+
 ## v0.13.0 — 2026-04-26
 
 ### The fix

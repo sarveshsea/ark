@@ -1,6 +1,6 @@
 # Demo Scripts
 
-These are the demos to keep reusing in README, npm, and launch posts. Lead with the code-first `0.13.0` demo.
+These are the demos to keep reusing in README, npm, and launch posts. Lead with the marketplace `0.13.1` demo.
 
 ## 60-second 0.13 code-first demo
 

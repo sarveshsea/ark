@@ -1,6 +1,6 @@
 # Memoire Launch Pack
 
-Use one message everywhere for the `0.13.0` launch:
+Use one message everywhere for the `0.13.1` launch:
 
 > Design CI for shadcn/Tailwind apps: diagnose UI debt in real code, extract tokens, and publish the improved system as an installable registry.
 
@@ -10,7 +10,7 @@ Link to one conversion page only per post. Until `memoire.cv/components` is fixe
 
 ## Launch baseline
 
-- Repo release target: `0.13.0`
+- Repo release target: `0.13.1`
 - npm package behind repo before launch: `0.12.3` latest while repo was `0.12.4`
 - Demand baseline from the 30-day plan: `66` weekly downloads for Apr 17-23, 2026 and `1532` monthly downloads for Mar 25-Apr 23, 2026
 - 30-day target: `1500+` weekly downloads and `4000+` monthly downloads
