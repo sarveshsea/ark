@@ -12,7 +12,7 @@ export const MarketplaceCatalogComponentSchema = z.object({
 export const MarketplaceCatalogEntrySchema = z.object({
   slug: z.string().min(1).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
   title: z.string().min(1),
-  packageName: z.string().min(1),
+  packageName: z.string().min(1).regex(/^(@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/),
   description: z.string().min(1),
   category: z.string().min(1),
   tags: z.array(z.string().min(1)).min(1),
@@ -24,6 +24,28 @@ export const MarketplaceCatalogEntrySchema = z.object({
   sourceUrl: z.string().url(),
   screenshotPath: z.string().min(1),
   screenshotUrl: z.string().url(),
+}).superRefine((entry, ctx) => {
+  if (entry.componentCount !== entry.components.length) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["componentCount"],
+      message: "componentCount must match components.length",
+    });
+  }
+  if (!entry.installCommand.includes(entry.packageName)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["installCommand"],
+      message: "installCommand must reference packageName",
+    });
+  }
+  if (new Set(entry.tags).size !== entry.tags.length) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["tags"],
+      message: "tags must be unique",
+    });
+  }
 });
 
 export const MarketplaceCatalogSchema = z.object({
