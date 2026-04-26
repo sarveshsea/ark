@@ -82,11 +82,15 @@ export async function resolveRegistry(ref: string, cwd: string = process.cwd(), 
       if (await fileExists(localSource)) {
         return await resolveLocal(localSource, cwd);
       }
-      const packagedSource = packagePath(marketplaceEntry.sourcePath);
-      if (await fileExists(packagedSource)) {
-        return await resolveLocal(packagedSource, cwd);
+      try {
+        return await resolveNpm(marketplaceEntry.packageName, cwd, options);
+      } catch {
+        const packagedSource = packagePath(marketplaceEntry.sourcePath);
+        if (await fileExists(packagedSource)) {
+          return await resolveLocal(packagedSource, cwd);
+        }
+        throw new Error(`Install it first: npm install ${marketplaceEntry.packageName}`);
       }
-      return await resolveNpm(marketplaceEntry.packageName, cwd, options);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       throw new Error(

@@ -2,7 +2,7 @@
  * Resolver tests — local registry resolution + SSRF guard.
  */
 
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { mkdtemp, rm, writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { tmpdir } from "os";
@@ -17,6 +17,9 @@ const validRegistry = {
 };
 
 describe("Registry resolver", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
   it("resolves a local registry directory", async () => {
     const dir = await mkdtemp(join(tmpdir(), "memoire-resolver-"));
     try {
@@ -108,12 +111,11 @@ describe("Registry resolver", () => {
     }
   });
 
-  it("explains the package mapping when a featured alias is not installed", async () => {
+  it("reports a missing npm registry package without requiring node_modules", async () => {
     const dir = await mkdtemp(join(tmpdir(), "memoire-resolver-"));
     try {
-      await expect(resolveRegistry("starter-saas", dir)).rejects.toThrow(
-        /starter-saas.*@memoire-examples\/starter-saas.*npm install @memoire-examples\/starter-saas/,
-      );
+      vi.stubGlobal("fetch", vi.fn(async () => new Response("missing", { status: 404 })));
+      await expect(resolveRegistry("@missing/ds", dir)).rejects.toThrow(/could not be resolved locally or from npm/i);
     } finally {
       await rm(dir, { recursive: true, force: true });
     }

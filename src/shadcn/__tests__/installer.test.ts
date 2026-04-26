@@ -1,0 +1,85 @@
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { describe, expect, it } from "vitest";
+
+import type { MemoireEngine } from "../../engine/core.js";
+import type { AnySpec } from "../../specs/types.js";
+import { installShadcnRegistryItem, resolveShadcnRegistryItem } from "../installer.js";
+
+describe("shadcn registry installer", () => {
+  it("installs item content to file targets and records a spec", async () => {
+    const projectRoot = await mkdtemp(join(tmpdir(), "memoire-shadcn-install-"));
+    try {
+      await writeFile(join(projectRoot, "components.json"), JSON.stringify({
+        aliases: { components: "@/components" },
+      }));
+      await writeShadcnFixture(projectRoot);
+
+      const savedSpecs: AnySpec[] = [];
+      const engine = {
+        config: { projectRoot },
+        registry: {
+          saveSpec: async (spec: AnySpec) => {
+            savedSpecs.push(spec);
+            await mkdir(join(projectRoot, ".memoire", "specs", "components"), { recursive: true });
+            await writeFile(join(projectRoot, ".memoire", "specs", "components", `${spec.name}.json`), JSON.stringify(spec));
+          },
+        },
+      } as unknown as MemoireEngine;
+
+      const result = await installShadcnRegistryItem(engine, {
+        from: join(projectRoot, "public", "r"),
+        name: "Button",
+      });
+
+      expect(result.codePath).toBe(join(projectRoot, "components", "ui", "button.tsx"));
+      expect(await readFile(result.codePath!, "utf8")).toContain("export function Button");
+      expect(savedSpecs[0]?.name).toBe("Button");
+      expect(result.specPath).toContain(".memoire/specs/components/Button.json");
+    } finally {
+      await rm(projectRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("reports missing shadcn items with the requested name", async () => {
+    const projectRoot = await mkdtemp(join(tmpdir(), "memoire-shadcn-missing-"));
+    try {
+      await writeShadcnFixture(projectRoot);
+      await expect(resolveShadcnRegistryItem(join(projectRoot, "public", "r"), "Missing", projectRoot)).rejects.toThrow(/Missing|missing/i);
+    } finally {
+      await rm(projectRoot, { recursive: true, force: true });
+    }
+  });
+});
+
+async function writeShadcnFixture(projectRoot: string): Promise<void> {
+  const outDir = join(projectRoot, "public", "r");
+  await mkdir(outDir, { recursive: true });
+  await writeFile(join(outDir, "registry.json"), JSON.stringify({
+    "$schema": "https://ui.shadcn.com/schema/registry.json",
+    name: "test",
+    items: [{
+      name: "button",
+      type: "registry:ui",
+      title: "Button",
+      description: "Button item",
+      files: [{ path: "registry/button/button.tsx", type: "registry:component", target: "@/components/ui/button.tsx" }],
+      meta: { memoire: { itemRoute: "/r/button.json" } },
+    }],
+  }));
+  await writeFile(join(outDir, "button.json"), JSON.stringify({
+    "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+    name: "button",
+    type: "registry:ui",
+    title: "Button",
+    description: "Button item",
+    files: [{
+      path: "registry/button/button.tsx",
+      type: "registry:component",
+      target: "@/components/ui/button.tsx",
+      content: "export function Button() { return <button /> }",
+    }],
+    categories: ["atom"],
+  }));
+}

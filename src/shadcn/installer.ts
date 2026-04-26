@@ -100,14 +100,20 @@ export async function resolveShadcnRegistryItem(
     if (await exists(localSource)) {
       return resolveLocalShadcnItem(localSource, name, cwd, `catalog:${catalogEntry.slug}`);
     }
-    const packagedSource = packagePath(catalogEntry.sourcePath);
-    if (await exists(packagedSource)) {
-      return resolveLocalShadcnItem(packagedSource, name, cwd, `catalog:${catalogEntry.slug}`);
-    }
   }
 
-  const cached = await fetchNpmPackageToCache(packageName, cwd, "latest", { refresh: options.refresh });
-  return resolveLocalShadcnItem(cached.packageDir, name, cwd, `npm:${packageName}@${cached.version}`);
+  try {
+    const cached = await fetchNpmPackageToCache(packageName, cwd, "latest", { refresh: options.refresh });
+    return resolveLocalShadcnItem(cached.packageDir, name, cwd, `npm:${packageName}@${cached.version}`);
+  } catch (error) {
+    if (catalogEntry) {
+      const packagedSource = packagePath(catalogEntry.sourcePath);
+      if (await exists(packagedSource)) {
+        return resolveLocalShadcnItem(packagedSource, name, cwd, `catalog:${catalogEntry.slug}`);
+      }
+    }
+    throw error;
+  }
 }
 
 function itemToSyntheticSpec(item: ShadcnRegistryItem): ComponentSpec {
