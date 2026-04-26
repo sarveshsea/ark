@@ -15,10 +15,20 @@ This release makes Memoire a code-first Design CI tool for shadcn/Tailwind apps:
 - Bumped the public release line to `0.13.0` so the next npm publish can carry the Design CI positioning, faster CLI work, and code-first docs under one semver release.
 - Added high-intent npm keywords for `design-ci`, UI quality, shadcn/Tailwind audits, token extraction, design tokens, tweakcn, and registry publishing.
 - Updated shipped examples, preview badges, plugin metadata, and release checks to the new release marker.
+- Rewrote the npm README, docs quickstart, launch copy, submission templates, and site SEO handoff around one npm-first conversion path.
+
+### Commits
+| Hash | Message |
+|------|---------|
+| `25e65b07` | chore(release): bump to 0.13.0 |
+| `e2d1af1d` | docs(seo): rewrite npm conversion surface |
+| `f0e4059b` | docs(site): add seo and metadata handoff |
+| `c014eec0` | docs(launch): update growth copy |
 
 ### Key Design Decisions
 - **Prioritize code-first adoption** — Developers can start from an existing shadcn/Tailwind app without opening Figma.
 - **Use Design CI as the wedge** — Public copy should sell repeatable UI quality checks and registry publishing, not a broad AI design platform.
+- **Keep npm as the only primary CTA** — Until the deployed `/components` page is reliable, every growth surface sends traffic to `@sarveshsea/memoire`.
 
 ## v0.12.4 — 2026-04-16 (Growth surfaces)
 

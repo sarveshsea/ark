@@ -390,7 +390,7 @@ a:hover { text-decoration: underline; }
       <a href="changelog.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>Changelog</a>
     </nav>
     <div class="hdr-stats">
-      <span><span class="n" id="stat-commits">157</span> commits</span>
+      <span><span class="n" id="stat-commits">160</span> commits</span>
       <span><span class="n" id="stat-versions">11</span> versions</span>
       <span><span class="n" id="stat-latest">2026-04-26</span> latest</span>
     </div>
@@ -408,7 +408,7 @@ a:hover { text-decoration: underline; }
           <div class="summary-card">
             <span class="summary-kicker">Current release</span>
             <strong class="summary-value">v0.13.0</strong>
-            <div class="summary-caption">1 commits tracked in v0.13.0 from CHANGELOG.md.</div>
+            <div class="summary-caption">4 commits tracked in v0.13.0 from CHANGELOG.md.</div>
           </div>
           <div class="summary-card">
             <span class="summary-kicker">Biggest theme</span>
@@ -445,8 +445,20 @@ const releases = [
     "summary": "Bumped the public release line to 0.13.0 so the next npm publish can carry the Design CI positioning, faster CLI work, and code-first docs under one semver release; Added high-intent npm keywords for design-ci, UI quality, shadcn/Tailwind audits, token extraction, design tokens, tweakcn, and registry publishing; Updated shipped examples, preview badges, plugin metadata, and release checks to the new release marker.",
     "commits": [
       [
-        "66ed209c",
-        "feat(engine): add design ci research v2 and token intelligence"
+        "25e65b07",
+        "chore(release): bump to 0.13.0"
+      ],
+      [
+        "e2d1af1d",
+        "docs(seo): rewrite npm conversion surface"
+      ],
+      [
+        "f0e4059b",
+        "docs(site): add seo and metadata handoff"
+      ],
+      [
+        "c014eec0",
+        "docs(launch): update growth copy"
       ]
     ],
     "decisions": [
@@ -457,12 +469,17 @@ const releases = [
       [
         "Use Design CI as the wedge",
         "Public copy should sell repeatable UI quality checks and registry publishing, not a broad AI design platform."
+      ],
+      [
+        "Keep npm as the only primary CTA",
+        "Until the deployed /components page is reliable, every growth surface sends traffic to @sarveshsea/memoire."
       ]
     ],
     "changes": [
       "Bumped the public release line to 0.13.0 so the next npm publish can carry the Design CI positioning, faster CLI work, and code-first docs under one semver release.",
       "Added high-intent npm keywords for design-ci, UI quality, shadcn/Tailwind audits, token extraction, design tokens, tweakcn, and registry publishing.",
       "Updated shipped examples, preview badges, plugin metadata, and release checks to the new release marker.",
+      "Rewrote the npm README, docs quickstart, launch copy, submission templates, and site SEO handoff around one npm-first conversion path.",
       "**Design CI diagnosis command** — memi diagnose [target] audits real shadcn/Tailwind apps from source code or a URL, scores UI debt, and writes .memoire/app-quality/diagnosis.{json,md}.",
       "**Code-first token intelligence** — memi tokens --from <file|dir|url> extracts CSS variables, Tailwind @theme tokens, modes, aliases, repeated literals, utility patterns, semantic coverage, mode coverage, duplicate groups, and recommendations.",
       "**Auditable token reports** — memi tokens --from ./src --report writes token-extraction.report.md and token-extraction.report.json alongside CSS, Tailwind, JSON, and Style Dictionary exports.",
