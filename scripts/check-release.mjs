@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { readdir, readFile, access } from "node:fs/promises";
+import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { applyChangelogData, parseChangelogMarkdown } from "./build-changelog-preview.mjs";
@@ -19,6 +20,31 @@ function fail(message) {
 
 const packageJson = await readJson(join(root, "package.json"));
 const version = packageJson.version;
+
+const readme = await readFile(join(root, "README.md"), "utf-8");
+const readmeTopFold = readme.slice(0, 3000);
+const requiredReadmeTerms = [
+  "Shadcn-native Design CI for Tailwind apps",
+  "npm i -g @sarveshsea/memoire",
+  "memi shadcn export",
+  "memi registry install",
+  "https://ui.shadcn.com/docs/registry/getting-started",
+  "https://ui.shadcn.com/docs/registry/registry-item-json",
+  "https://ui.shadcn.com/docs/components-json",
+  "https://v0.app/docs/design-systems",
+];
+for (const term of requiredReadmeTerms) {
+  if (!readmeTopFold.includes(term)) {
+    fail(`README top fold is missing required conversion term: ${term}`);
+  }
+}
+
+const cliEntry = await readFile(join(root, "src", "index.ts"), "utf-8");
+for (const command of ["diagnose [target]", "tokens", "publish", "add <component>", "registry <subcommand>"]) {
+  if (!cliEntry.includes(command)) {
+    fail(`fast CLI help is missing command: ${command}`);
+  }
+}
 
 const lockfile = await readJson(join(root, "package-lock.json"));
 if (lockfile.version !== version) {
@@ -96,6 +122,46 @@ if (!Array.isArray(featuredCatalog) || featuredCatalog.length < 3) {
     } catch {
       fail(`featured registry ${entry.slug} screenshotPath does not exist: ${entry.screenshotPath}`);
     }
+  }
+}
+
+const marketplaceCatalog = await readJson(join(root, "examples", "marketplace-catalog.v1.json"));
+const packagedMarketplaceCatalog = await readJson(join(root, "assets", "marketplace-catalog.v1.json"));
+if (JSON.stringify(marketplaceCatalog) !== JSON.stringify(packagedMarketplaceCatalog)) {
+  fail("examples/marketplace-catalog.v1.json and assets/marketplace-catalog.v1.json are not synced");
+}
+if (marketplaceCatalog.version !== 1) {
+  fail(`marketplace catalog version is ${marketplaceCatalog.version}, expected 1`);
+}
+if (!Array.isArray(marketplaceCatalog.entries) || marketplaceCatalog.entries.length < 7) {
+  fail("marketplace catalog must contain at least seven registry entries");
+} else {
+  const seen = new Set();
+  for (const entry of marketplaceCatalog.entries) {
+    if (!entry.slug || seen.has(entry.slug)) {
+      fail(`marketplace catalog has a missing or duplicate slug: ${entry.slug}`);
+    }
+    seen.add(entry.slug);
+    for (const field of ["packageName", "installCommand", "sourcePath", "sourceUrl", "screenshotPath", "screenshotUrl", "description", "category"]) {
+      if (!entry[field]) fail(`marketplace catalog ${entry.slug} is missing ${field}`);
+    }
+    if (!Array.isArray(entry.tags) || entry.tags.length < 3) {
+      fail(`marketplace catalog ${entry.slug} must include at least three SEO tags`);
+    }
+    if (!entry.installCommand?.includes(entry.packageName)) {
+      fail(`marketplace catalog ${entry.slug} installCommand does not reference ${entry.packageName}`);
+    }
+  }
+}
+
+if (process.env.SKIP_PACK_GATE !== "1") {
+  const pack = spawnSync(process.execPath, [join(root, "scripts", "pack-dry-run.mjs")], {
+    cwd: root,
+    encoding: "utf-8",
+    maxBuffer: 1024 * 1024,
+  });
+  if (pack.status !== 0) {
+    fail(`package size gate failed: ${pack.stderr.trim() || pack.stdout.trim() || pack.status}`);
   }
 }
 

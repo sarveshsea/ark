@@ -32,6 +32,8 @@ memi publish --name @you/ds
 
 Primary CTA: [`@sarveshsea/memoire` on npm](https://www.npmjs.com/package/@sarveshsea/memoire).
 
+Compatibility targets: [shadcn registry](https://ui.shadcn.com/docs/registry/getting-started), [registry item schema](https://ui.shadcn.com/docs/registry/registry-item-json), [components.json](https://ui.shadcn.com/docs/components-json), and [v0 design systems](https://v0.app/docs/design-systems).
+
 ### Install the output anywhere
 
 ```bash
