@@ -35,8 +35,8 @@ This release line rebuilds Mémoire around shadcn-native registry export: diagno
 - `npm run build:marketplace` and `npm run build:site-bundle` generated clean outputs.
 - Focused shadcn, remote registry, npm cache, app graph/fix, MCP, and site bundle tests passed.
 - `npm run check:release` passed throughout the release work.
-- `npm run bench:cli` passed: help median `30ms`, diagnose median `394ms`, tokens median `637ms`, status median `378ms`.
-- `npm run pack:dry-run` passed: package size `1,053,297` bytes, unpacked size `3,747,430` bytes, `440` files, under the `1,250,000` byte gate.
+- `npm run bench:cli` passed: help median `26ms`, diagnose median `381ms`, tokens median `640ms`, status median `392ms`.
+- `npm run pack:dry-run` passed: package size `1,077,934` bytes, unpacked size `3,882,863` bytes, `464` files, under the `1,250,000` byte gate.
 
 ### Commits
 | Hash | Message |
@@ -69,7 +69,7 @@ This release line rebuilds Mémoire around shadcn-native registry export: diagno
 | `a2ab7796` | refactor(registry): isolate legacy v1 protocol |
 | `e92a4e77` | docs(seo): update 0.14.1 keyword strategy |
 | `a7ac9650` | docs(launch): add 0.14.1 campaign |
-| `pending` | docs(changelog): finalize v0.14.1 |
+| `581a563e` | docs(changelog): finalize v0.14.1 |
 | `pending` | chore(release): tag v0.14.1 |
 
 ### Key Design Decisions
