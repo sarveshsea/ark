@@ -109,11 +109,41 @@ describe("memi view", () => {
     );
 
     const payload = JSON.parse(lastLog(logs));
-    expect(payload).toEqual({
+    expect(payload).toMatchObject({
       status: "printed",
       url: "https://www.npmjs.com/package/@acme/ds",
       component: "Button",
       registry: "@acme/ds",
+    });
+    expect(payload.marketplaceUrl).toBeUndefined();
+  });
+
+  it("resolves catalog-backed registry aliases and prints npm plus marketplace URLs", async () => {
+    const logs = captureLogs();
+    const program = new Command();
+    registerViewCommand(program, makeFakeEngine());
+
+    await program.parseAsync(["view", "starter-saas/Button", "--print"], { from: "user" });
+
+    expect(logs).toContain("https://www.npmjs.com/package/@memoire-examples/starter-saas");
+    expect(logs).toContain("https://memoire.cv/components/starter-saas/Button");
+  });
+
+  it("includes marketplace URL metadata for aliases in JSON mode", async () => {
+    const logs = captureLogs();
+    const program = new Command();
+    registerViewCommand(program, makeFakeEngine());
+
+    await program.parseAsync(["view", "ai-chat/ChatComposer", "--json"], { from: "user" });
+
+    const payload = JSON.parse(lastLog(logs));
+    expect(payload).toMatchObject({
+      status: "printed",
+      url: "https://www.npmjs.com/package/@memoire-examples/ai-chat",
+      marketplaceUrl: "https://memoire.cv/components/ai-chat/ChatComposer",
+      component: "ChatComposer",
+      registry: "@memoire-examples/ai-chat",
+      alias: "ai-chat",
     });
   });
 });

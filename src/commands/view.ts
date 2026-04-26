@@ -16,14 +16,17 @@ import type { Command } from "commander";
 import type { MemoireEngine } from "../engine/core.js";
 import { spawn } from "node:child_process";
 import { ui } from "../tui/format.js";
-import { npmPackageUrl } from "../registry/constants.js";
+import { marketplaceComponentUrl, npmPackageUrl } from "../registry/constants.js";
+import { resolveMarketplaceAlias } from "../marketplace/catalog-loader.js";
 import type { ComponentSpec } from "../specs/types.js";
 
 export interface ViewPayload {
   status: "opened" | "printed" | "failed";
   url?: string;
+  marketplaceUrl?: string;
   component?: string;
   registry?: string;
+  alias?: string;
   error?: string;
 }
 
@@ -109,23 +112,37 @@ export function registerViewCommand(program: Command, engine: MemoireEngine) {
           }
         }
 
-        const url = npmPackageUrl(registry);
+        const marketplaceEntry = await resolveMarketplaceAlias(registry).catch(() => undefined);
+        const resolvedRegistry = marketplaceEntry?.packageName ?? registry;
+        const url = npmPackageUrl(resolvedRegistry);
+        const marketplaceUrl = marketplaceEntry
+          ? marketplaceComponentUrl(marketplaceEntry.slug, component)
+          : undefined;
 
         if (opts.json) {
-          const payload: ViewPayload = { status: "printed", url, component, registry };
+          const payload: ViewPayload = {
+            status: "printed",
+            url,
+            marketplaceUrl,
+            component,
+            registry: resolvedRegistry,
+            alias: marketplaceEntry?.slug,
+          };
           console.log(JSON.stringify(payload));
           return;
         }
 
         if (opts.print) {
           console.log(url);
+          if (marketplaceUrl) console.log(marketplaceUrl);
           return;
         }
 
         openInBrowser(url);
         console.log();
-        console.log(ui.ok(`Opening ${registry} for ${component}`));
+        console.log(ui.ok(`Opening ${resolvedRegistry} for ${component}`));
         console.log(ui.dim(`  ${url}`));
+        if (marketplaceUrl) console.log(ui.dim(`  Marketplace: ${marketplaceUrl}`));
         console.log();
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
