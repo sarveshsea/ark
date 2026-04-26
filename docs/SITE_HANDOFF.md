@@ -4,13 +4,13 @@ These are the exact external-surface updates that still need credentials or the 
 
 ## GitHub repo metadata
 
-- Description: `Design CI for shadcn/Tailwind apps: diagnose UI debt, extract tokens, and publish installable registries.`
-- Topics: `design-ci`, `ui-quality`, `ui-audit`, `shadcn-audit`, `tailwind-audit`, `design-quality`, `frontend-quality`, `token-extraction`, `design-tokens`, `shadcn-registry`, `tweakcn`, `registry`
+- Description: `Shadcn-native Design CI for Tailwind apps: export registries that work with shadcn, v0, AI editors, and npm.`
+- Topics: `shadcn-native`, `shadcn-registry`, `shadcn-registry-generator`, `v0-design-system`, `design-ci`, `tailwind-audit`, `token-extraction`, `ui-quality`, `ui-fix-plan`, `registry-generator`, `design-tokens`, `tweakcn`
 
 ## Homepage hero
 
-- Heading: `Design CI for shadcn/Tailwind apps.`
-- Subhead: `Diagnose UI debt in real code, extract tokens, and publish the improved system as an installable registry.`
+- Heading: `Shadcn-native Design CI for Tailwind apps.`
+- Subhead: `Turn an existing app into a registry that works with shadcn, v0, AI editors, npm, and Mémoire.`
 - Primary CTA: `https://www.npmjs.com/package/@sarveshsea/memoire`
 - Secondary CTA: omit until `/components` is reliable. If one is required, use `https://github.com/sarveshsea/m-moire#no-figma-required`.
 
@@ -32,3 +32,13 @@ These are the exact external-surface updates that still need credentials or the 
 - npm link: `https://www.npmjs.com/package/@sarveshsea/memoire`
 - Version string: only show the currently released package version
 - OpenGraph, Twitter card, sitemap, and JSON-LD copy: [`docs/SEO.md`](./SEO.md)
+
+## 0.14.1 external release checklist
+
+- Publish `0.13.1` first if npm latest is still behind the repo; do not announce `0.14.1` while npm users still see the old README.
+- Publish `0.14.1` to npm from the tagged `main` commit, then run `npm run check:public-release`.
+- Update GitHub description and topics to the exact strings above.
+- Deploy the website hero, docs landing, and `/components` catalog from the generated marketplace bundle.
+- Verify `/components` renders non-empty cards from the catalog or featured fallback.
+- Verify npm README first screen contains `Shadcn-native Design CI for Tailwind apps` and `npm i -g @sarveshsea/memoire`.
+- Record the 7-day follow-up metrics in [`docs/METRICS.md`](./METRICS.md): npm weekly downloads, npm monthly downloads, npm latest, GitHub stars, README CTA, and `/components` health.
