@@ -142,8 +142,11 @@ if (!Array.isArray(marketplaceCatalog.entries) || marketplaceCatalog.entries.len
       fail(`marketplace catalog has a missing or duplicate slug: ${entry.slug}`);
     }
     seen.add(entry.slug);
-    for (const field of ["packageName", "installCommand", "sourcePath", "sourceUrl", "screenshotPath", "screenshotUrl", "description", "category"]) {
+    for (const field of ["packageName", "installCommand", "sourcePath", "sourceUrl", "screenshotPath", "screenshotUrl", "registryItemUrl", "openInV0Url", "description", "category"]) {
       if (!entry[field]) fail(`marketplace catalog ${entry.slug} is missing ${field}`);
+    }
+    if (!entry.openInV0Url.includes(encodeURIComponent(entry.registryItemUrl))) {
+      fail(`marketplace catalog ${entry.slug} openInV0Url does not encode registryItemUrl`);
     }
     if (!Array.isArray(entry.tags) || entry.tags.length < 3) {
       fail(`marketplace catalog ${entry.slug} must include at least three SEO tags`);

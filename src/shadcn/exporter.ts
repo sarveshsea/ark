@@ -100,7 +100,7 @@ export function buildShadcnRegistry(input: Omit<ShadcnRegistryExportInput, "outD
     $schema: SHADCN_REGISTRY_SCHEMA_URL,
     name: sanitizeRegistryName(input.name),
     homepage: input.homepage,
-    items: items.map((item) => withItemRoute(item)),
+    items: items.map((item) => withItemRoute(item, input.homepage)),
     meta: {
       memoire: {
         protocol: "shadcn-v2",
@@ -179,18 +179,25 @@ export function shadcnItemFileRoute(name: string): string {
   return `/r/${toShadcnItemName(name)}.json`;
 }
 
-function withItemRoute(item: ShadcnRegistryItem): ShadcnRegistryItem {
+function withItemRoute(item: ShadcnRegistryItem, homepage?: string): ShadcnRegistryItem {
+  const route = shadcnItemFileRoute(item.name);
+  const publicItemUrl = homepage ? `${homepage.replace(/\/$/, "")}${route}` : null;
   return ShadcnRegistryItemSchema.parse({
     ...item,
     meta: {
       ...(item.meta ?? {}),
       memoire: {
         ...((item.meta?.memoire as Record<string, unknown> | undefined) ?? {}),
-        itemRoute: shadcnItemFileRoute(item.name),
+        itemRoute: route,
+        ...(publicItemUrl ? {
+          registryItemUrl: publicItemUrl,
+          openInV0Url: `https://v0.dev/chat/api/open?url=${encodeURIComponent(publicItemUrl)}`,
+        } : {}),
       },
     },
   });
 }
+
 
 function stripFileContent(item: ShadcnRegistryItem): ShadcnRegistryItem {
   return ShadcnRegistryItemSchema.parse({

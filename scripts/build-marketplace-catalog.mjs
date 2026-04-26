@@ -144,8 +144,25 @@ function githubRawUrl(path) {
   return `https://raw.githubusercontent.com/sarveshsea/m-moire/main/${path}`;
 }
 
+function memoireRegistryItemUrl(slug, componentName) {
+  return `https://www.memoire.cv/r/${slug}/${toItemName(componentName)}.json`;
+}
+
+function openInV0Url(itemUrl) {
+  return `https://v0.dev/chat/api/open?url=${encodeURIComponent(itemUrl)}`;
+}
+
 function normalizeHref(href) {
   return href.replace(/^\.\//, "");
+}
+
+function toItemName(name) {
+  return name
+    .trim()
+    .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
+    .replace(/[^a-zA-Z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .toLowerCase();
 }
 
 async function listPresetSlugs() {
@@ -214,6 +231,7 @@ async function buildEntry(slug) {
   if (!installCommand.includes(pkg.name)) {
     fail(`${slug}: installCommand must include package name`);
   }
+  const registryItemUrl = memoireRegistryItemUrl(slug, installComponent.name);
 
   return {
     slug,
@@ -230,6 +248,8 @@ async function buildEntry(slug) {
     sourceUrl: githubTreeUrl(sourcePath),
     screenshotPath: meta.screenshotPath,
     screenshotUrl: githubRawUrl(meta.screenshotPath),
+    registryItemUrl,
+    openInV0Url: openInV0Url(registryItemUrl),
   };
 }
 

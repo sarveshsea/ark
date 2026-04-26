@@ -24,6 +24,8 @@ export const MarketplaceCatalogEntrySchema = z.object({
   sourceUrl: z.string().url(),
   screenshotPath: z.string().min(1),
   screenshotUrl: z.string().url(),
+  registryItemUrl: z.string().url(),
+  openInV0Url: z.string().url(),
 }).superRefine((entry, ctx) => {
   if (entry.componentCount !== entry.components.length) {
     ctx.addIssue({
@@ -44,6 +46,13 @@ export const MarketplaceCatalogEntrySchema = z.object({
       code: z.ZodIssueCode.custom,
       path: ["tags"],
       message: "tags must be unique",
+    });
+  }
+  if (!entry.openInV0Url.includes(encodeURIComponent(entry.registryItemUrl))) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["openInV0Url"],
+      message: "openInV0Url must include the encoded registryItemUrl",
     });
   }
 });
