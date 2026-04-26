@@ -20,6 +20,7 @@
     "build": "node scripts/build.mjs",
     "build:changelog": "node scripts/build-changelog-preview.mjs",
     "build:plugin": "node scripts/build-plugin.mjs",
+    "bench:cli": "node scripts/bench-cli.mjs",
     "check:release": "node scripts/check-release.mjs",
     "validate:presets": "node scripts/build-presets.mjs",
     "dev": "tsx watch src/index.ts",
