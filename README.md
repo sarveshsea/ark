@@ -136,6 +136,7 @@ Theme import handles both Tailwind v3 (`:root { --primary: ... }`) and v4 (`@the
 </p>
 
 Demo scripts for recording and reuse live in [`docs/DEMOS.md`](./docs/DEMOS.md).
+No-Figma proof examples live in [`docs/PROOF.md`](./docs/PROOF.md).
 
 ---
 

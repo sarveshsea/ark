@@ -59,6 +59,7 @@ memi add Button --from @you/theme
 ## Proof
 
 - Featured installable registries: [`examples/README.md`](../examples/README.md)
+- No-Figma proof examples: [`docs/PROOF.md`](./PROOF.md)
 - Recording scripts: [`docs/DEMOS.md`](./DEMOS.md)
 - Launch copy: [`docs/LAUNCH.md`](./LAUNCH.md)
 - Full package overview: [`README.md`](../README.md)
