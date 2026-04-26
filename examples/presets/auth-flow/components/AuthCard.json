@@ -1,0 +1,35 @@
+{
+  "name": "AuthCard",
+  "type": "component",
+  "level": "organism",
+  "purpose": "Authentication card for login, signup, and account settings entry points",
+  "researchBacking": [],
+  "designTokens": { "source": "manual", "mapped": true },
+  "variants": ["login", "signup", "settings"],
+  "props": {
+    "title": "string",
+    "description": "string?",
+    "mode": "'login' | 'signup' | 'settings'",
+    "primaryCta": "string",
+    "secondaryAction": "string?"
+  },
+  "shadcnBase": ["Button", "Card", "Badge", "Input"],
+  "composesSpecs": ["Badge", "Button", "Input", "Card"],
+  "codeConnect": { "props": {}, "mapped": false },
+  "accessibility": {
+    "role": "form",
+    "ariaLabel": "required",
+    "keyboardNav": true,
+    "focusStyle": "ring",
+    "focusWidth": "2px",
+    "focusContrastRatio": 3,
+    "touchTarget": "min-44",
+    "reducedMotion": true,
+    "liveRegion": "polite",
+    "colorIndependent": true
+  },
+  "dataviz": null,
+  "tags": ["auth", "login", "signup", "settings"],
+  "createdAt": "2026-04-26T00:00:00.000Z",
+  "updatedAt": "2026-04-26T00:00:00.000Z"
+}

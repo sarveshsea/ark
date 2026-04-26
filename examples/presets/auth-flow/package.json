@@ -1,0 +1,27 @@
+{
+  "name": "@memoire-examples/auth-flow",
+  "version": "0.1.0",
+  "description": "Auth Flow Memoire Registry - install login, signup, and settings UI into shadcn apps.",
+  "homepage": "https://memoire.cv",
+  "license": "MIT",
+  "files": [
+    "registry.json",
+    "tokens/",
+    "components/",
+    "README.md"
+  ],
+  "keywords": [
+    "memoire-registry",
+    "design-system",
+    "design-tokens",
+    "shadcn",
+    "auth",
+    "login",
+    "signup",
+    "settings"
+  ],
+  "memoire": {
+    "registry": true,
+    "schemaVersion": "v1"
+  }
+}

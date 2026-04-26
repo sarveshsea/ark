@@ -181,6 +181,54 @@
       "screenshotUrl": "https://raw.githubusercontent.com/sarveshsea/m-moire/main/assets/showcases/landing-page.svg"
     },
     {
+      "slug": "auth-flow",
+      "title": "Auth Flow",
+      "packageName": "@memoire-examples/auth-flow",
+      "description": "Install login, signup, and account-settings UI into shadcn apps.",
+      "category": "auth",
+      "tags": [
+        "auth",
+        "login",
+        "signup",
+        "settings",
+        "shadcn"
+      ],
+      "featured": false,
+      "installCommand": "memi add Button --from @memoire-examples/auth-flow",
+      "componentCount": 5,
+      "components": [
+        {
+          "name": "Button",
+          "level": "atom",
+          "category": "action"
+        },
+        {
+          "name": "Card",
+          "level": "molecule",
+          "category": "surface"
+        },
+        {
+          "name": "Badge",
+          "level": "atom",
+          "category": "status"
+        },
+        {
+          "name": "Input",
+          "level": "atom",
+          "category": "form"
+        },
+        {
+          "name": "AuthCard",
+          "level": "organism",
+          "category": "auth"
+        }
+      ],
+      "sourcePath": "examples/presets/auth-flow",
+      "sourceUrl": "https://github.com/sarveshsea/m-moire/tree/main/examples/presets/auth-flow",
+      "screenshotPath": "assets/showcases/auth-flow.svg",
+      "screenshotUrl": "https://raw.githubusercontent.com/sarveshsea/m-moire/main/assets/showcases/auth-flow.svg"
+    },
+    {
       "slug": "starter",
       "title": "Starter",
       "packageName": "@memoire-examples/starter",

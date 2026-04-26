@@ -49,6 +49,14 @@ const presetMeta = {
     screenshotPath: "assets/showcases/landing-page.svg",
     description: "Conversion-focused landing page registry with hero, CTA, and form primitives.",
   },
+  "auth-flow": {
+    title: "Auth Flow",
+    category: "auth",
+    tags: ["auth", "login", "signup", "settings", "shadcn"],
+    featured: false,
+    screenshotPath: "assets/showcases/auth-flow.svg",
+    description: "Install login, signup, and account-settings UI into shadcn apps.",
+  },
   starter: {
     title: "Starter",
     category: "starter",
@@ -88,6 +96,7 @@ const priority = [
   "docs-blog",
   "dashboard",
   "landing-page",
+  "auth-flow",
   "starter",
   "tweakcn-vercel",
   "tweakcn-supabase",
