@@ -390,7 +390,7 @@ a:hover { text-decoration: underline; }
       <a href="changelog.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>Changelog</a>
     </nav>
     <div class="hdr-stats">
-      <span><span class="n" id="stat-commits">224</span> commits</span>
+      <span><span class="n" id="stat-commits">226</span> commits</span>
       <span><span class="n" id="stat-versions">13</span> versions</span>
       <span><span class="n" id="stat-latest">2026-04-26</span> latest</span>
     </div>
@@ -408,7 +408,7 @@ a:hover { text-decoration: underline; }
           <div class="summary-card">
             <span class="summary-kicker">Current release</span>
             <strong class="summary-value">v0.14.1</strong>
-            <div class="summary-caption">31 commits tracked in v0.14.1 from CHANGELOG.md.</div>
+            <div class="summary-caption">32 commits tracked in v0.14.1 from CHANGELOG.md.</div>
           </div>
           <div class="summary-card">
             <span class="summary-kicker">Biggest theme</span>
@@ -565,6 +565,10 @@ const releases = [
         "docs: add achievement-safe community growth kit"
       ],
       [
+        "8ad7b719",
+        "feat(mcp): add official registry metadata"
+      ],
+      [
         "pending",
         "chore(release): tag v0.14.1"
       ]
@@ -606,6 +610,7 @@ const releases = [
       "Added memi fix plan and memi fix apply --yes for evidence-backed UI fix planning and safe mechanical accessibility fixes.",
       "Added v0 Open-in-v0 metadata, MCP tools, website-ready marketplace bundle generation, shadcn/v0 workflow docs, SEO docs, and launch campaign copy.",
       "Added an achievement-safe community growth kit with GitHub issue forms, discussion category forms, PR template guidance, a directory submission matrix, and a GitHub achievement tracker.",
+      "Added official MCP Registry metadata with package.json#mcpName, root server.json, npm stdio package arguments, and release checks for registry consistency.",
       "New commands: memi shadcn export, memi shadcn serve, memi shadcn doctor, memi fix plan, memi fix apply, and memi registry install <component> --from <ref>.",
       "memi add can now fall back to shadcn registry item installs and resolve catalog aliases without a preinstalled local package.",
       "memi registry doctor --refresh and memi add --refresh refresh cached npm registry tarballs.",
