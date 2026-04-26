@@ -390,7 +390,7 @@ a:hover { text-decoration: underline; }
       <a href="changelog.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>Changelog</a>
     </nav>
     <div class="hdr-stats">
-      <span><span class="n" id="stat-commits">194</span> commits</span>
+      <span><span class="n" id="stat-commits">224</span> commits</span>
       <span><span class="n" id="stat-versions">13</span> versions</span>
       <span><span class="n" id="stat-latest">2026-04-26</span> latest</span>
     </div>
@@ -408,7 +408,7 @@ a:hover { text-decoration: underline; }
           <div class="summary-card">
             <span class="summary-kicker">Current release</span>
             <strong class="summary-value">v0.14.1</strong>
-            <div class="summary-caption">0 commits tracked in v0.14.1 from CHANGELOG.md.</div>
+            <div class="summary-caption">30 commits tracked in v0.14.1 from CHANGELOG.md.</div>
           </div>
           <div class="summary-card">
             <span class="summary-kicker">Biggest theme</span>
@@ -442,8 +442,129 @@ const releases = [
     "version": "v0.14.1",
     "date": "2026-04-26",
     "tag": "fix",
-    "summary": "Started the 0.14.1 release line and aligned package, lockfile, plugin metadata, preview labels, docs, and example registry markers; Set the public package description to Shadcn-native Design CI for Tailwind apps; Kept the release compatible by preparing shadcn V2 outputs alongside the legacy Mémoire registry protocol instead of replacing existing commands.",
-    "commits": [],
+    "summary": "Added shadcn registry.json and registry-item.json Zod schemas with file targets, dependencies, registryDependencies, cssVars, blocks, pages, hooks, lib files, themes, and non-breaking Memoire metadata; Added memi shadcn export, memi shadcn doctor, and memi shadcn serve for shadcn-native /r/*.json registry output; Added token-to-shadcn cssVars.theme, cssVars.light, and cssVars.dark mapping from extracted Memoire tokens.",
+    "commits": [
+      [
+        "f9fd3843",
+        "chore(release): publish-gate current npm lag"
+      ],
+      [
+        "283f4a9c",
+        "chore(release): bump to 0.14.1"
+      ],
+      [
+        "6ece0ea2",
+        "docs(positioning): rewrite top fold around shadcn-native registries"
+      ],
+      [
+        "ee5242a6",
+        "docs(github): add metadata and external release checklist"
+      ],
+      [
+        "f219936d",
+        "ci(release): verify public conversion surfaces"
+      ],
+      [
+        "50682368",
+        "feat(shadcn): add registry item schema"
+      ],
+      [
+        "c5bf5d31",
+        "feat(shadcn): map memoire components to registry items"
+      ],
+      [
+        "4b837987",
+        "feat(shadcn): export cssVars from extracted tokens"
+      ],
+      [
+        "4c2860a6",
+        "feat(shadcn): generate registry index and item routes"
+      ],
+      [
+        "28ce698c",
+        "test(shadcn): validate v2 registry compatibility"
+      ],
+      [
+        "87af9214",
+        "feat(registry): resolve npm registries without local install"
+      ],
+      [
+        "b5690b68",
+        "feat(registry): add safe cache and integrity checks"
+      ],
+      [
+        "68ae80d8",
+        "feat(add): install shadcn registry items directly"
+      ],
+      [
+        "17d58d0f",
+        "feat(add): support catalog aliases as remote installs"
+      ],
+      [
+        "13e38dbd",
+        "test(registry): cover remote npm and alias installs"
+      ],
+      [
+        "e67f8c50",
+        "feat(app-graph): build component and route graph"
+      ],
+      [
+        "571a23ef",
+        "feat(app-quality): add evidence-backed diagnosis v2"
+      ],
+      [
+        "37dfc481",
+        "feat(fix): add dry-run fix plans"
+      ],
+      [
+        "d5a3e5d3",
+        "feat(fix): apply safe mechanical fixes"
+      ],
+      [
+        "94f42afe",
+        "test(fix): validate diagnosis and patch safety"
+      ],
+      [
+        "44c85305",
+        "feat(v0): emit open-in-v0 metadata"
+      ],
+      [
+        "ce08e49b",
+        "feat(mcp): expose shadcn registry tools"
+      ],
+      [
+        "6974d904",
+        "feat(site): generate marketplace static bundle"
+      ],
+      [
+        "a8963db2",
+        "docs(v0): add shadcn/v0 workflow demos"
+      ],
+      [
+        "5db3aede",
+        "test(site): validate generated marketplace bundle"
+      ],
+      [
+        "a2ab7796",
+        "refactor(registry): isolate legacy v1 protocol"
+      ],
+      [
+        "e92a4e77",
+        "docs(seo): update 0.14.1 keyword strategy"
+      ],
+      [
+        "a7ac9650",
+        "docs(launch): add 0.14.1 campaign"
+      ],
+      [
+        "pending",
+        "docs(changelog): finalize v0.14.1"
+      ],
+      [
+        "pending",
+        "chore(release): tag v0.14.1"
+      ]
+    ],
     "decisions": [
       [
         "Shadcn-native is the wedge",
@@ -456,12 +577,47 @@ const releases = [
       [
         "Add V2 without breaking V1",
         "Old registry commands stay valid while shadcn-compatible artifacts become the new default output surface."
+      ],
+      [
+        "Remote install must not require node_modules",
+        "npm package refs and catalog aliases now resolve through cached tarballs when local installs are missing."
+      ],
+      [
+        "Fixes must be evidence-backed",
+        "Diagnosis and fix planning carry file evidence, confidence, effort, and write-safety rather than vague lint output."
+      ],
+      [
+        "Website proof is repo-owned",
+        "examples/site-bundle gives the site catalog data, registry items, screenshots, SEO pages, and sitemap entries from one generated source."
       ]
     ],
     "changes": [
-      "Started the 0.14.1 release line and aligned package, lockfile, plugin metadata, preview labels, docs, and example registry markers.",
-      "Set the public package description to Shadcn-native Design CI for Tailwind apps.",
-      "Kept the release compatible by preparing shadcn V2 outputs alongside the legacy Mémoire registry protocol instead of replacing existing commands."
+      "Added shadcn registry.json and registry-item.json Zod schemas with file targets, dependencies, registryDependencies, cssVars, blocks, pages, hooks, lib files, themes, and non-breaking Memoire metadata.",
+      "Added memi shadcn export, memi shadcn doctor, and memi shadcn serve for shadcn-native /r/*.json registry output.",
+      "Added token-to-shadcn cssVars.theme, cssVars.light, and cssVars.dark mapping from extracted Memoire tokens.",
+      "Added remote npm registry resolution with tarball cache, TTL, --refresh, and shasum/integrity verification.",
+      "Added shadcn item installation through memi add and memi registry install, including local path, URL, npm, GitHub-compatible refs, and catalog aliases.",
+      "Added app graph analysis for routes, components, imports, shadcn usage, CSS files, tokens, and package metadata.",
+      "Upgraded app-quality diagnosis with evidence locations, affected files, confidence, estimated effort, and fix categories.",
+      "Added memi fix plan and memi fix apply --yes for evidence-backed UI fix planning and safe mechanical accessibility fixes.",
+      "Added v0 Open-in-v0 metadata, MCP tools, website-ready marketplace bundle generation, shadcn/v0 workflow docs, SEO docs, and launch campaign copy.",
+      "New commands: memi shadcn export, memi shadcn serve, memi shadcn doctor, memi fix plan, memi fix apply, and memi registry install <component> --from <ref>.",
+      "memi add can now fall back to shadcn registry item installs and resolve catalog aliases without a preinstalled local package.",
+      "memi registry doctor --refresh and memi add --refresh refresh cached npm registry tarballs.",
+      "MCP now exposes get_shadcn_registry, get_registry_item, diagnose_app_quality, and plan_ui_fixes.",
+      "Generated website bundle: examples/site-bundle/ with catalog JSON, item JSON, screenshots, SEO metadata, sitemap, and copy snippets.",
+      "npm run lint passed after each blueprint block.",
+      "npm run validate:presets passed for all 11 presets.",
+      "npm run build:marketplace and npm run build:site-bundle generated clean outputs.",
+      "Focused shadcn, remote registry, npm cache, app graph/fix, MCP, and site bundle tests passed.",
+      "npm run check:release passed throughout the release work.",
+      "npm run bench:cli passed: help median 30ms, diagnose median 394ms, tokens median 637ms, status median 378ms.",
+      "npm run pack:dry-run passed: package size 1,053,297 bytes, unpacked size 3,747,430 bytes, 440 files, under the 1,250,000 byte gate.",
+      "Publish 0.13.1 first if npm latest is still behind the repo, then publish 0.14.1.",
+      "Verify npm latest reports 0.14.1, README contains Shadcn-native Design CI for Tailwind apps, and memi --version returns 0.14.1.",
+      "Update GitHub description/topics from docs/SITE_HANDOFF.md.",
+      "Deploy /components from examples/site-bundle/catalog.json; no empty state is allowed.",
+      "Recheck npm weekly/monthly downloads, GitHub stars, README CTA, and /components health after 7 days."
     ]
   },
   {
