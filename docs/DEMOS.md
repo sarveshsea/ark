@@ -2,6 +2,8 @@
 
 These are the demos to keep reusing in README, npm, and launch posts. Lead with the marketplace `0.13.1` demo.
 
+For the `0.14.1` shadcn/v0 launch, use [`docs/V0_WORKFLOWS.md`](./V0_WORKFLOWS.md). It includes the 60-second terminal script for `memi diagnose`, `memi shadcn export`, `memi shadcn serve`, Open-in-v0 URLs, and `memi registry install`.
+
 ## 60-second 0.13 code-first demo
 
 Goal: show that Memoire starts from an existing shadcn/Tailwind app, no Figma required.
