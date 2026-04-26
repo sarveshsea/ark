@@ -1,0 +1,43 @@
+name: Question
+description: Ask a support question when Discussions are not enough.
+title: "[Question]: "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Prefer GitHub Discussions for open-ended support once Discussions are enabled. Use issues for questions that may reveal a bug or missing documentation.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - MCP setup
+        - shadcn registry export
+        - registry install
+        - token extraction
+        - app diagnosis
+        - fix plans
+        - publishing
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: Include what you tried, what happened, and what you expected.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Project context
+      placeholder: |
+        Framework:
+        Package manager:
+        Tailwind version:
+        shadcn version:
+        MCP client:
+    validations:
+      required: false

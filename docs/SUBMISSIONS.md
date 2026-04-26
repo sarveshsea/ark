@@ -1,141 +1,163 @@
 # Distribution Submissions
 
-Ready-to-submit entries for awesome lists and directories.
+Use this as the operating board for real directory and launch work. Every entry should improve Memoire discovery or trust. Do not submit low-quality PRs for achievements.
 
----
+## Canonical Positioning
 
-## 1. awesome-claude-code (hesreallyhim/awesome-claude-code)
+```text
+Memoire is an MCP server and CLI for shadcn-native Design CI: diagnose UI debt, extract Tailwind tokens, export shadcn registries, and plan safe UI fixes.
+```
 
-**Category:** Agent Skills > General
+## Primary Install Path
 
-**Entry:**
+```bash
+npm i -g @sarveshsea/memoire
+memi diagnose
+memi shadcn export --out public/r
+memi mcp config --install
+```
+
+## Directory Matrix
+
+| Priority | Target | Lane | Submission route | Status | Next action |
+| --- | --- | --- | --- | --- | --- |
+| P0 | Official MCP Registry | MCP directory | `mcp-publisher publish` with server metadata | Blocked | Publish npm 0.14.1, then add registry metadata |
+| P0 | MCP.Directory | MCP directory | `https://mcp.directory/submit` | Ready | Submit GitHub URL, npm package, and one-line description |
+| P0 | Smithery | MCP directory | `https://smithery.ai/new` or CLI publish | Ready | Submit after server metadata is published |
+| P0 | Glama | MCP directory | Glama MCP server directory submission | Ready | Submit npm/GitHub links and demo |
+| P0 | PulseMCP | MCP directory | Directory indexing/submission path | Ready | Confirm listing after official registry submission |
+| P0 | MCP Central | MCP directory | Directory listing | Ready | Submit after npm is live |
+| P0 | mcp.so | MCP directory | Directory listing | Ready | Submit after npm is live |
+| P0 | `punkpeye/awesome-mcp-servers` | Awesome list | Pull request | In progress | Update PR copy to shadcn-native MCP positioning |
+| P0 | `hesreallyhim/awesome-claude-code` | Awesome list | Issue or PR | In progress | Comment with 0.14.1 proof and install command |
+| P1 | shadcn registry directory | shadcn registry | Pull request to registry index | Ready | Submit when public registry URL is stable |
+| P1 | Awesome shadcn/ui | shadcn ecosystem | Submit project or PR | Ready | Pitch as registry generator and MCP bridge |
+| P1 | v0/design-system community | v0 ecosystem | Post/demo | Ready | Lead with Open in v0 registry workflow |
+| P2 | Product Hunt | Launch | Launch page | Draft | Use demo video and npm CTA |
+| P2 | Hacker News | Launch | Show HN post | Draft | Post after npm latest is verified |
+| P2 | Reddit `r/mcp` | Community | Demo post | Draft | Share practical setup and demo, not hype |
+| P2 | Reddit `r/shadcn` | Community | Registry workflow post | Draft | Lead with shadcn-native registry export |
+| P2 | Dev.to/Hashnode | Content | Tutorial | Draft | Publish the 60-second workflow as a written guide |
+
+## Ready-To-Submit Entries
+
+### awesome-claude-code
+
+Category: `Agent Skills > General`
 
 ```markdown
-- [Memoire](https://github.com/sarveshsea/m-moire) by [sarveshsea](https://github.com/sarveshsea) - Design CI for shadcn/Tailwind apps. Diagnose UI debt in real code, extract tokens, publish installable registries, and connect Claude Code to the same workflow with `memi mcp config --install`.
+- [Memoire](https://github.com/sarveshsea/m-moire) by [sarveshsea](https://github.com/sarveshsea) - MCP server and CLI for shadcn-native Design CI. Diagnose UI debt, extract Tailwind tokens, export shadcn registries, plan safe UI fixes, and connect Claude Code with `memi mcp config --install`.
 ```
 
----
+### awesome-mcp-servers
 
-## 2. awesome-mcp-servers (punkpeye/awesome-mcp-servers)
-
-**Category:** Server Implementations > Design
-
-**Entry:**
+Category: `Developer Tools > Design`
 
 ```markdown
-- [Memoire](https://github.com/sarveshsea/m-moire) 📇 🏠 - Design CI for shadcn/Tailwind apps. Diagnose UI debt in real code, publish installable registries from improved systems, pull tokens from Figma or Penpot, and connect the workflow to Claude Code with `memi mcp config --install`.
+- [Memoire](https://github.com/sarveshsea/m-moire) 📇 🏠 - MCP server and CLI for shadcn-native Design CI. Audits Tailwind/shadcn apps, extracts tokens, exports shadcn registries, plans safe UI fixes, and gives Claude Code/Cursor/Codex design-system context through MCP.
 ```
 
----
+### MCP directory one-liner
 
-## 3. Show HN Post
-
-**Title:** Show HN: Design CI for shadcn/Tailwind apps
-
-**Body:**
-
+```text
+MCP server and CLI for shadcn-native Design CI in Tailwind apps.
 ```
-I built Memoire - Design CI for shadcn/Tailwind apps and a registry-capable CLI + MCP server for design systems.
+
+### MCP directory description
+
+```text
+Memoire lets AI coding tools understand and improve real shadcn/Tailwind apps. It diagnoses UI debt, extracts design tokens, exports shadcn-compatible registries, validates install paths, and exposes the workflow through MCP for Claude Code, Cursor, Codex, and other clients.
+```
+
+### shadcn/v0 directory description
+
+```text
+Memoire turns existing Tailwind/shadcn applications into shadcn-native registries that work with shadcn CLI, v0, AI editors, and npm. Use it to audit an app, extract tokens, export registry items, and publish installable design-system packages.
+```
+
+## Show HN Post
+
+Title: `Show HN: MCP server for shadcn-native Design CI`
+
+```text
+I built Memoire, an MCP server and CLI for shadcn-native Design CI.
+
+It starts from the app you already have:
 
   npm i -g @sarveshsea/memoire
   memi diagnose
-  memi tokens --from ./src --report
-  memi publish --name @acme/ds
+  memi shadcn export --out public/r
+  memi mcp config --install
 
-That turns an existing codebase into a UI-quality audit, token extraction report, and publishable registry.
+That gives you a UI-quality diagnosis, Tailwind token extraction, shadcn-compatible registry output, and MCP tools for Claude Code/Cursor/Codex.
 
-Then in any shadcn app:
-
-  npx @sarveshsea/memoire add Button --from @acme/ds
-
-It also works as an MCP server for Claude Code / Cursor, so the same registry workflow can be driven from AI tools.
-
-There are Figma, tweakcn, Penpot, and public-site paths too, but the main path is code-first.
+The wedge is code-first design systems. No Figma required. If your team has a messy shadcn/Tailwind app, Memoire helps turn it into an installable registry and a set of safer UI fix plans.
 
 MIT licensed.
 
 https://github.com/sarveshsea/m-moire
 ```
 
----
+## X/Twitter Thread
 
-## 4. Twitter/X Thread
+```text
+i built an MCP server for shadcn-native Design CI
 
-**Tweet 1 (hook):**
-```
-i built Design CI for shadcn/Tailwind apps
-
+npm i -g @sarveshsea/memoire
 memi diagnose
-memi tokens --from ./src --report
-memi publish --name @acme/ds
+memi shadcn export --out public/r
+memi mcp config --install
 
-then from any shadcn app:
-npx @sarveshsea/memoire add Button --from @acme/ds
-
-UI debt audit + tokens + real components, not screenshots or specs only
+it turns a real Tailwind/shadcn app into a UI audit, token report, shadcn registry, and AI-editor context
 ```
 
-**Tweet 2 (how it works):**
-```
-how it works:
+```text
+most AI UI tools help with the first draft
 
-1. diagnose the app you already have
-2. extract tokens from code
-3. package tokens + specs + generated code
-4. publish to npm
-5. install components anywhere with `memi add`
-
-it’s basically the shadcn pattern for whole design systems
+Memoire is for after the draft:
+- find UI debt
+- extract tokens from code
+- export shadcn registry items
+- validate install paths
+- give Claude Code/Cursor/Codex MCP tools for the same system
 ```
 
-**Tweet 3 (MCP angle):**
-```
-it also runs as an MCP server
+```text
+the core loop:
 
-add to claude code in one command:
-  memi mcp config --install
-
-then your AI assistant can:
-- pull tokens from figma or penpot
-- generate shadcn/ui code from specs
-- audit and sync the design system
-- work against the same published registry
+1. run `memi diagnose`
+2. export registry items with `memi shadcn export`
+3. validate with `memi shadcn doctor`
+4. connect MCP with `memi mcp config --install`
+5. let AI editors work from the same design-system context
 ```
 
-**Tweet 4 (CTA):**
+```text
+repo:
+https://github.com/sarveshsea/m-moire
+
+npm:
+https://www.npmjs.com/package/@sarveshsea/memoire
 ```
-MIT licensed. works offline. npm package + standalone binary.
-
-github.com/sarveshsea/m-moire
-
-try it:
-  npm i -g @sarveshsea/memoire
-  memi diagnose
-```
-
----
-
-## 5. Dev.to Article
-
-**Title:** I built a CLI that reverse-engineers any website's design system
-
-**Outline:**
-
-1. The problem — manually eyeballing design systems from DevTools
-2. The solution — `memi design-doc <url>` (with demo output)
-3. How it works (CSS parsing + AI synthesis)
-4. Beyond extraction — full Figma-to-code pipeline
-5. MCP server for AI coding tools
-6. Try it now (npx one-liner)
-
----
 
 ## Submission Checklist
 
-- [ ] PR to hesreallyhim/awesome-claude-code
-- [ ] PR to punkpeye/awesome-mcp-servers
-- [ ] Show HN post
-- [ ] Twitter thread (attach demo GIF/video)
-- [ ] Dev.to article
-- [ ] Product Hunt launch
-- [ ] Submit to glama.ai/mcp/servers directory
+- [ ] Publish npm 0.14.1 and verify `npm view @sarveshsea/memoire version`
+- [x] Update GitHub description and topics
+- [x] Enable GitHub Discussions
+- [ ] Submit to Official MCP Registry
+- [ ] Submit to MCP.Directory
+- [ ] Submit to Smithery
+- [ ] Submit to Glama
+- [ ] Submit to PulseMCP
+- [ ] Submit to MCP Central
+- [ ] Submit to mcp.so
+- [ ] Update `punkpeye/awesome-mcp-servers` PR
+- [ ] Update `hesreallyhim/awesome-claude-code` issue
+- [ ] Submit to shadcn registry directory
+- [ ] Submit to Awesome shadcn/ui
+- [ ] Post Show HN
+- [ ] Post X/Twitter thread with demo
+- [ ] Post practical walkthrough to `r/mcp`
+- [ ] Post registry workflow to `r/shadcn`
+- [ ] Publish Dev.to or Hashnode tutorial

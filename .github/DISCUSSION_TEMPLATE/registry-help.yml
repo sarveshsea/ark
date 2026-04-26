@@ -1,0 +1,25 @@
+title: "[Registry help] "
+labels: ["registry", "question"]
+body:
+  - type: input
+    id: command
+    attributes:
+      label: Command
+      placeholder: "memi shadcn export --out public/r"
+    validations:
+      required: true
+  - type: textarea
+    id: files
+    attributes:
+      label: Registry files or errors
+      description: Paste the relevant registry item, doctor output, or command error.
+      render: json
+    validations:
+      required: false
+  - type: textarea
+    id: goal
+    attributes:
+      label: What install path do you want to work?
+      placeholder: "npx shadcn@latest add https://example.com/r/button.json"
+    validations:
+      required: true

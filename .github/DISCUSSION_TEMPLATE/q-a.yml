@@ -1,0 +1,31 @@
+title: "[Q&A] "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ask support questions here so answers can stay searchable for other Memoire users.
+  - type: input
+    id: goal
+    attributes:
+      label: What are you trying to do?
+      placeholder: "Export a shadcn registry from an existing Tailwind app"
+    validations:
+      required: true
+  - type: textarea
+    id: attempted
+    attributes:
+      label: What did you try?
+      render: shell
+      placeholder: |
+        npm i -g @sarveshsea/memoire
+        memi diagnose
+        memi shadcn export --out public/r
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: What happened?
+    validations:
+      required: true

@@ -1,0 +1,69 @@
+name: Directory submission
+description: Track a real external directory, awesome-list, or marketplace submission.
+title: "[Directory]: "
+labels: ["distribution"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for real submissions only. Do not open filler issues for achievement farming.
+  - type: input
+    id: directory
+    attributes:
+      label: Directory or repository
+      description: Name of the directory, awesome list, marketplace, or target repository.
+      placeholder: "Official MCP Registry"
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: Target URL
+      placeholder: "https://github.com/modelcontextprotocol/registry"
+    validations:
+      required: true
+  - type: dropdown
+    id: lane
+    attributes:
+      label: Distribution lane
+      options:
+        - MCP directory
+        - shadcn registry
+        - v0/design-system
+        - Awesome list
+        - Launch/community
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: submission
+    attributes:
+      label: Proposed submission copy
+      description: Paste the exact title, description, install command, and links.
+    validations:
+      required: true
+  - type: textarea
+    id: proof
+    attributes:
+      label: Proof assets
+      description: Add demo, screenshot, npm link, GitHub link, and docs links.
+      placeholder: |
+        npm:
+        GitHub:
+        Demo:
+        Docs:
+    validations:
+      required: true
+  - type: dropdown
+    id: status
+    attributes:
+      label: Submission status
+      options:
+        - Draft
+        - Submitted
+        - In review
+        - Accepted
+        - Rejected
+        - Needs follow-up
+    validations:
+      required: true

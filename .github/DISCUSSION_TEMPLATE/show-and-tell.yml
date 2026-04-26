@@ -1,0 +1,30 @@
+title: "[Show and tell] "
+labels: ["show-and-tell"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Share a registry, UI audit, demo, or integration built with Memoire.
+  - type: input
+    id: project
+    attributes:
+      label: Project or registry
+      placeholder: "My shadcn design-system registry"
+    validations:
+      required: true
+  - type: textarea
+    id: links
+    attributes:
+      label: Links
+      placeholder: |
+        Demo:
+        Registry:
+        Source:
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: What should others notice?
+    validations:
+      required: false

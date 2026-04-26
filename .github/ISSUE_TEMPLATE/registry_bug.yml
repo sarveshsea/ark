@@ -1,0 +1,48 @@
+name: Registry bug
+description: Report a problem with shadcn registry export, install, or validation.
+title: "[Registry]: "
+labels: ["bug", "registry"]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Memoire version
+      placeholder: "memi --version"
+    validations:
+      required: true
+  - type: dropdown
+    id: command
+    attributes:
+      label: Command area
+      options:
+        - memi shadcn export
+        - memi shadcn serve
+        - memi shadcn doctor
+        - memi registry install
+        - memi add
+        - memi publish
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: command_output
+    attributes:
+      label: Command and output
+      render: shell
+      placeholder: |
+        memi shadcn doctor --out public/r
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: files
+    attributes:
+      label: Relevant files
+      description: Include registry.json, registry item JSON, components.json, package manager, and framework if relevant.
+    validations:
+      required: false
