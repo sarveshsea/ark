@@ -20,6 +20,7 @@
  *    memoire dataviz <name>    Create a dataviz spec
  *    memoire page <name>       Create a page spec
  *    memoire tokens            Export design tokens
+ *    memoire shadcn            Export and serve shadcn-native registry files
  *    memoire registry          Discover installable registries
  *    memoire pull --rest       Pull design system via Figma REST API (no plugin)
  *    memoire design-doc <url>  Extract design system from any URL → DESIGN.md
@@ -84,6 +85,7 @@ const [
   { registerAddCommand },
   { registerPublishCommand },
   { registerThemeCommand },
+  { registerShadcnCommand },
   { registerViewCommand },
   { registerRegistryCommand },
   { registerUpgradeCommand },
@@ -124,6 +126,7 @@ const [
   import("./commands/add.js"),
   import("./commands/publish.js"),
   import("./commands/theme.js"),
+  import("./commands/shadcn.js"),
   import("./commands/view.js"),
   import("./commands/registry.js"),
   import("./commands/upgrade.js"),
@@ -171,6 +174,7 @@ registerDiagnoseCommand(program, engine);
 registerInitCommand(program, engine);
 registerPublishCommand(program, engine);
 registerThemeCommand(program, engine);
+registerShadcnCommand(program, engine);
 registerAddCommand(program, engine);
 registerRegistryCommand(program);
 registerUpdateCommand(program, engine);
@@ -275,8 +279,8 @@ function printFastHelp(version: string): void {
   const lines = [
     "Usage: memoire [options] [command]",
     "",
-    "Design CI for shadcn/Tailwind apps.",
-    "Diagnose UI debt in real code, extract tokens, and publish installable registries.",
+    "Shadcn-native Design CI for Tailwind apps.",
+    "Diagnose UI debt, export shadcn registries, and install them with shadcn/v0/memi.",
     "",
     "Options:",
     "  -V, --version           output the version number",
@@ -286,6 +290,7 @@ function printFastHelp(version: string): void {
     "  diagnose [target]       Diagnose design debt in code or a URL",
     "  tokens                  Extract or export design tokens",
     "  publish                 Package the design system as an installable registry",
+    "  shadcn <subcommand>     Export, serve, and validate shadcn-native registry files",
     "  add <component>         Install a component from a registry",
     "  registry <subcommand>   List, search, and inspect installable registries",
     "  theme <subcommand>      Import, preview, validate, diff, apply, and publish tweakcn themes",
