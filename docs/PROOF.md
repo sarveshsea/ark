@@ -2,6 +2,32 @@
 
 These examples are for developers who already have a shadcn/Tailwind app and want a better design system without starting in Figma.
 
+## 0. Install a marketplace registry
+
+Use this when a developer wants proof immediately, before running a full audit or token extraction pass.
+
+```bash
+npm i -g @sarveshsea/memoire
+memi add HeroSection --from @memoire-examples/landing-page
+memi add AuthCard --from @memoire-examples/auth-flow
+memi add ChatComposer --from @memoire-examples/ai-chat
+memi add ProductCard --from @memoire-examples/ecommerce
+```
+
+What to show:
+
+- Eleven first-party registries in `examples/marketplace-catalog.v1.json`
+- Screenshot proof for every catalog entry
+- One copy-paste command per registry
+- Clear choices for SaaS, docs, dashboard, landing page, auth, AI chat, ecommerce, starter, and tweakcn-inspired themes
+
+Proof artifacts:
+
+- `assets/marketplace-catalog.v1.json`
+- `examples/marketplace-catalog.v1.json`
+- `assets/showcases/*.svg`
+- `examples/presets/*/registry.json`
+
 ## 1. Audit an existing app
 
 Use this when the app feels inconsistent and you need a ranked UI-quality punch list.
