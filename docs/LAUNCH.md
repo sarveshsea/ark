@@ -102,6 +102,8 @@ https://www.npmjs.com/package/@sarveshsea/memoire
 
 ## Canonical posts
 
+Standalone post templates and reply copy live in [`docs/SOCIAL.md`](./SOCIAL.md).
+
 ### X / Twitter
 
 ```text
