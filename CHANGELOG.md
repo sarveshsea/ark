@@ -23,6 +23,7 @@ This release line rebuilds Mémoire around shadcn-native registry export: diagno
 - Added v0 Open-in-v0 metadata, MCP tools, website-ready marketplace bundle generation, shadcn/v0 workflow docs, SEO docs, and launch campaign copy.
 - Added an achievement-safe community growth kit with GitHub issue forms, discussion category forms, PR template guidance, a directory submission matrix, and a GitHub achievement tracker.
 - Added official MCP Registry metadata with `package.json#mcpName`, root `server.json`, npm stdio package arguments, and release checks for registry consistency.
+- Tracked shadcn directory submissions for `bytefer/awesome-shadcn-ui` and `birobirobiro/awesome-shadcn-ui` as legitimate Pull Shark candidates.
 
 ### Public API Changes
 - New commands: `memi shadcn export`, `memi shadcn serve`, `memi shadcn doctor`, `memi fix plan`, `memi fix apply`, and `memi registry install <component> --from <ref>`.
@@ -74,6 +75,7 @@ This release line rebuilds Mémoire around shadcn-native registry export: diagno
 | `581a563e` | docs(changelog): finalize v0.14.1 |
 | `a4445945` | docs: add achievement-safe community growth kit |
 | `8ad7b719` | feat(mcp): add official registry metadata |
+| `cfa22797` | docs: track shadcn directory submissions |
 | `pending` | chore(release): tag v0.14.1 |
 
 ### Key Design Decisions
