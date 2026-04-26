@@ -17,6 +17,7 @@ import {
   type RegistryComponentRef,
   REGISTRY_FILENAME,
 } from "./schema.js";
+import { resolveMarketplaceAlias } from "../marketplace/catalog-loader.js";
 
 export interface ResolvedRegistry {
   /** The parsed registry document */
@@ -66,6 +67,17 @@ export async function resolveRegistry(ref: string, cwd: string = process.cwd()):
   }
   if (ref.startsWith("./") || ref.startsWith("../") || isAbsolute(ref)) {
     return resolveLocal(ref, cwd);
+  }
+  const marketplaceEntry = await resolveMarketplaceAlias(ref);
+  if (marketplaceEntry && marketplaceEntry.packageName !== ref) {
+    try {
+      return await resolveNpm(marketplaceEntry.packageName, cwd);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(
+        `Featured registry "${ref}" maps to "${marketplaceEntry.packageName}". ${message}`,
+      );
+    }
   }
   // Default: treat as npm package name — look in node_modules
   return resolveNpm(ref, cwd);

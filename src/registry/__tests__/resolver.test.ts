@@ -90,4 +90,32 @@ describe("Registry resolver", () => {
       await rm(dir, { recursive: true, force: true });
     }
   });
+
+  it("resolves featured marketplace aliases to catalog package names", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "memoire-resolver-"));
+    const pkgDir = join(dir, "node_modules", "@memoire-examples", "ai-chat");
+    try {
+      await mkdir(pkgDir, { recursive: true });
+      await writeFile(join(pkgDir, "registry.json"), JSON.stringify({
+        ...validRegistry,
+        name: "@memoire-examples/ai-chat",
+      }));
+      const resolved = await resolveRegistry("ai-chat", dir);
+      expect(resolved.registry.name).toBe("@memoire-examples/ai-chat");
+      expect(resolved.source).toContain("@memoire-examples/ai-chat");
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("explains the package mapping when a featured alias is not installed", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "memoire-resolver-"));
+    try {
+      await expect(resolveRegistry("starter-saas", dir)).rejects.toThrow(
+        /starter-saas.*@memoire-examples\/starter-saas.*npm install @memoire-examples\/starter-saas/,
+      );
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
 });
