@@ -26,8 +26,6 @@
  *    memoire audit             WCAG 2.2 accessibility audit
  */
 
-import { Command } from "commander";
-import { MemoireEngine } from "./engine/core.js";
 import { getMemoirePackageVersion } from "./utils/package-version.js";
 
 import { existsSync, rmSync } from "fs";
@@ -37,42 +35,98 @@ import { join } from "path";
 // limit before loading them so `memi --help` does not emit warnings.
 process.setMaxListeners(50);
 
-const { registerConnectCommand } = await import("./commands/connect.js");
-const { registerPullCommand } = await import("./commands/pull.js");
-const { registerResearchCommand } = await import("./commands/research.js");
-const { registerSpecCommand } = await import("./commands/spec.js");
-const { registerGenerateCommand } = await import("./commands/generate.js");
-const { registerPreviewCommand } = await import("./commands/preview.js");
-const { registerStatusCommand } = await import("./commands/status.js");
-const { registerDoctorCommand } = await import("./commands/doctor.js");
-const { registerDaemonCommand } = await import("./commands/daemon.js");
-const { registerHeartbeatCommand } = await import("./commands/heartbeat.js");
-const { registerSyncCommand } = await import("./commands/sync.js");
-const { registerTokensCommand } = await import("./commands/tokens.js");
-const { registerPrototypeCommand } = await import("./commands/prototype.js");
-const { registerInitCommand } = await import("./commands/init.js");
-const { registerDashboardCommand } = await import("./commands/dashboard.js");
-const { registerIACommand } = await import("./commands/ia.js");
-const { registerComposeCommand } = await import("./commands/compose.js");
-const { registerGoCommand } = await import("./commands/go.js");
-const { registerExportCommand } = await import("./commands/export.js");
-const { registerNotesCommand } = await import("./commands/notes.js");
-const { registerWatchCommand } = await import("./commands/watch.js");
-const { registerListCommand } = await import("./commands/list.js");
-const { registerMcpCommand } = await import("./commands/mcp.js");
-const { registerAgentCommand } = await import("./commands/agent.js");
-const { registerValidateCommand } = await import("./commands/validate.js");
-const { registerDesignDocCommand } = await import("./commands/design-doc.js");
-const { registerSetupCommand } = await import("./commands/setup.js");
-const { registerAuditCommand } = await import("./commands/audit.js");
-const { registerDiffCommand } = await import("./commands/diff.js");
-const { registerAddCommand } = await import("./commands/add.js");
-const { registerPublishCommand } = await import("./commands/publish.js");
-const { registerThemeCommand } = await import("./commands/theme.js");
-const { registerViewCommand } = await import("./commands/view.js");
-const { registerUpgradeCommand } = await import("./commands/upgrade.js");
-const { registerUpdateCommand } = await import("./commands/update.js");
-const { registerDiagnoseCommand } = await import("./commands/diagnose.js");
+const packageVersion = getMemoirePackageVersion();
+const cliArgs = process.argv.slice(2);
+
+if (isGlobalVersionRequest(cliArgs)) {
+  console.log(packageVersion);
+  process.exit(0);
+}
+
+if (isGlobalHelpRequest(cliArgs)) {
+  printFastHelp(packageVersion);
+  process.exit(0);
+}
+
+const [
+  { Command },
+  { MemoireEngine },
+  { registerConnectCommand },
+  { registerPullCommand },
+  { registerResearchCommand },
+  { registerSpecCommand },
+  { registerGenerateCommand },
+  { registerPreviewCommand },
+  { registerStatusCommand },
+  { registerDoctorCommand },
+  { registerDaemonCommand },
+  { registerHeartbeatCommand },
+  { registerSyncCommand },
+  { registerTokensCommand },
+  { registerPrototypeCommand },
+  { registerInitCommand },
+  { registerDashboardCommand },
+  { registerIACommand },
+  { registerComposeCommand },
+  { registerGoCommand },
+  { registerExportCommand },
+  { registerNotesCommand },
+  { registerWatchCommand },
+  { registerListCommand },
+  { registerMcpCommand },
+  { registerAgentCommand },
+  { registerValidateCommand },
+  { registerDesignDocCommand },
+  { registerSetupCommand },
+  { registerAuditCommand },
+  { registerDiffCommand },
+  { registerAddCommand },
+  { registerPublishCommand },
+  { registerThemeCommand },
+  { registerViewCommand },
+  { registerUpgradeCommand },
+  { registerUpdateCommand },
+  { registerDiagnoseCommand },
+] = await Promise.all([
+  import("commander"),
+  import("./engine/core.js"),
+  import("./commands/connect.js"),
+  import("./commands/pull.js"),
+  import("./commands/research.js"),
+  import("./commands/spec.js"),
+  import("./commands/generate.js"),
+  import("./commands/preview.js"),
+  import("./commands/status.js"),
+  import("./commands/doctor.js"),
+  import("./commands/daemon.js"),
+  import("./commands/heartbeat.js"),
+  import("./commands/sync.js"),
+  import("./commands/tokens.js"),
+  import("./commands/prototype.js"),
+  import("./commands/init.js"),
+  import("./commands/dashboard.js"),
+  import("./commands/ia.js"),
+  import("./commands/compose.js"),
+  import("./commands/go.js"),
+  import("./commands/export.js"),
+  import("./commands/notes.js"),
+  import("./commands/watch.js"),
+  import("./commands/list.js"),
+  import("./commands/mcp.js"),
+  import("./commands/agent.js"),
+  import("./commands/validate.js"),
+  import("./commands/design-doc.js"),
+  import("./commands/setup.js"),
+  import("./commands/audit.js"),
+  import("./commands/diff.js"),
+  import("./commands/add.js"),
+  import("./commands/publish.js"),
+  import("./commands/theme.js"),
+  import("./commands/view.js"),
+  import("./commands/upgrade.js"),
+  import("./commands/update.js"),
+  import("./commands/diagnose.js"),
+]);
 
 // Catch unhandled async errors so the CLI doesn't crash silently
 process.on("unhandledRejection", (reason) => {
@@ -85,7 +139,7 @@ const program = new Command();
 program
   .name("memoire")
   .description("Diagnose and improve real web apps, then package the design system as an installable registry")
-  .version(getMemoirePackageVersion());
+  .version(packageVersion);
 
 // Create engine instance (shared across commands)
 const engine = new MemoireEngine({
@@ -204,3 +258,55 @@ if (process.argv.length === 2) {
 
 // Parse and execute
 program.parse();
+
+function isGlobalHelpRequest(args: string[]): boolean {
+  return args.length === 1 && (args[0] === "--help" || args[0] === "-h");
+}
+
+function isGlobalVersionRequest(args: string[]): boolean {
+  return args.length === 1 && (args[0] === "--version" || args[0] === "-V" || args[0] === "version");
+}
+
+function printFastHelp(version: string): void {
+  const lines = [
+    "Usage: memoire [options] [command]",
+    "",
+    "Design CI for shadcn/Tailwind apps.",
+    "Diagnose UI debt in real code, extract tokens, and publish installable registries.",
+    "",
+    "Options:",
+    "  -V, --version           output the version number",
+    "  -h, --help              display help for command",
+    "",
+    "Hero workflow:",
+    "  diagnose [target]       Diagnose design debt in code or a URL",
+    "  tokens                  Extract or export design tokens",
+    "  publish                 Package the design system as an installable registry",
+    "  add <component>         Install a component from a registry",
+    "  theme <subcommand>      Import, preview, validate, diff, apply, and publish tweakcn themes",
+    "",
+    "Registry and code:",
+    "  init                    Initialize a Memoire workspace or registry",
+    "  update                  Update installed registry components",
+    "  view                    Print or open a registry component URL",
+    "  design-doc              Extract a design system from any URL",
+    "  generate                Generate shadcn/Tailwind code from specs",
+    "  preview                 Start the local preview and registry server",
+    "  status                  Show workspace status",
+    "",
+    "Figma, agents, and advanced:",
+    "  setup                   Full guided onboarding",
+    "  connect                 Start the Figma bridge",
+    "  pull                    Pull design system data from Figma or REST",
+    "  sync                    Pull and regenerate code",
+    "  mcp                     Configure or start the MCP server",
+    "  research                Run the research pipeline",
+    "  notes                   Manage Memoire Notes",
+    "  doctor                  Check local install health",
+    "  audit                   Run accessibility audits",
+    "",
+    `Version: ${version}`,
+    "npm: https://www.npmjs.com/package/@sarveshsea/memoire",
+  ];
+  console.log(lines.join("\n"));
+}
