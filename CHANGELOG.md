@@ -6,6 +6,29 @@ This changelog tracks Mémoire itself: every version, commit, and architectural 
 
 ---
 
+## v0.14.2 — 2026-04-27
+
+### The fix
+This patch publishes the MCP Registry verification metadata that landed after the first `0.14.1` npm publish. npm now needs a fresh version because the public `0.14.1` package does not expose `package.json#mcpName` to the official MCP Registry verifier.
+
+### New
+- Bumped package metadata, lockfile, plugin widget metadata, examples, and `server.json` to `0.14.2`.
+- Kept the MCP server name stable as `io.github.sarveshsea/memoire`.
+- Kept npm package transport as stdio with the `memi mcp` positional argument.
+
+### Verification
+- `SKIP_PACK_GATE=1 npm run check:release` passed for `0.14.2`.
+
+### Commits
+| Hash | Message |
+|------|---------|
+| `pending` | chore(release): bump to 0.14.2 for MCP registry publish |
+
+### External Release Gates
+- Publish `0.14.2` to npm after logging in with `npm login`.
+- Verify `npm view @sarveshsea/memoire version mcpName --json` reports `0.14.2` and `io.github.sarveshsea/memoire`.
+- Publish `server.json` with `mcp-publisher publish`.
+
 ## v0.14.1 — 2026-04-26
 
 ### The fix

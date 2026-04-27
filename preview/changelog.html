@@ -390,9 +390,9 @@ a:hover { text-decoration: underline; }
       <a href="changelog.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>Changelog</a>
     </nav>
     <div class="hdr-stats">
-      <span><span class="n" id="stat-commits">228</span> commits</span>
-      <span><span class="n" id="stat-versions">13</span> versions</span>
-      <span><span class="n" id="stat-latest">2026-04-26</span> latest</span>
+      <span><span class="n" id="stat-commits">229</span> commits</span>
+      <span><span class="n" id="stat-versions">14</span> versions</span>
+      <span><span class="n" id="stat-latest">2026-04-27</span> latest</span>
     </div>
   </header>
 
@@ -407,8 +407,8 @@ a:hover { text-decoration: underline; }
         <div class="hero-kpis">
           <div class="summary-card">
             <span class="summary-kicker">Current release</span>
-            <strong class="summary-value">v0.14.1</strong>
-            <div class="summary-caption">34 commits tracked in v0.14.1 from CHANGELOG.md.</div>
+            <strong class="summary-value">v0.14.2</strong>
+            <div class="summary-caption">1 commits tracked in v0.14.2 from CHANGELOG.md.</div>
           </div>
           <div class="summary-card">
             <span class="summary-kicker">Biggest theme</span>
@@ -434,10 +434,32 @@ a:hover { text-decoration: underline; }
     <section class="release-list" id="release-list"></section>
   </main>
 
-  <footer class="footer">memoire changelog - synced with CHANGELOG.md through v0.14.1</footer>
+  <footer class="footer">memoire changelog - synced with CHANGELOG.md through v0.14.2</footer>
 
 <script>
 const releases = [
+  {
+    "version": "v0.14.2",
+    "date": "2026-04-27",
+    "tag": "fix",
+    "summary": "Bumped package metadata, lockfile, plugin widget metadata, examples, and server.json to 0.14.2; Kept the MCP server name stable as io.github.sarveshsea/memoire; Kept npm package transport as stdio with the memi mcp positional argument.",
+    "commits": [
+      [
+        "pending",
+        "chore(release): bump to 0.14.2 for MCP registry publish"
+      ]
+    ],
+    "decisions": [],
+    "changes": [
+      "Bumped package metadata, lockfile, plugin widget metadata, examples, and server.json to 0.14.2.",
+      "Kept the MCP server name stable as io.github.sarveshsea/memoire.",
+      "Kept npm package transport as stdio with the memi mcp positional argument.",
+      "SKIP_PACK_GATE=1 npm run check:release passed for 0.14.2.",
+      "Publish 0.14.2 to npm after logging in with npm login.",
+      "Verify npm view @sarveshsea/memoire version mcpName --json reports 0.14.2 and io.github.sarveshsea/memoire.",
+      "Publish server.json with mcp-publisher publish."
+    ]
+  },
   {
     "version": "v0.14.1",
     "date": "2026-04-26",
