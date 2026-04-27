@@ -22,7 +22,7 @@ This patch publishes the MCP Registry verification metadata that landed after th
 ### Commits
 | Hash | Message |
 |------|---------|
-| `pending` | chore(release): bump to 0.14.2 for MCP registry publish |
+| `bfdf91f2` | chore(release): bump to 0.14.2 for MCP registry publish |
 
 ### External Release Gates
 - Publish `0.14.2` to npm after logging in with `npm login`.
