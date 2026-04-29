@@ -29,7 +29,7 @@ This patch makes the code-first workflow faster and the release path safer. `mem
 ### Commits
 | Hash | Message |
 |------|---------|
-| `pending` | perf(scan): streamline diagnosis and publish readiness |
+| `75045817` | perf(scan): streamline diagnosis and publish readiness |
 
 ### External Release Gates
 - Run `npm run publish:ready` while logged in to npm.
