@@ -1,6 +1,7 @@
 import { access, mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { scanSources } from "../utils/source-scanner.js";
+import { performance } from "node:perf_hooks";
+import { scanSources, type ScannedSourceFile } from "../utils/source-scanner.js";
 import { buildAppGraph, type AppGraph } from "./app-graph.js";
 
 export type AppQualitySeverity = "critical" | "high" | "medium" | "low";
@@ -62,6 +63,9 @@ export interface AppQualityDiagnosis {
     shadcnImports: number;
     cssVariables: number;
     hexColors: number;
+    scannedBytes?: number;
+    scanMs?: number;
+    analysisMs?: number;
   };
   scores: Record<AppQualityCategory, number>;
   files: AppQualityFileSignal[];
@@ -74,6 +78,7 @@ export interface AppQualityDiagnosis {
     imports: number;
     shadcnComponents: string[];
     package: AppGraph["package"];
+    graphMs?: number;
   };
 }
 
@@ -92,7 +97,8 @@ interface RawFile {
 
 const DEFAULT_MAX_FILES = 500;
 const FETCH_TIMEOUT_MS = 15000;
-const SOURCE_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".html", ".css"]);
+const SOURCE_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".html", ".css", ".mdx"]);
+const MAX_BYTES_PER_FILE = 750_000;
 const IGNORE_DIRS = new Set([
   ".git",
   ".next",
@@ -118,17 +124,24 @@ const CATEGORY_BASE: Record<AppQualityCategory, number> = {
 
 export async function diagnoseAppQuality(options: ScanOptions): Promise<AppQualityDiagnosis> {
   const target = options.target ?? options.projectRoot;
-  const files = await loadTargetFiles(options.projectRoot, target, options.maxFiles ?? DEFAULT_MAX_FILES);
+  const startedAt = performance.now();
+  const sources = await scanTargetSources(options.projectRoot, target, options.maxFiles ?? DEFAULT_MAX_FILES);
+  const scanMs = performance.now() - startedAt;
+  const files = sources.map(sourceToRawFile);
+  const graphStartedAt = performance.now();
   const appGraph = await buildAppGraph({
     projectRoot: options.projectRoot,
     target,
     maxFiles: options.maxFiles ?? DEFAULT_MAX_FILES,
+    sources,
   });
+  const graphMs = performance.now() - graphStartedAt;
   const fileSignals = files.map(analyzeFile);
   const aggregate = aggregateSignals(files, fileSignals);
   const issues = enrichIssues(buildIssues(aggregate), appGraph, files);
   const scores = scoreCategories(issues);
   const score = Math.round(Object.values(scores).reduce((sum, value) => sum + value, 0) / Object.values(scores).length);
+  const analysisMs = performance.now() - startedAt;
 
   const diagnosis: AppQualityDiagnosis = {
     version: 1,
@@ -145,6 +158,9 @@ export async function diagnoseAppQuality(options: ScanOptions): Promise<AppQuali
       shadcnImports: aggregate.shadcnImports.length,
       cssVariables: aggregate.cssVariables.length,
       hexColors: aggregate.hexColors.length,
+      scannedBytes: sources.reduce((sum, source) => sum + (source.sizeBytes ?? source.content.length), 0),
+      scanMs: Math.round(scanMs),
+      analysisMs: Math.round(analysisMs),
     },
     scores,
     files: fileSignals,
@@ -161,6 +177,7 @@ export async function diagnoseAppQuality(options: ScanOptions): Promise<AppQuali
       imports: appGraph.summary.imports,
       shadcnComponents: appGraph.shadcn.components,
       package: appGraph.package,
+      graphMs: Math.round(graphMs),
     },
   };
 
@@ -171,24 +188,28 @@ export async function diagnoseAppQuality(options: ScanOptions): Promise<AppQuali
   return diagnosis;
 }
 
-async function loadTargetFiles(projectRoot: string, target: string, maxFiles: number): Promise<RawFile[]> {
-  const sources = await scanSources({
+async function scanTargetSources(projectRoot: string, target: string, maxFiles: number): Promise<ScannedSourceFile[]> {
+  return scanSources({
     projectRoot,
     target,
     extensions: SOURCE_EXTENSIONS,
     ignoreDirs: IGNORE_DIRS,
     maxFiles,
+    maxBytesPerFile: MAX_BYTES_PER_FILE,
     concurrency: 16,
     fetchTimeoutMs: FETCH_TIMEOUT_MS,
     includeInlineStyles: true,
     includeLinkedStyles: false,
     userAgent: "Memoire-Diagnose/1.0",
   });
-  return sources.map((source) => ({
+}
+
+function sourceToRawFile(source: ScannedSourceFile): RawFile {
+  return {
     path: source.projectPath,
     absolutePath: source.absolutePath,
     content: source.content,
-  }));
+  };
 }
 
 function analyzeFile(file: RawFile): AppQualityFileSignal {

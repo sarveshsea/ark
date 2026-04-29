@@ -60,4 +60,21 @@ describe("scanSources", () => {
       signal: expect.any(AbortSignal),
     }));
   });
+
+  it("skips local files above the configured byte budget", async () => {
+    const root = await makeRoot();
+    await mkdir(join(root, "src"), { recursive: true });
+    await writeFile(join(root, "src", "small.css"), ":root { --color: red; }");
+    await writeFile(join(root, "src", "large.css"), `:root { --large: ${"x".repeat(128)}; }`);
+
+    const files = await scanSources({
+      projectRoot: root,
+      target: "src",
+      extensions: [".css"],
+      maxBytesPerFile: 64,
+    });
+
+    expect(files.map((file) => file.path)).toEqual(["small.css"]);
+    expect(files[0]?.sizeBytes).toBeGreaterThan(0);
+  });
 });

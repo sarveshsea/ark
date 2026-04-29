@@ -53,6 +53,12 @@ function printDiagnosis(diagnosis: AppQualityDiagnosis, wroteReports: boolean): 
   console.log(ui.dots("Score", `${diagnosis.summary.score}/100`));
   console.log(ui.dots("Verdict", diagnosis.summary.verdict));
   console.log(ui.dots("Files", String(diagnosis.summary.scannedFiles)));
+  if (diagnosis.summary.scanMs !== undefined || diagnosis.summary.analysisMs !== undefined) {
+    console.log(ui.dots(
+      "Scan",
+      `${diagnosis.summary.scanMs ?? 0}ms scan · ${diagnosis.summary.analysisMs ?? 0}ms total`,
+    ));
+  }
   console.log(ui.dots("Routes", String(diagnosis.summary.routes)));
   console.log(ui.dots("Components", String(diagnosis.summary.components)));
   console.log(ui.dots("Tailwind classes", String(diagnosis.summary.tailwindClasses)));

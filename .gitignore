@@ -20,6 +20,7 @@ preview/competitor-audit.html
 preview/user-research.html
 preview/auth.html
 preview/bidcraft*.html
+research/store.v2.json
 
 .env
 .env.local

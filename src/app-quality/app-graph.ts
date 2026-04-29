@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { basename, extname, join } from "node:path";
-import { scanSources } from "../utils/source-scanner.js";
+import { scanSources, type ScannedSourceFile } from "../utils/source-scanner.js";
 
 export type AppGraphFileKind = "route" | "component" | "style" | "config" | "markup" | "test" | "other";
 
@@ -72,6 +72,7 @@ export interface BuildAppGraphOptions {
   projectRoot: string;
   target?: string;
   maxFiles?: number;
+  sources?: ScannedSourceFile[];
 }
 
 const SOURCE_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".html", ".css", ".mdx"]);
@@ -90,12 +91,13 @@ const IGNORE_DIRS = new Set([
 
 export async function buildAppGraph(options: BuildAppGraphOptions): Promise<AppGraph> {
   const target = options.target ?? options.projectRoot;
-  const sources = await scanSources({
+  const sources = options.sources ?? await scanSources({
     projectRoot: options.projectRoot,
     target,
     extensions: SOURCE_EXTENSIONS,
     ignoreDirs: IGNORE_DIRS,
     maxFiles: options.maxFiles ?? 700,
+    maxBytesPerFile: 750_000,
     concurrency: 20,
     includeInlineStyles: true,
     includeLinkedStyles: false,

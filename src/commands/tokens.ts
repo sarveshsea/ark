@@ -41,6 +41,7 @@ const SKIP_DIRECTORIES = new Set([
 ]);
 
 const MAX_LOCAL_SOURCE_FILES = 350;
+const MAX_LOCAL_SOURCE_BYTES = 750_000;
 const FETCH_TIMEOUT_MS = 15000;
 
 export function registerTokensCommand(program: Command, engine: MemoireEngine) {
@@ -267,6 +268,7 @@ async function collectTokenSources(target: string, projectRoot: string): Promise
     extensions: SUPPORTED_SOURCE_EXTENSIONS,
     ignoreDirs: SKIP_DIRECTORIES,
     maxFiles: MAX_LOCAL_SOURCE_FILES,
+    maxBytesPerFile: MAX_LOCAL_SOURCE_BYTES,
     concurrency: 16,
     fetchTimeoutMs: FETCH_TIMEOUT_MS,
     includeInlineStyles: true,

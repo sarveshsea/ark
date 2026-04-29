@@ -27,16 +27,16 @@ Do not ask for fake stars, star swaps, or bot engagement. The ask must sit after
 
 ## First Move: Publish The MCP Patch
 
-The official MCP Registry verifies npm package ownership by matching `server.json#name` to `package.json#mcpName`. Those fields are now in the repo, but npm `0.14.1` was published before that metadata landed. The next publish should be `0.14.2` unless we intentionally choose a larger version.
+The official MCP Registry verifies npm package ownership by matching `server.json#name` to `package.json#mcpName`. Those fields are now in the repo, but npm `0.14.1` was published before that metadata landed. The next publish should be `0.14.3`.
 
 Release gate:
 
 ```bash
-npm version patch --no-git-tag-version
 npm run lint
 npm test
 npm run build
 SKIP_PACK_GATE=1 npm run check:release
+npm run publish:ready
 npm publish --access public
 ```
 
@@ -54,7 +54,7 @@ Why this matters: the official registry only hosts metadata, but MCP directories
 
 | Priority | Target | Why it matters | Route | Status |
 | --- | --- | --- | --- | --- |
-| P0 | Official MCP Registry | Trust anchor for downstream MCP aggregators | `mcp-publisher publish server.json` | Blocked until `0.14.2` publish |
+| P0 | Official MCP Registry | Trust anchor for downstream MCP aggregators | `mcp-publisher publish server.json` | Blocked until `0.14.3` publish |
 | P0 | MCP.Directory | Has a direct submit form and says it auto-pulls GitHub/npm metadata | `https://mcp.directory/submit` | Ready after official registry |
 | P0 | Glama | Already indexes Memoire, needs refreshed positioning | Claim/update listing after official registry | Ready |
 | P0 | Smithery | Distribution, analytics, and config UI for MCP servers | `smithery.ai/new` or `smithery mcp publish` | Requires URL/MCPB decision |
@@ -87,7 +87,7 @@ Why this matters: the official registry only hosts metadata, but MCP directories
 
 ## Launch Sequence For 12 Stars
 
-1. Publish `0.14.2` with `mcpName` and `server.json`.
+1. Publish `0.14.3` with `mcpName` and `server.json`.
 2. Publish to the official MCP Registry and verify search returns `io.github.sarveshsea/memoire`.
 3. Submit MCP.Directory, refresh Glama, submit Smithery, confirm PulseMCP and mcp.so indexing.
 4. Follow up on all open PRs with one useful comment only after the official registry link exists.

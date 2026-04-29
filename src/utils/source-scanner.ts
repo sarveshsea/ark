@@ -8,6 +8,7 @@ export interface ScannedSourceFile {
   absolutePath: string;
   content: string;
   extension: string;
+  sizeBytes?: number;
   url?: string;
 }
 
@@ -17,6 +18,7 @@ export interface SourceScanOptions {
   extensions: Iterable<string>;
   ignoreDirs?: Iterable<string>;
   maxFiles?: number;
+  maxBytesPerFile?: number;
   concurrency?: number;
   fetchTimeoutMs?: number;
   includeInlineStyles?: boolean;
@@ -55,7 +57,8 @@ export async function scanSources(options: SourceScanOptions): Promise<ScannedSo
   const extensions = normalizeExtensions(options.extensions);
 
   if (targetStat.isFile()) {
-    return [await readLocalFile(root, resolvedTarget, resolvedTarget)];
+    const source = await readLocalFile(root, resolvedTarget, resolvedTarget, options.maxBytesPerFile);
+    return source ? [source] : [];
   }
   if (!targetStat.isDirectory()) {
     throw new Error(`Unsupported source target: ${target}`);
@@ -64,9 +67,10 @@ export async function scanSources(options: SourceScanOptions): Promise<ScannedSo
   const ignoreDirs = new Set([...DEFAULT_IGNORE_DIRS, ...(options.ignoreDirs ?? [])]);
   const candidates = await collectCandidates(resolvedTarget, extensions, ignoreDirs, maxFiles);
   const sortedCandidates = candidates.sort((a, b) => normalizePath(a).localeCompare(normalizePath(b))).slice(0, maxFiles);
-  return mapWithConcurrency(sortedCandidates, options.concurrency ?? DEFAULT_CONCURRENCY, (filePath) => {
-    return readLocalFile(root, filePath, resolvedTarget);
+  const sources = await mapWithConcurrency(sortedCandidates, options.concurrency ?? DEFAULT_CONCURRENCY, (filePath) => {
+    return readLocalFile(root, filePath, resolvedTarget, options.maxBytesPerFile).catch(() => null);
   });
+  return sources.filter((source): source is ScannedSourceFile => source !== null);
 }
 
 async function collectCandidates(
@@ -106,7 +110,16 @@ async function walk(
   }
 }
 
-async function readLocalFile(projectRoot: string, filePath: string, sourceRoot: string): Promise<ScannedSourceFile> {
+async function readLocalFile(
+  projectRoot: string,
+  filePath: string,
+  sourceRoot: string,
+  maxBytesPerFile?: number,
+): Promise<ScannedSourceFile | null> {
+  const fileStat = await stat(filePath);
+  if (maxBytesPerFile !== undefined && fileStat.size > maxBytesPerFile) {
+    return null;
+  }
   const content = await readFile(filePath, "utf-8");
   const path = normalizePath(relative(sourceRoot, filePath)) || normalizePath(relative(projectRoot, filePath)) || filePath;
   const projectPath = normalizePath(relative(projectRoot, filePath)) || path;
@@ -117,6 +130,7 @@ async function readLocalFile(projectRoot: string, filePath: string, sourceRoot: 
     absolutePath: filePath,
     content,
     extension: extname(filePath).toLowerCase(),
+    sizeBytes: fileStat.size,
   };
 }
 
@@ -171,6 +185,7 @@ function urlSource(id: string, content: string, extension: string): ScannedSourc
     absolutePath: id,
     content,
     extension,
+    sizeBytes: Buffer.byteLength(content),
     url: id,
   };
 }

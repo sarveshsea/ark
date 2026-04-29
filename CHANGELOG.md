@@ -6,6 +6,36 @@ This changelog tracks Mémoire itself: every version, commit, and architectural 
 
 ---
 
+## v0.14.3 — 2026-04-28
+
+### The fix
+This patch makes the code-first workflow faster and the release path safer. `memi diagnose` now reuses one source scan for both quality diagnosis and app graph analysis, source scanning skips oversized local files, and maintainers get a dedicated publish-readiness gate before npm/MCP Registry pushes.
+
+### New
+- Reused scanned source files between app-quality diagnosis and app-graph construction to avoid duplicate directory walks and file reads.
+- Added source byte accounting and scan/analysis timing to diagnosis summaries.
+- Added `maxBytesPerFile` support to the shared source scanner and applied it to diagnosis, app graphing, and token extraction.
+- Added `npm run publish:ready` to verify npm auth, version drift, MCP metadata, git cleanliness, and package contents before publish.
+
+### Verification
+- Focused app-quality and source-scanner tests passed.
+- `npm run lint` passed.
+- `npm test` passed.
+- `npm run build` passed.
+- `npm run bench:cli` passed with all tracked CLI commands below thresholds.
+- `MEMOIRE_PUBLISH_READY_SKIP_AUTH=1 MEMOIRE_PUBLISH_READY_SKIP_GIT=1 node scripts/publish-ready.mjs` passed after the version bump.
+- `SKIP_PACK_GATE=1 npm run check:release` passed for `0.14.3`.
+
+### Commits
+| Hash | Message |
+|------|---------|
+| `pending` | perf(scan): streamline diagnosis and publish readiness |
+
+### External Release Gates
+- Run `npm run publish:ready` while logged in to npm.
+- Publish `0.14.3` to npm.
+- Run `mcp-publisher publish` after npm reports `0.14.3`.
+
 ## v0.14.2 — 2026-04-27
 
 ### The fix

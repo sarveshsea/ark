@@ -29,6 +29,9 @@ export default function Dashboard() {
       const diagnosis = await diagnoseAppQuality({ projectRoot: root, write: true });
 
       expect(diagnosis.summary.scannedFiles).toBeGreaterThan(0);
+      expect(diagnosis.summary.scannedBytes).toBeGreaterThan(0);
+      expect(diagnosis.summary.scanMs).toBeGreaterThanOrEqual(0);
+      expect(diagnosis.summary.analysisMs).toBeGreaterThanOrEqual(diagnosis.summary.scanMs ?? 0);
       expect(diagnosis.summary.score).toBeLessThan(100);
       expect(diagnosis.issues.map((issue) => issue.id)).toContain("color.raw-hex");
       expect(diagnosis.issues.map((issue) => issue.id)).toContain("a11y.image-alt");

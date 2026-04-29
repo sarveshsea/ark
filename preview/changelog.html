@@ -390,9 +390,9 @@ a:hover { text-decoration: underline; }
       <a href="changelog.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>Changelog</a>
     </nav>
     <div class="hdr-stats">
-      <span><span class="n" id="stat-commits">229</span> commits</span>
-      <span><span class="n" id="stat-versions">14</span> versions</span>
-      <span><span class="n" id="stat-latest">2026-04-27</span> latest</span>
+      <span><span class="n" id="stat-commits">230</span> commits</span>
+      <span><span class="n" id="stat-versions">15</span> versions</span>
+      <span><span class="n" id="stat-latest">2026-04-28</span> latest</span>
     </div>
   </header>
 
@@ -407,8 +407,8 @@ a:hover { text-decoration: underline; }
         <div class="hero-kpis">
           <div class="summary-card">
             <span class="summary-kicker">Current release</span>
-            <strong class="summary-value">v0.14.2</strong>
-            <div class="summary-caption">1 commits tracked in v0.14.2 from CHANGELOG.md.</div>
+            <strong class="summary-value">v0.14.3</strong>
+            <div class="summary-caption">1 commits tracked in v0.14.3 from CHANGELOG.md.</div>
           </div>
           <div class="summary-card">
             <span class="summary-kicker">Biggest theme</span>
@@ -434,10 +434,39 @@ a:hover { text-decoration: underline; }
     <section class="release-list" id="release-list"></section>
   </main>
 
-  <footer class="footer">memoire changelog - synced with CHANGELOG.md through v0.14.2</footer>
+  <footer class="footer">memoire changelog - synced with CHANGELOG.md through v0.14.3</footer>
 
 <script>
 const releases = [
+  {
+    "version": "v0.14.3",
+    "date": "2026-04-28",
+    "tag": "fix",
+    "summary": "Reused scanned source files between app-quality diagnosis and app-graph construction to avoid duplicate directory walks and file reads; Added source byte accounting and scan/analysis timing to diagnosis summaries; Added maxBytesPerFile support to the shared source scanner and applied it to diagnosis, app graphing, and token extraction.",
+    "commits": [
+      [
+        "pending",
+        "perf(scan): streamline diagnosis and publish readiness"
+      ]
+    ],
+    "decisions": [],
+    "changes": [
+      "Reused scanned source files between app-quality diagnosis and app-graph construction to avoid duplicate directory walks and file reads.",
+      "Added source byte accounting and scan/analysis timing to diagnosis summaries.",
+      "Added maxBytesPerFile support to the shared source scanner and applied it to diagnosis, app graphing, and token extraction.",
+      "Added npm run publish:ready to verify npm auth, version drift, MCP metadata, git cleanliness, and package contents before publish.",
+      "Focused app-quality and source-scanner tests passed.",
+      "npm run lint passed.",
+      "npm test passed.",
+      "npm run build passed.",
+      "npm run bench:cli passed with all tracked CLI commands below thresholds.",
+      "MEMOIRE_PUBLISH_READY_SKIP_AUTH=1 MEMOIRE_PUBLISH_READY_SKIP_GIT=1 node scripts/publish-ready.mjs passed after the version bump.",
+      "SKIP_PACK_GATE=1 npm run check:release passed for 0.14.3.",
+      "Run npm run publish:ready while logged in to npm.",
+      "Publish 0.14.3 to npm.",
+      "Run mcp-publisher publish after npm reports 0.14.3."
+    ]
+  },
   {
     "version": "v0.14.2",
     "date": "2026-04-27",

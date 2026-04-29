@@ -2,6 +2,22 @@
 
 Use these checks before announcing or tagging a public release.
 
+## Local Publish-Ready Gate
+
+`npm run publish:ready` verifies the local package is safe to publish before npm mutates anything:
+
+- npm auth is active for `https://registry.npmjs.org/`.
+- `package.json`, `server.json`, and the MCP npm package entry use the same version.
+- local version is newer than npm `latest`.
+- `server.json` and `dist/index.js` are present in the package tarball.
+- the git worktree is clean.
+
+```bash
+npm run build
+SKIP_PACK_GATE=1 npm run check:release
+npm run publish:ready
+```
+
 ## Public npm Gate
 
 `npm run check:public-release` verifies the live npm surface after publish:
