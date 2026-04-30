@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { mkdir, readFile, rm, writeFile } from "fs/promises";
 import { join } from "path";
 import { tmpdir } from "os";
-import { installNote, getNoteInfo } from "../index.js";
+import { installNote, getNoteInfo, parseGithubNoteRepo } from "../index.js";
 
 let projectRoot: string;
 let sourceDir: string;
@@ -18,6 +18,18 @@ afterEach(async () => {
 });
 
 describe("installNote", () => {
+  it("validates GitHub Note sources before cloning", async () => {
+    expect(parseGithubNoteRepo("sarveshsea/memoire-notes")).toEqual({
+      owner: "sarveshsea",
+      repo: "memoire-notes",
+      cloneUrl: "https://github.com/sarveshsea/memoire-notes.git",
+    });
+
+    expect(() => parseGithubNoteRepo("sarveshsea/memoire-notes.git")).toThrow(/github:owner\/repo/);
+    expect(() => parseGithubNoteRepo("sarveshsea/memoire-notes --upload-pack=sh")).toThrow(/github:owner\/repo/);
+    await expect(installNote("github:sarveshsea/memoire-notes;rm -rf /", projectRoot)).rejects.toThrow(/github:owner\/repo/);
+  });
+
   it("installs a SKILL.md-only bundle and synthesizes a memoire manifest", async () => {
     await writeFile(
       join(sourceDir, "SKILL.md"),

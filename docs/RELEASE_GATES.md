@@ -16,6 +16,7 @@ Use these checks before announcing or tagging a public release.
 npm run build
 SKIP_PACK_GATE=1 npm run check:release
 npm run publish:ready
+npm run growth:status
 ```
 
 ## Public npm Gate
@@ -27,7 +28,7 @@ npm run publish:ready
 - npm README includes `npm i -g @sarveshsea/memoire`.
 - A clean temp install can run `memi --version`.
 
-For the `0.14.1` line, `0.13.1` must be published first. If npm still reports `0.12.3`, do not announce `0.14.1`; publish and verify the existing release line before continuing external launch work.
+For the `0.14.4` line, npm must report `0.14.4` before any Official MCP Registry or directory follow-up.
 
 ```bash
 npm run check:public-release
@@ -38,9 +39,9 @@ The local `npm run check:release` remains repo-only so development can continue 
 
 ## External Trust Gate
 
-Before the public `0.14.1` announcement, verify every external surface points to the same shadcn-native story:
+Before the public `0.14.4` announcement, verify every external surface points to the same shadcn-native story:
 
-- npm latest: `0.14.1`
+- npm latest: `0.14.4`
 - npm README phrase: `Shadcn-native Design CI for Tailwind apps`
 - npm install command: `npm i -g @sarveshsea/memoire`
 - GitHub description: `Shadcn-native Design CI for Tailwind apps: export registries that work with shadcn, v0, AI editors, and npm.`

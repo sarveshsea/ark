@@ -6,6 +6,38 @@ This changelog tracks Mémoire itself: every version, commit, and architectural 
 
 ---
 
+## v0.14.4 — 2026-04-30
+
+### The fix
+This patch hardens Memoire for public directory review. GitHub Note installs now avoid shell-string cloning, standalone binary upgrades fail closed when checksum metadata is missing, and the release workflow has a live growth/status command for npm, GitHub, MCP Registry, SafeSkill, and directory PR tracking.
+
+### New
+- Added strict `github:owner/repo` validation and argument-safe Git clone execution for Note installs.
+- Added `memi upgrade --allow-unverified`; upgrades now require SHA256 verification by default and only skip missing checksum metadata when explicitly requested.
+- Added `npm run growth:status` for npm version/downloads, GitHub stars, Official MCP Registry presence, SafeSkill PR status, and directory PR status.
+- Added `SECURITY.md`, `CODE_OF_CONDUCT.md`, `.github/FUNDING.yml`, and `docs/OFFICIAL_MCP_REGISTRY.md`.
+- Updated Starstruck, submissions, achievements, metrics, and release-gate docs around the current `0.14.4` trust patch.
+
+### Verification
+- Focused Notes installer and upgrade checksum tests passed.
+- `npm run growth:status` passed and reported npm latest `0.14.3`, `7` GitHub stars, Official MCP Registry absent, SafeSkill PR `20/100`, and `9` stars remaining for Starstruck.
+- `npm run lint` passed.
+- `npm test` passed.
+- `npm run build` passed.
+- `npm run bench:cli` passed with all tracked commands below thresholds.
+- `SKIP_PACK_GATE=1 npm run check:release` passed for `0.14.4`.
+- `MEMOIRE_PUBLISH_READY_SKIP_AUTH=1 MEMOIRE_PUBLISH_READY_SKIP_GIT=1 npm run publish:ready` passed before commit.
+
+### Commits
+| Hash | Message |
+|------|---------|
+| `pending` | security(release): harden trust gates for v0.14.4 |
+
+### External Release Gates
+- Publish `0.14.4` to npm.
+- Run `mcp-publisher publish server.json`.
+- Close or replace the blocked SafeSkill badge only after the score improves.
+
 ## v0.14.3 — 2026-04-28
 
 ### The fix

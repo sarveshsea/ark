@@ -33,4 +33,5 @@ export {
   removeNote,
   scaffoldNote,
   getNoteInfo,
+  parseGithubNoteRepo,
 } from "./installer.js";

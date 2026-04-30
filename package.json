@@ -1,6 +1,6 @@
 {
   "name": "@sarveshsea/memoire",
-  "version": "0.14.3",
+  "version": "0.14.4",
   "mcpName": "io.github.sarveshsea/memoire",
   "description": "Shadcn-native Design CI for Tailwind apps: export registries that work with shadcn, v0, AI editors, and npm.",
   "type": "module",
@@ -24,6 +24,7 @@
     "build:site-bundle": "node scripts/build-site-bundle.mjs",
     "build:plugin": "node scripts/build-plugin.mjs",
     "bench:cli": "node scripts/bench-cli.mjs",
+    "growth:status": "node scripts/growth-status.mjs",
     "pack:dry-run": "node scripts/pack-dry-run.mjs",
     "publish:ready": "node scripts/publish-ready.mjs",
     "check:release": "node scripts/check-release.mjs",

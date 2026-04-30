@@ -1,18 +1,19 @@
 # Starstruck Distribution Plan
 
-Goal: move `sarveshsea/m-moire` from `4` real stars to the Starstruck base tier at `16` stars. We need `12` legitimate stars from developers who see enough value to install, test, or bookmark Memoire.
+Goal: move `sarveshsea/m-moire` from `7` real stars to the Starstruck base tier at `16` stars. We need `9` legitimate stars from developers who see enough value to install, test, or bookmark Memoire.
 
 ## Current Reality
 
 | Surface | Status | Meaning |
 | --- | --- | --- |
-| GitHub stars | `4` | Need `12` more for Starstruck |
-| npm latest | `0.14.1` | Published, but the already-published package does not include the later `mcpName` metadata |
+| GitHub stars | `7` | Need `9` more for Starstruck |
+| npm latest | `0.14.3` | Published with `mcpName`; next trust patch is `0.14.4` |
 | Official MCP Registry | Not listed | `registry.modelcontextprotocol.io` search returns no Memoire result |
 | Glama | Listed | Listed as `sarveshsea/m-moire`, but the description still reflects the older design-system MCP positioning |
 | GitHub topics | Updated | Strong enough for search: `mcp-server`, `shadcn-native`, `shadcn-registry-generator`, `design-ci`, `token-extraction` |
-| Open shadcn PRs | `2` | `bytefer/awesome-shadcn-ui#18`, `birobirobiro/awesome-shadcn-ui#493` |
-| Open MCP PRs | `4` | New MCP list and registry PRs opened from this pass |
+| SafeSkill PR | Open, blocked badge | Do not merge until score improves or findings are addressed |
+| Open shadcn PRs | `1` | `bytefer/awesome-shadcn-ui#18`; `birobirobiro/awesome-shadcn-ui#493` merged |
+| Open MCP PRs | `3` | TensorBlock, YuzeHao2023, and MobinX remain open; toolsdk merged |
 
 ## Star CTA
 
@@ -27,7 +28,7 @@ Do not ask for fake stars, star swaps, or bot engagement. The ask must sit after
 
 ## First Move: Publish The MCP Patch
 
-The official MCP Registry verifies npm package ownership by matching `server.json#name` to `package.json#mcpName`. Those fields are now in the repo, but npm `0.14.1` was published before that metadata landed. The next publish should be `0.14.3`.
+The official MCP Registry verifies npm package ownership by matching `server.json#name` to `package.json#mcpName`. npm `0.14.3` includes that metadata, but the registry still does not list Memoire. The next publish should be the `0.14.4` trust patch, then `server.json`.
 
 Release gate:
 
@@ -38,6 +39,7 @@ npm run build
 SKIP_PACK_GATE=1 npm run check:release
 npm run publish:ready
 npm publish --access public
+npm run growth:status
 ```
 
 Then publish to the official MCP Registry:
@@ -54,7 +56,7 @@ Why this matters: the official registry only hosts metadata, but MCP directories
 
 | Priority | Target | Why it matters | Route | Status |
 | --- | --- | --- | --- | --- |
-| P0 | Official MCP Registry | Trust anchor for downstream MCP aggregators | `mcp-publisher publish server.json` | Blocked until `0.14.3` publish |
+| P0 | Official MCP Registry | Trust anchor for downstream MCP aggregators | `mcp-publisher publish server.json` | Ready after `0.14.4` npm publish |
 | P0 | MCP.Directory | Has a direct submit form and says it auto-pulls GitHub/npm metadata | `https://mcp.directory/submit` | Ready after official registry |
 | P0 | Glama | Already indexes Memoire, needs refreshed positioning | Claim/update listing after official registry | Ready |
 | P0 | Smithery | Distribution, analytics, and config UI for MCP servers | `smithery.ai/new` or `smithery mcp publish` | Requires URL/MCPB decision |
@@ -72,12 +74,12 @@ Why this matters: the official registry only hosts metadata, but MCP directories
 | Priority | Repo | Stars at audit | Fit | Status |
 | --- | --- | ---: | --- | --- |
 | P0 | `punkpeye/awesome-mcp-servers` | `85k+` | Largest MCP list | Merged: https://github.com/punkpeye/awesome-mcp-servers/pull/4373 |
-| P0 | `TensorBlock/awesome-mcp-servers` | `639` | MCP list with developer utility category | Open: https://github.com/TensorBlock/awesome-mcp-servers/pull/455 |
+| P0 | `TensorBlock/awesome-mcp-servers` | `639` | MCP list with developer utility category | Open, requested docs mirror fixed: https://github.com/TensorBlock/awesome-mcp-servers/pull/455 |
 | P0 | `YuzeHao2023/Awesome-MCP-Servers` | `1041` | MCP list with development tools category | Open: https://github.com/YuzeHao2023/Awesome-MCP-Servers/pull/208 |
 | P0 | `MobinX/awesome-mcp-list` | `878` | Concise MCP list with developer tools category | Open: https://github.com/MobinX/awesome-mcp-list/pull/241 |
-| P0 | `toolsdk-ai/toolsdk-mcp-registry` | `169` | Structured MCP registry JSON | Open: https://github.com/toolsdk-ai/toolsdk-mcp-registry/pull/296 |
+| P0 | `toolsdk-ai/toolsdk-mcp-registry` | `169` | Structured MCP registry JSON | Merged: https://github.com/toolsdk-ai/toolsdk-mcp-registry/pull/296 |
 | P1 | `bytefer/awesome-shadcn-ui` | `683` | shadcn ecosystem list | Open: https://github.com/bytefer/awesome-shadcn-ui/pull/18 |
-| P1 | `birobirobiro/awesome-shadcn-ui` | `19k+` | Largest shadcn ecosystem list | Open: https://github.com/birobirobiro/awesome-shadcn-ui/pull/493 |
+| P1 | `birobirobiro/awesome-shadcn-ui` | `19k+` | Largest shadcn ecosystem list | Merged: https://github.com/birobirobiro/awesome-shadcn-ui/pull/493 |
 | P1 | `appcypher/awesome-mcp-servers` | `5492` | MCP list with development tools category | Branch pushed, PR creation blocked by base permissions: https://github.com/appcypher/awesome-mcp-servers/compare/main...sarveshsea:awesome-mcp-servers-2:add-memoire-design-ci |
 | P1 | `wong2/awesome-mcp-servers` | `4005` | MCP list with community servers category | Branch pushed, PR creation blocked by base permissions: https://github.com/wong2/awesome-mcp-servers/compare/main...sarveshsea:awesome-mcp-servers-1:add-memoire-design-ci |
 | P2 | `react-figma/awesome-figma` | `430` | Figma/dev integration list | Wait until Figma positioning is not competing with shadcn-native wedge |
@@ -87,10 +89,10 @@ Why this matters: the official registry only hosts metadata, but MCP directories
 
 ## Launch Sequence For 12 Stars
 
-1. Publish `0.14.3` with `mcpName` and `server.json`.
+1. Publish `0.14.4` with security hardening, `mcpName`, and `server.json`.
 2. Publish to the official MCP Registry and verify search returns `io.github.sarveshsea/memoire`.
 3. Submit MCP.Directory, refresh Glama, submit Smithery, confirm PulseMCP and mcp.so indexing.
-4. Follow up on all open PRs with one useful comment only after the official registry link exists.
+4. Follow up on open PRs only with new proof: official registry link, security hardening, or maintainer-requested fixes.
 5. Ship one 60-second terminal demo: install, `memi diagnose`, `memi shadcn export`, `memi mcp config --install`.
 6. Post the demo to X, Show HN, `r/mcp`, and `r/shadcn` with the GitHub star CTA.
 7. Recheck stars daily for 7 days and record which surface drove each bump.

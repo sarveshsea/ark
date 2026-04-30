@@ -21,7 +21,7 @@ memi mcp config --install
 
 | Priority | Target | Lane | Submission route | Status | Next action |
 | --- | --- | --- | --- | --- | --- |
-| P0 | Official MCP Registry | MCP directory | `mcp-publisher publish server.json` | Ready next patch | Publish a patch containing `mcpName`, then publish `server.json` |
+| P0 | Official MCP Registry | MCP directory | `mcp-publisher publish server.json` | Ready after `0.14.4` publish | Publish npm, then publish `server.json` |
 | P0 | MCP.Directory | MCP directory | `https://mcp.directory/submit` | Ready | Submit GitHub URL, npm package, and one-line description |
 | P0 | Smithery | MCP directory | `https://smithery.ai/new` or CLI publish | Ready | Submit after server metadata is published |
 | P0 | Glama | MCP directory | Glama MCP server directory submission | Listed with old copy | Claim or refresh listing after official registry publish |
@@ -29,16 +29,16 @@ memi mcp config --install
 | P0 | MCP Central | MCP directory | Directory listing | Ready | Submit after npm is live |
 | P0 | mcp.so | MCP directory | Directory listing | Ready | Submit after npm is live |
 | P0 | `punkpeye/awesome-mcp-servers` | Awesome list | Pull request | Accepted | Merged: https://github.com/punkpeye/awesome-mcp-servers/pull/4373 |
-| P0 | `TensorBlock/awesome-mcp-servers` | Awesome list | Pull request | Submitted | https://github.com/TensorBlock/awesome-mcp-servers/pull/455 |
+| P0 | `TensorBlock/awesome-mcp-servers` | Awesome list | Pull request | Submitted, maintainer change addressed | https://github.com/TensorBlock/awesome-mcp-servers/pull/455 |
 | P0 | `YuzeHao2023/Awesome-MCP-Servers` | Awesome list | Pull request | Submitted | https://github.com/YuzeHao2023/Awesome-MCP-Servers/pull/208 |
 | P0 | `MobinX/awesome-mcp-list` | Awesome list | Pull request | Submitted | https://github.com/MobinX/awesome-mcp-list/pull/241 |
-| P0 | `toolsdk-ai/toolsdk-mcp-registry` | MCP registry | Pull request | Submitted | https://github.com/toolsdk-ai/toolsdk-mcp-registry/pull/296 |
+| P0 | `toolsdk-ai/toolsdk-mcp-registry` | MCP registry | Pull request | Merged | https://github.com/toolsdk-ai/toolsdk-mcp-registry/pull/296 |
 | P1 | `appcypher/awesome-mcp-servers` | Awesome list | Pull request | Branch pushed | PR creation blocked by base permissions; compare branch: https://github.com/appcypher/awesome-mcp-servers/compare/main...sarveshsea:awesome-mcp-servers-2:add-memoire-design-ci |
 | P1 | `wong2/awesome-mcp-servers` | Awesome list | Pull request | Branch pushed | PR creation blocked by base permissions; compare branch: https://github.com/wong2/awesome-mcp-servers/compare/main...sarveshsea:awesome-mcp-servers-1:add-memoire-design-ci |
-| P0 | `hesreallyhim/awesome-claude-code` | Awesome list | Issue or PR | Closed | Closed issue: https://github.com/hesreallyhim/awesome-claude-code/issues/1533 |
+| P0 | `hesreallyhim/awesome-claude-code` | Awesome list | Web form | Closed, wrong submission route | Resubmit through required web form after 7-day cooldown |
 | P1 | shadcn registry directory | shadcn registry | Pull request to registry index | Ready | Submit when public registry URL is stable |
 | P1 | `bytefer/awesome-shadcn-ui` | shadcn ecosystem | Pull request | Submitted | https://github.com/bytefer/awesome-shadcn-ui/pull/18 |
-| P1 | `birobirobiro/awesome-shadcn-ui` | shadcn ecosystem | Pull request | Submitted | https://github.com/birobirobiro/awesome-shadcn-ui/pull/493 |
+| P1 | `birobirobiro/awesome-shadcn-ui` | shadcn ecosystem | Pull request | Merged | https://github.com/birobirobiro/awesome-shadcn-ui/pull/493 |
 | P1 | v0/design-system community | v0 ecosystem | Post/demo | Ready | Lead with Open in v0 registry workflow |
 | P2 | Product Hunt | Launch | Launch page | Draft | Use demo video and npm CTA |
 | P2 | Hacker News | Launch | Show HN post | Draft | Post after npm latest is verified |
@@ -150,7 +150,8 @@ https://www.npmjs.com/package/@sarveshsea/memoire
 ## Submission Checklist
 
 - [x] Publish npm 0.14.1 and verify `npm view @sarveshsea/memoire version`
-- [ ] Publish next patch with `mcpName` and `server.json`
+- [x] Publish npm 0.14.3 and verify `mcpName`
+- [ ] Publish 0.14.4 trust patch
 - [x] Update GitHub description and topics
 - [x] Enable GitHub Discussions
 - [ ] Submit to Official MCP Registry
@@ -164,12 +165,13 @@ https://www.npmjs.com/package/@sarveshsea/memoire
 - [ ] Merge `TensorBlock/awesome-mcp-servers` PR
 - [ ] Merge `YuzeHao2023/Awesome-MCP-Servers` PR
 - [ ] Merge `MobinX/awesome-mcp-list` PR
-- [ ] Merge `toolsdk-ai/toolsdk-mcp-registry` PR
+- [x] Merge `toolsdk-ai/toolsdk-mcp-registry` PR
 - [ ] Open or hand-submit `appcypher/awesome-mcp-servers` branch
 - [ ] Open or hand-submit `wong2/awesome-mcp-servers` branch
 - [x] Close `hesreallyhim/awesome-claude-code` issue
+- [ ] Resubmit `hesreallyhim/awesome-claude-code` through required web form
 - [ ] Merge `bytefer/awesome-shadcn-ui` PR
-- [ ] Merge `birobirobiro/awesome-shadcn-ui` PR
+- [x] Merge `birobirobiro/awesome-shadcn-ui` PR
 - [ ] Submit to shadcn registry directory
 - [ ] Post Show HN
 - [ ] Post X/Twitter thread with demo

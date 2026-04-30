@@ -59,13 +59,44 @@ function extract(archivePath: string, destDir: string, archive: "tar.gz" | "zip"
   if (result.status !== 0) throw new Error(`extract failed for ${archivePath}`);
 }
 
+export async function verifyArchiveChecksum(options: {
+  archiveName: string;
+  archivePath: string;
+  sumsPath: string;
+  allowUnverified?: boolean;
+}): Promise<"verified" | "unverified-allowed"> {
+  let sums: string;
+  try {
+    sums = await readFile(options.sumsPath, "utf-8");
+  } catch (err) {
+    if (options.allowUnverified) return "unverified-allowed";
+    throw new Error(`SHA256 verification required but SHA256SUMS.txt is unavailable (${(err as Error).message}). Re-run with --allow-unverified only if you trust the release source.`);
+  }
+
+  const actualSha = await sha256File(options.archivePath);
+  const expected = sums.split("\n")
+    .map((line) => line.trim())
+    .find((line) => line.endsWith(options.archiveName))?.split(/\s+/)[0];
+
+  if (!expected) {
+    if (options.allowUnverified) return "unverified-allowed";
+    throw new Error(`SHA256 verification required but ${options.archiveName} is missing from SHA256SUMS.txt. Re-run with --allow-unverified only if you trust the release source.`);
+  }
+  if (expected !== actualSha) {
+    throw new Error(`SHA256 mismatch — expected ${expected}, got ${actualSha}`);
+  }
+
+  return "verified";
+}
+
 export function registerUpgradeCommand(program: Command, _engine: MemoireEngine): void {
   program
     .command("upgrade")
     .description("Self-update the standalone memi binary to the latest release")
     .option("--version <tag>", "Install a specific version (e.g. v1.2.3)", "latest")
     .option("--check", "Check for updates without installing")
-    .action(async (opts: { version: string; check?: boolean }) => {
+    .option("--allow-unverified", "Allow upgrade when SHA256SUMS.txt is unavailable or missing this archive")
+    .action(async (opts: { version: string; check?: boolean; allowUnverified?: boolean }) => {
       if (!isStandaloneBinary()) {
         console.log("  memi was installed via npm. Upgrade with:");
         console.log("    npm i -g @sarveshsea/memoire@latest");
@@ -96,28 +127,35 @@ export function registerUpgradeCommand(program: Command, _engine: MemoireEngine)
       const root = packageRoot();
       const stagingDir = join(tmpdir(), `memi-upgrade-${Date.now()}`);
       const archivePath = join(stagingDir, archiveName);
+      const sumsPath = join(stagingDir, "SHA256SUMS.txt");
 
       try {
         console.log(`▸ Downloading ${archiveName}`);
         await download(archiveUrl, archivePath);
 
-        const actualSha = await sha256File(archivePath);
+        let checksumManifestDownloaded = false;
         try {
-          const sumsPath = join(stagingDir, "SHA256SUMS.txt");
           await download(sumsUrl, sumsPath);
-          const sums = await readFile(sumsPath, "utf-8");
-          const expected = sums.split("\n")
-            .map(l => l.trim())
-            .find(l => l.endsWith(archiveName))?.split(/\s+/)[0];
-          if (!expected) {
-            console.warn(`  ! No SHA256 for ${archiveName} in manifest — continuing`);
-          } else if (expected !== actualSha) {
-            throw new Error(`SHA256 mismatch — expected ${expected}, got ${actualSha}`);
-          } else {
-            console.log("✓ SHA256 verified");
-          }
+          checksumManifestDownloaded = true;
         } catch (err) {
-          console.warn(`  ! SHA256SUMS.txt unavailable (${(err as Error).message}) — continuing without verification`);
+          if (!opts.allowUnverified) {
+            throw new Error(`SHA256SUMS.txt unavailable (${(err as Error).message}). Re-run with --allow-unverified only if you trust the release source.`);
+          }
+          console.warn(`  ! SHA256SUMS.txt unavailable (${(err as Error).message}) — continuing because --allow-unverified was set`);
+        }
+
+        if (checksumManifestDownloaded) {
+          const checksumStatus = await verifyArchiveChecksum({
+            archiveName,
+            archivePath,
+            sumsPath,
+            allowUnverified: opts.allowUnverified,
+          });
+          if (checksumStatus === "verified") {
+            console.log("✓ SHA256 verified");
+          } else {
+            console.warn(`  ! No SHA256 for ${archiveName} in manifest — continuing because --allow-unverified was set`);
+          }
         }
 
         console.log(`▸ Extracting to ${root}`);

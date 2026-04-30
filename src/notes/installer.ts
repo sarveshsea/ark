@@ -9,12 +9,13 @@
 
 import { readFile, writeFile, mkdir, rm, readdir, stat, copyFile, cp } from "fs/promises";
 import { join, basename, resolve } from "path";
-import { execSync } from "child_process";
+import { execFile, type ExecFileOptions } from "child_process";
 import { createLogger } from "../engine/logger.js";
 import { NoteManifestSchema, type NoteCategory, type NoteManifest } from "./types.js";
 import { buildWorkspaceSkillManifest, parseSkillMarkdown } from "./frontmatter.js";
 
 const log = createLogger("notes-installer");
+const GITHUB_REPO_PATTERN = /^([A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?)\/([A-Za-z0-9._-]{1,100})$/;
 
 function notesDir(projectRoot: string): string {
   return join(projectRoot, ".memoire", "notes");
@@ -78,9 +79,11 @@ async function installFromLocal(sourcePath: string, destRoot: string): Promise<N
 }
 
 async function installFromGithub(repo: string, destRoot: string): Promise<NoteManifest> {
+  const source = parseGithubNoteRepo(repo);
+
   // Validate git is available
   try {
-    execSync("git --version", { stdio: "ignore" });
+    await execFileChecked("git", ["--version"], { timeout: 10_000 });
   } catch {
     throw new Error("Git is not installed. Install git or use local path: memi notes install ./my-note");
   }
@@ -88,12 +91,11 @@ async function installFromGithub(repo: string, destRoot: string): Promise<NoteMa
   // Clone into a temp directory first
   const tmpDir = join(destRoot, ".tmp-clone-" + Date.now());
   try {
-    execSync(`git clone --depth 1 https://github.com/${repo}.git "${tmpDir}"`, {
-      stdio: "pipe",
+    await execFileChecked("git", ["clone", "--depth", "1", source.cloneUrl, tmpDir], {
       timeout: 30_000,
     });
 
-    const { manifest, generated } = await readManifestFromSource(tmpDir, basename(repo));
+    const { manifest, generated } = await readManifestFromSource(tmpDir, source.repo);
 
     assertSafeName(manifest.name);
 
@@ -125,6 +127,40 @@ async function installFromGithub(repo: string, destRoot: string): Promise<NoteMa
   } finally {
     await rm(tmpDir, { recursive: true, force: true }).catch(() => {});
   }
+}
+
+export function parseGithubNoteRepo(repo: string): { owner: string; repo: string; cloneUrl: string } {
+  if (repo.trim() !== repo) {
+    throw new Error("GitHub Note source must be exactly `github:owner/repo` with no surrounding whitespace");
+  }
+
+  const match = repo.match(GITHUB_REPO_PATTERN);
+  if (!match || repo.includes("..") || repo.endsWith(".git")) {
+    throw new Error(`Invalid GitHub Note source "github:${repo}". Use exactly github:owner/repo.`);
+  }
+
+  const [, owner, repoName] = match;
+  return {
+    owner,
+    repo: repoName,
+    cloneUrl: `https://github.com/${owner}/${repoName}.git`,
+  };
+}
+
+function execFileChecked(command: string, args: string[], options: ExecFileOptions = {}): Promise<void> {
+  return new Promise((resolvePromise, reject) => {
+    execFile(command, args, {
+      encoding: "utf-8",
+      maxBuffer: 1024 * 1024,
+      ...options,
+    }, (error, _stdout, stderr) => {
+      if (error) {
+        reject(new Error(String(stderr ?? "").trim() || error.message));
+        return;
+      }
+      resolvePromise();
+    });
+  });
 }
 
 async function readManifestFromSource(sourcePath: string, fallbackName: string): Promise<{ manifest: NoteManifest; generated: boolean }> {
