@@ -31,7 +31,7 @@ This patch hardens Memoire for public directory review. GitHub Note installs now
 ### Commits
 | Hash | Message |
 |------|---------|
-| `pending` | security(release): harden trust gates for v0.14.4 |
+| `d81f4716` | security(release): harden trust gates for v0.14.4 |
 
 ### External Release Gates
 - Publish `0.14.4` to npm.
