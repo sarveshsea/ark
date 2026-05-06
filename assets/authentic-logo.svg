@@ -1,23 +1,31 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-labelledby="memoireLogoTitle">
+  <title id="memoireLogoTitle">Memoire flower logo</title>
+  <rect width="512" height="512" fill="#000000"/>
   <defs>
-    <mask id="holes">
-      <rect width="120" height="120" fill="white"/>
-      <!-- 5 oval cutouts between the lobes -->
-      <ellipse cx="60" cy="34" rx="10" ry="15" fill="black"/>
-      <ellipse cx="84" cy="52" rx="10" ry="15" transform="rotate(72 84 52)" fill="black"/>
-      <ellipse cx="75" cy="80" rx="10" ry="15" transform="rotate(144 75 80)" fill="black"/>
-      <ellipse cx="45" cy="80" rx="10" ry="15" transform="rotate(-144 45 80)" fill="black"/>
-      <ellipse cx="36" cy="52" rx="10" ry="15" transform="rotate(-72 36 52)" fill="black"/>
+    <path id="memoirePetal" d="M256 220C236 194 196 176 181 139C167 104 184 72 217 67C237 64 250 75 256 88C262 75 275 64 295 67C328 72 345 104 331 139C316 176 276 194 256 220Z"/>
+    <mask id="memoireFlowerMask" maskUnits="userSpaceOnUse">
+      <rect width="512" height="512" fill="black"/>
+      <use href="#memoirePetal" fill="white"/>
+      <use href="#memoirePetal" fill="white" transform="rotate(90 256 256)"/>
+      <use href="#memoirePetal" fill="white" transform="rotate(180 256 256)"/>
+      <use href="#memoirePetal" fill="white" transform="rotate(270 256 256)"/>
+      <path d="M256 204C264 232 280 248 308 256C280 264 264 280 256 308C248 280 232 264 204 256C232 248 248 232 256 204Z" fill="black"/>
+      <g fill="black">
+        <path d="M256 126C243 154 244 188 256 220C268 188 269 154 256 126Z"/>
+        <circle cx="256" cy="145" r="15"/>
+        <path d="M256 126C243 154 244 188 256 220C268 188 269 154 256 126Z" transform="rotate(90 256 256)"/>
+        <circle cx="367" cy="256" r="15"/>
+        <path d="M256 126C243 154 244 188 256 220C268 188 269 154 256 126Z" transform="rotate(180 256 256)"/>
+        <circle cx="256" cy="367" r="15"/>
+        <path d="M256 126C243 154 244 188 256 220C268 188 269 154 256 126Z" transform="rotate(270 256 256)"/>
+        <circle cx="145" cy="256" r="15"/>
+      </g>
     </mask>
+    <linearGradient id="memoireSilver" x1="134" y1="78" x2="378" y2="430" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffffff"/>
+      <stop offset="0.56" stop-color="#f6f6f2"/>
+      <stop offset="1" stop-color="#c9c9c4"/>
+    </linearGradient>
   </defs>
-  <!-- 5 overlapping circles forming the blob -->
-  <g mask="url(#holes)">
-    <circle cx="60" cy="28" r="24" fill="#C24B38"/>
-    <circle cx="90" cy="50" r="24" fill="#C24B38"/>
-    <circle cx="78" cy="84" r="24" fill="#C24B38"/>
-    <circle cx="42" cy="84" r="24" fill="#C24B38"/>
-    <circle cx="30" cy="50" r="24" fill="#C24B38"/>
-    <!-- Fill center -->
-    <circle cx="60" cy="58" r="18" fill="#C24B38"/>
-  </g>
+  <rect width="512" height="512" fill="url(#memoireSilver)" mask="url(#memoireFlowerMask)"/>
 </svg>

@@ -34,6 +34,18 @@ Primary CTA: [`@sarveshsea/memoire` on npm](https://www.npmjs.com/package/@sarve
 
 Compatibility targets: [shadcn registry](https://ui.shadcn.com/docs/registry/getting-started), [registry item schema](https://ui.shadcn.com/docs/registry/registry-item-json), [components.json](https://ui.shadcn.com/docs/components-json), and [v0 design systems](https://v0.app/docs/design-systems).
 
+### Studio in 0.15
+
+`0.15.0` adds Mémoire Studio: a local agent design workbench for Claude Code, Codex, Hermes, Ollama, OpenCode, Gemini, Mémoire Native, project memory, the Figma bridge, and an in-app Marketplace for Mémoire Notes.
+
+```bash
+memi studio web --port 1422
+memi studio tui
+memi studio logs --follow
+memi studio run --harness codex --action design-doc --prompt "Audit this UI and generate a design spec"
+memi video create "Launch story" --adapter remotion --prompt "Product motion system"
+```
+
 ### Install the output anywhere
 
 ```bash
@@ -184,6 +196,22 @@ Claude Design, Figma Make, Lovable, Bolt, Replit Agent, and v0 are useful for fa
 - v0: strong for generating screens and using registries. Memoire helps infer, improve, and publish the registry from the app you already have.
 
 If your team needs better visual quality, versioned tokens, installable components, tweakcn theme packaging, and cross-tool design system context, that is the Memoire wedge.
+
+---
+
+## Studio interface references and adapted components
+
+Memoire Studio is a desktop-first agent workbench for design runs. Its interface uses Hermes WebUI and Hermes Agent as MIT-licensed references for the transcript-first console, three-pane workbench, event normalization, and supervised local sessions.
+
+Studio runs Claude Code, Codex, Hermes, Ollama, OpenCode, Gemini, and Memoire Native through a shared harness manifest. External coding agents receive a Memoire design/research envelope before execution, so their runs start from project memory, specs, references, Figma state, accessibility, and Atomic Design rather than a generic coding prompt. `memi studio tui` and `memi studio logs` expose the same persisted JSONL events for terminal-first visibility into package logs, Claude/Codex output, harness status, approvals, artifacts, and final results.
+
+Studio also includes a Notes Marketplace that lists built-in Notes, installed workspace Notes, and installable packages from the repo-owned `notes/*/note.json` manifests. The Marketplace uses the same Notes installer logic as `memi notes`, so installed packs become normal `.memoire/notes` project memory and agent context.
+
+Motion/video work is native in 0.15 through optional Remotion and HyperFrames adapters. `memi video create|preview|render` stores projects under `.memoire/videos` without making either video tool a hard dependency.
+
+Warp is used as a product reference for terminal blocks and grouped command output. Only MIT-licensed Warp UI framework pieces such as `warpui_core` and `warpui` are considered for adaptation; Warp AGPL application/client code is not copied into Memoire.
+
+See [`NOTICE`](./NOTICE) for source links and attribution details.
 
 ---
 
