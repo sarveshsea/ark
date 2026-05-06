@@ -94,7 +94,7 @@ if (!npmPackageEntry) {
   }
 }
 
-const changelog = await readFile(join(root, "CHANGELOG.md"), "utf-8");
+const changelog = normalizeNewlines(await readFile(join(root, "CHANGELOG.md"), "utf-8"));
 const changelogMatch = changelog.match(/^## v([0-9]+\.[0-9]+\.[0-9]+)\b/m);
 if (!changelogMatch) {
   fail("CHANGELOG.md does not contain a version heading");
@@ -103,10 +103,10 @@ if (!changelogMatch) {
 }
 
 const previewPath = join(root, "preview", "changelog.html");
-const currentPreview = await readFile(previewPath, "utf-8");
+const currentPreview = normalizeNewlines(await readFile(previewPath, "utf-8"));
 const releases = parseChangelogMarkdown(changelog);
 const generatedPreview = applyChangelogData(currentPreview, releases);
-if (normalizeNewlines(generatedPreview) !== normalizeNewlines(currentPreview)) {
+if (generatedPreview !== currentPreview) {
   fail("preview/changelog.html is not synced with CHANGELOG.md");
 }
 
