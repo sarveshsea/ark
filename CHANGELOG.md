@@ -22,6 +22,7 @@ This release turns Mémoire into an agent-first Studio platform instead of only 
 - Added a compact active Figma bridge controller with connect/disconnect, native open, port scanning, client status, full sync, inspect, pull tokens, pull components, pull stickies, and screenshot actions.
 - Added Studio UI markers and a dense old-Mémoire-inspired product-memory shell, with the harness terminal scoped to Home and Monitor instead of taking over the whole app.
 - Added a compact active-widget Studio home surface and a Notes Marketplace for built-in, workspace-installed, and installable Mémoire Notes packages.
+- Added tagged-release macOS DMG publishing for Mémoire Studio so app downloads live on GitHub Releases instead of in git.
 - Added Hermes/Warp interface attribution and license-boundary notes while excluding Warp AGPL app/client code from copied implementation.
 
 ### Compatibility
@@ -42,14 +43,14 @@ This release turns Mémoire into an agent-first Studio platform instead of only 
 - `npm run typecheck` passed.
 - `npm --prefix apps/studio run build` passed.
 - `cargo test --quiet` passed in `apps/studio/src-tauri`.
-- `npm run studio:build` passed and produced `Mémoire Studio.app`.
+- `npm run studio:build` passed and produced `Mémoire Studio.app` plus the macOS DMG bundle.
 - `npm run check:release` and `npm run pack:dry-run` passed for `0.15.0`.
 - Packaged-mode smoke verification passed from a temporary non-source project directory.
 
 ### Commits
 | Hash | Message |
 |------|---------|
-| `pending` | chore(release): prepare v0.15.0 Studio harness upgrade |
+| `f1da52a1` | chore(release): prepare v0.15 studio update |
 
 ### External Release Gates
 - Publish `0.15.0` to npm after the local release gate passes.

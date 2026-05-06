@@ -25,6 +25,7 @@ describe("0.15.0 release metadata", () => {
     expect(studioLock.version).toBe("0.15.0");
     expect(studioLock.packages[""].version).toBe("0.15.0");
     expect(studioTauri.version).toBe("0.15.0");
+    expect(studioTauri.bundle?.targets).toContain("dmg");
     expect(studioCargo).toMatch(/^version = "0\.15\.0"$/m);
     expect(changelog).toMatch(/^## v0\.15\.0\b/m);
     expect(changelog).toContain("Studio");

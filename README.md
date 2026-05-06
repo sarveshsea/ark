@@ -207,6 +207,12 @@ Studio runs Claude Code, Codex, Hermes, Ollama, OpenCode, Gemini, and Memoire Na
 
 Studio also includes a Notes Marketplace that lists built-in Notes, installed workspace Notes, and installable packages from the repo-owned `notes/*/note.json` manifests. The Marketplace uses the same Notes installer logic as `memi notes`, so installed packs become normal `.memoire/notes` project memory and agent context.
 
+The desktop app source lives in `apps/studio`. Build output stays out of git under `apps/studio/src-tauri/target`; tagged GitHub Releases attach the downloadable macOS DMGs, for example `Mémoire Studio_0.15.0_aarch64.dmg`. For a local build, run:
+
+```bash
+npm run studio:build
+```
+
 Motion/video work is native in 0.15 through optional Remotion and HyperFrames adapters. `memi video create|preview|render` stores projects under `.memoire/videos` without making either video tool a hard dependency.
 
 Warp is used as a product reference for terminal blocks and grouped command output. Only MIT-licensed Warp UI framework pieces such as `warpui_core` and `warpui` are considered for adaptation; Warp AGPL application/client code is not copied into Memoire.
