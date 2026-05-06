@@ -319,6 +319,7 @@ Or add manually to `.mcp.json`:
 | `memi init` | Initialize workspace with starter specs |
 | `memi diagnose [target]` | Diagnose design debt in an existing web app from code or URL |
 | `memi connect` | Start Figma bridge (auto-discovers plugin on ports 9223-9232) |
+| `memi mermaid-jam status` | Inspect the Mermaid Jam FigJam plugin link, repo, and local manifest path |
 | `memi pull` | Extract tokens, components, styles from Figma |
 | `memi pull --rest` | Pull via REST API -- no plugin, no Figma Desktop |
 | `memi pull --penpot` | Pull from Penpot (needs `PENPOT_TOKEN` + `PENPOT_FILE_ID`) |
