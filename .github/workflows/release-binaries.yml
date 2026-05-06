@@ -28,13 +28,19 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            apps/studio/package-lock.json
 
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
       - name: Install deps
-        run: rm -f package-lock.json && npm install --ignore-scripts
+        run: |
+          rm -f package-lock.json
+          npm install --ignore-scripts
+          npm --prefix apps/studio ci --ignore-scripts
 
       - name: Check release metadata
         run: npm run check:release
