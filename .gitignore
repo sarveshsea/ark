@@ -1,6 +1,10 @@
 node_modules/
 dist/
+target/
+apps/studio/src-tauri/gen/
 .memoire/
+.superpowers/
+.codex/
 .noche/
 .astro/
 *.tsbuildinfo

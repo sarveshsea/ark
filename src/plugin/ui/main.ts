@@ -105,6 +105,9 @@ const ACTIONS: ActionDef[] = [
   { id: "capture", label: "capture", requiresConnection: true, requiresSelection: true },
   { id: "changes", label: "changes", requiresConnection: true },
   { id: "page-tree", label: "tree", requiresConnection: true },
+  { id: "studio-full-sync", label: "studio sync", requiresConnection: true },
+  { id: "studio-pull-stickies", label: "stickies", requiresConnection: true },
+  { id: "studio-open", label: "open studio", requiresConnection: false },
   { id: "retry", label: "reconnect", requiresConnection: false },
 ];
 
@@ -994,9 +997,12 @@ const STATIC_SHELL_HTML = `
 <div class="shell">
   <div class="topbar">
     <div class="brand-wrap">
-      <svg class="brand-flower" viewBox="0 0 120 120" width="22" height="22">
-        <defs><mask id="h"><rect width="120" height="120" fill="white"/><ellipse cx="60" cy="34" rx="10" ry="15" fill="black"/><ellipse cx="84" cy="52" rx="10" ry="15" transform="rotate(72 84 52)" fill="black"/><ellipse cx="75" cy="80" rx="10" ry="15" transform="rotate(144 75 80)" fill="black"/><ellipse cx="45" cy="80" rx="10" ry="15" transform="rotate(-144 45 80)" fill="black"/><ellipse cx="36" cy="52" rx="10" ry="15" transform="rotate(-72 36 52)" fill="black"/></mask></defs>
-        <g mask="url(#h)"><circle cx="60" cy="28" r="24" fill="#C24B38"/><circle cx="90" cy="50" r="24" fill="#C24B38"/><circle cx="78" cy="84" r="24" fill="#C24B38"/><circle cx="42" cy="84" r="24" fill="#C24B38"/><circle cx="30" cy="50" r="24" fill="#C24B38"/><circle cx="60" cy="58" r="18" fill="#C24B38"/></g>
+      <svg class="brand-flower" viewBox="0 0 512 512" width="22" height="22" aria-hidden="true">
+        <defs>
+          <path id="brand-petal" d="M256 220C236 194 196 176 181 139C167 104 184 72 217 67C237 64 250 75 256 88C262 75 275 64 295 67C328 72 345 104 331 139C316 176 276 194 256 220Z"/>
+          <mask id="brand-flower-mask" maskUnits="userSpaceOnUse"><rect width="512" height="512" fill="black"/><use href="#brand-petal" fill="white"/><use href="#brand-petal" fill="white" transform="rotate(90 256 256)"/><use href="#brand-petal" fill="white" transform="rotate(180 256 256)"/><use href="#brand-petal" fill="white" transform="rotate(270 256 256)"/><path d="M256 204C264 232 280 248 308 256C280 264 264 280 256 308C248 280 232 264 204 256C232 248 248 232 256 204Z" fill="black"/><g fill="black"><path d="M256 126C243 154 244 188 256 220C268 188 269 154 256 126Z"/><circle cx="256" cy="145" r="15"/><path d="M256 126C243 154 244 188 256 220C268 188 269 154 256 126Z" transform="rotate(90 256 256)"/><circle cx="367" cy="256" r="15"/><path d="M256 126C243 154 244 188 256 220C268 188 269 154 256 126Z" transform="rotate(180 256 256)"/><circle cx="256" cy="367" r="15"/><path d="M256 126C243 154 244 188 256 220C268 188 269 154 256 126Z" transform="rotate(270 256 256)"/><circle cx="145" cy="256" r="15"/></g></mask>
+        </defs>
+        <rect width="512" height="512" fill="currentColor" mask="url(#brand-flower-mask)"/>
       </svg>
     </div>
     <div class="status-cluster" data-slot="status"></div>
@@ -1190,6 +1196,22 @@ function handleAction(action: string): void {
       break;
     case "page-tree":
       requestCommand("getPageTree", { depth: 2 }, "Inspect page tree", "system");
+      break;
+    case "studio-full-sync":
+      requestCommand("getSelection", {}, "Studio selection sync", "selection");
+      requestCommand("getVariables", {}, "Studio token pull", "sync");
+      requestCommand("getComponents", {}, "Studio component pull", "sync");
+      requestCommand("getStyles", {}, "Studio style pull", "sync");
+      requestCommand("getStickies", {}, "Studio sticky pull", "sync");
+      requestCommand("getPageTree", { depth: 2 }, "Studio page tree", "system");
+      break;
+    case "studio-pull-stickies":
+      requestCommand("getStickies", {}, "Studio sticky pull", "sync");
+      break;
+    case "studio-open":
+      addLog("info", "Studio runtime: http://127.0.0.1:1422");
+      window.open("http://127.0.0.1:1422/", "_blank", "noopener,noreferrer");
+      scheduleRender();
       break;
     case "retry":
       if (state.bridge.ws) {
@@ -1418,6 +1440,7 @@ function renderSelectionNode(node: WidgetSelectionNodeSnapshot): string {
 
 function renderSystem(): string {
   const cards: string[] = [];
+  cards.push(renderStudioCompanion());
 
   if (state.agentStatuses.length) {
     cards.push(`
@@ -1510,6 +1533,42 @@ function renderSystem(): string {
   `);
 
   return cards.join("");
+}
+
+function renderStudioCompanion(): string {
+  const runtime = "http://127.0.0.1:1422";
+  const selected = state.selection.count;
+  const tokenCount = state.syncSummary?.tokens ?? 0;
+  const componentCount = state.syncSummary?.components ?? 0;
+  const lastSync = state.lastSyncAt ? new Date(state.lastSyncAt).toLocaleTimeString() : "--";
+  const latestAgent = state.agentStatuses[0];
+
+  return `
+    <article class="studio-companion">
+      <div class="card-topline">
+        <strong class="card-title">Studio companion</strong>
+        <span class="chip">${escapeHtml(state.bridge.stage)}</span>
+      </div>
+      <div class="studio-companion-grid">
+        <span class="studio-runtime">${escapeHtml(runtime)}</span>
+        <span>${escapeHtml(state.connection.fileName || "--")}</span>
+        <span>${escapeHtml(state.connection.pageName || "--")}</span>
+        <span>${selected} selected</span>
+        <span>${tokenCount} token collections</span>
+        <span>${componentCount} components</span>
+        <span>last sync ${escapeHtml(lastSync)}</span>
+        <span>${latestAgent ? escapeHtml(`${latestAgent.title} · ${latestAgent.status}`) : "agent idle"}</span>
+      </div>
+      <div class="inline-actions">
+        <button class="tool-btn" data-action="inspect">Selection</button>
+        <button class="tool-btn" data-action="sync">Tokens/components</button>
+        <button class="tool-btn" data-action="studio-pull-stickies">Stickies</button>
+        <button class="tool-btn" data-action="capture">Screenshot</button>
+        <button class="tool-btn" data-action="studio-full-sync">Full sync</button>
+        <button class="tool-btn" data-action="studio-open">Open Studio</button>
+      </div>
+    </article>
+  `;
 }
 
 function renderLogs(): string {

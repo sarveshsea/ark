@@ -1,0 +1,33 @@
+Memoire Studio notices
+
+Studio interface references and adapted components:
+
+- Hermes WebUI (MIT): https://github.com/nesquena/hermes-webui
+  Memoire Studio adapts the transcript-first, calm console interaction pattern and
+  three-pane workbench organization from the public Hermes WebUI project.
+
+- Hermes Agent (MIT): https://github.com/NousResearch/hermes-agent
+  Memoire Studio adapts runtime ideas around agent sessions, normalized events,
+  approval-oriented supervision, and local execution boundaries from the public
+  Hermes Agent project.
+
+- Warp UI framework (MIT pieces only): https://github.com/warpdotdev/Warp
+  Memoire Studio may reference or adapt MIT-licensed Warp UI framework ideas from
+  warpui_core and warpui. Warp AGPL application/client code is not copied.
+
+Product references:
+
+- Warp terminal block behavior is used as a product reference for command blocks,
+  grouped output, and terminal-native workflows. AGPL application/client code is
+  excluded from this repository unless a future licensing decision explicitly
+  changes that boundary.
+
+Optional video adapters:
+
+- Remotion: https://www.remotion.dev/
+  Memoire creates filesystem-first video project scaffolds that can be previewed
+  or rendered with Remotion when it is installed by the user.
+
+- HyperFrames: https://github.com/heygen-com/hyperframes
+  Memoire treats HyperFrames as an optional adapter for open design-to-video
+  workflows; it is not bundled as a hard dependency.

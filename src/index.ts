@@ -26,6 +26,8 @@
  *    memoire pull --rest       Pull design system via Figma REST API (no plugin)
  *    memoire design-doc <url>  Extract design system from any URL → DESIGN.md
  *    memoire extract <url>    Alias for design-doc
+ *    memoire studio           Run the desktop/web agent design shell runtime
+ *    memoire video            Create Remotion/HyperFrames motion projects
  *    memoire audit             WCAG 2.2 accessibility audit
  */
 
@@ -93,6 +95,8 @@ const [
   { registerUpgradeCommand },
   { registerUpdateCommand },
   { registerDiagnoseCommand },
+  { registerStudioCommand },
+  { registerVideoCommand },
 ] = await Promise.all([
   import("commander"),
   import("./engine/core.js"),
@@ -135,6 +139,8 @@ const [
   import("./commands/upgrade.js"),
   import("./commands/update.js"),
   import("./commands/diagnose.js"),
+  import("./commands/studio.js"),
+  import("./commands/video.js"),
 ]);
 
 // Catch unhandled async errors so the CLI doesn't crash silently
@@ -174,6 +180,8 @@ if (!mcpMode) {
 // Register all commands. Put the code-native design-quality workflow first so
 // `memi --help` leads with the new product surface instead of the long tail.
 registerDiagnoseCommand(program, engine);
+registerStudioCommand(program, engine);
+registerVideoCommand(program, engine);
 registerInitCommand(program, engine);
 registerPublishCommand(program, engine);
 registerThemeCommand(program, engine);
@@ -307,6 +315,8 @@ function printFastHelp(version: string): void {
     "  design-doc              Extract a design system from any URL",
     "  generate                Generate shadcn/Tailwind code from specs",
     "  preview                 Start the local preview and registry server",
+    "  studio                  Run the desktop/web agent design shell runtime",
+    "  video                   Create, preview, and render motion/video projects",
     "  status                  Show workspace status",
     "",
     "Figma, agents, and advanced:",

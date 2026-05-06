@@ -424,6 +424,38 @@ pre { margin: 0; white-space: pre-wrap; word-break: break-all; }
 .inline-actions { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 6px; }
 .inline-actions .tool-btn { padding: 3px 7px; font-size: 9px; }
 
+.studio-companion {
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  padding: 10px;
+}
+
+.studio-companion-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  margin: 8px 0;
+}
+
+.studio-companion-grid span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-inset);
+  color: var(--fg-secondary);
+  padding: 4px 5px;
+  font-size: 9px;
+}
+
+.studio-runtime {
+  grid-column: 1 / -1;
+  color: var(--accent) !important;
+}
+
 /* ── Activity ticker ──────────────────── */
 
 .ticker {

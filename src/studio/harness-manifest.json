@@ -1,0 +1,192 @@
+{
+  "schemaVersion": 1,
+  "hardlineBlockedPatterns": [
+    {
+      "pattern": "\\brm\\s+(-[^\\s]*\\s+)*(\\/|\\/\\*|~|\\$HOME)(\\s|$)",
+      "description": "recursive delete of root or home directory"
+    },
+    {
+      "pattern": "\\bmkfs(\\.[a-z0-9]+)?\\b",
+      "description": "format filesystem"
+    },
+    {
+      "pattern": "\\bdd\\b[^\\n]*\\bof=/dev/(sd|nvme|hd|mmcblk|vd|xvd)[a-z0-9]*",
+      "description": "raw block-device overwrite"
+    },
+    {
+      "pattern": "(^|[;&|\\n])\\s*(sudo\\s+)?(shutdown|reboot|halt|poweroff)\\b",
+      "description": "system shutdown or reboot"
+    }
+  ],
+  "harnesses": [
+    {
+      "id": "memoire",
+      "label": "Mémoire Native",
+      "kind": "memoire",
+      "provider": "memoire",
+      "command": "memi",
+      "description": "Run the current Mémoire design intelligence engine.",
+      "enabledByDefault": true,
+      "installProbe": ["memi", "memoire"],
+      "capabilities": ["compose", "design-doc", "audit", "references", "video", "raw"],
+      "commandTemplates": {
+        "compose": ["compose", "{{prompt}}", "--json", "--no-figma"],
+        "design-doc": ["design-doc", "{{prompt}}", "--json"],
+        "audit": ["audit", "{{prompt}}", "--json"],
+        "references": ["references", "search", "{{prompt}}", "--json"],
+        "video": ["video", "create", "{{prompt}}", "--prompt", "{{prompt}}", "--json"],
+        "raw": ["compose", "{{prompt}}", "--json", "--no-figma"]
+      },
+      "envPolicy": "provider",
+      "workspacePolicy": "workspace-required",
+      "supportsStreaming": true,
+      "supportsCancel": true,
+      "outputParser": "memoire-jsonl"
+    },
+    {
+      "id": "claude-code",
+      "label": "Claude Code",
+      "kind": "external-cli",
+      "provider": "anthropic",
+      "command": "claude",
+      "description": "Delegate to Claude Code when installed.",
+      "enabledByDefault": true,
+      "installProbe": ["claude"],
+      "capabilities": ["compose", "audit", "raw"],
+      "commandTemplates": {
+        "compose": ["--print", "--output-format", "stream-json", "--permission-mode", "default", "--append-system-prompt", "{{agentSystemPrompt}}", "{{promptEnvelope}}"],
+        "audit": ["--print", "--output-format", "stream-json", "--permission-mode", "default", "--append-system-prompt", "{{agentSystemPrompt}}", "{{promptEnvelope}}"],
+        "raw": ["--print", "--output-format", "stream-json", "--permission-mode", "default", "--append-system-prompt", "{{agentSystemPrompt}}", "{{promptEnvelope}}"]
+      },
+      "envPolicy": "provider",
+      "workspacePolicy": "workspace-required",
+      "supportsStreaming": true,
+      "supportsCancel": true,
+      "outputParser": "claude-stream-json"
+    },
+    {
+      "id": "codex",
+      "label": "Codex",
+      "kind": "external-cli",
+      "provider": "openai",
+      "command": "codex",
+      "description": "Delegate to OpenAI Codex when installed.",
+      "enabledByDefault": true,
+      "installProbe": ["codex"],
+      "capabilities": ["compose", "audit", "raw"],
+      "commandTemplates": {
+        "compose": ["exec", "--json", "--sandbox", "workspace-write", "--skip-git-repo-check", "{{promptEnvelope}}"],
+        "audit": ["exec", "--json", "--sandbox", "workspace-write", "--skip-git-repo-check", "{{promptEnvelope}}"],
+        "raw": ["exec", "--json", "--sandbox", "workspace-write", "--skip-git-repo-check", "{{promptEnvelope}}"]
+      },
+      "envPolicy": "provider",
+      "workspacePolicy": "workspace-required",
+      "supportsStreaming": true,
+      "supportsCancel": true,
+      "outputParser": "codex-jsonl"
+    },
+    {
+      "id": "opencode",
+      "label": "OpenCode",
+      "kind": "external-cli",
+      "provider": "openai",
+      "command": "opencode",
+      "description": "Delegate to OpenCode when installed.",
+      "enabledByDefault": true,
+      "installProbe": ["opencode"],
+      "capabilities": ["compose", "audit", "raw"],
+      "commandTemplates": {
+        "compose": ["run", "{{promptEnvelope}}"],
+        "audit": ["run", "{{promptEnvelope}}"],
+        "raw": ["run", "{{promptEnvelope}}"]
+      },
+      "envPolicy": "provider",
+      "workspacePolicy": "workspace-required",
+      "supportsStreaming": true,
+      "supportsCancel": true,
+      "outputParser": "stdio"
+    },
+    {
+      "id": "gemini",
+      "label": "Gemini CLI",
+      "kind": "external-cli",
+      "provider": "google",
+      "command": "gemini",
+      "description": "Delegate to Gemini CLI when installed.",
+      "enabledByDefault": true,
+      "installProbe": ["gemini"],
+      "capabilities": ["compose", "audit", "raw"],
+      "commandTemplates": {
+        "compose": ["-p", "{{promptEnvelope}}"],
+        "audit": ["-p", "{{promptEnvelope}}"],
+        "raw": ["-p", "{{promptEnvelope}}"]
+      },
+      "envPolicy": "provider",
+      "workspacePolicy": "workspace-required",
+      "supportsStreaming": true,
+      "supportsCancel": true,
+      "outputParser": "stdio"
+    },
+    {
+      "id": "ollama",
+      "label": "Ollama",
+      "kind": "local-model",
+      "provider": "local",
+      "command": "ollama",
+      "description": "Run a local Ollama model as an agent harness.",
+      "enabledByDefault": true,
+      "installProbe": ["ollama"],
+      "capabilities": ["compose", "raw"],
+      "commandTemplates": {
+        "compose": ["run", "{{ollamaModel}}", "{{promptEnvelope}}"],
+        "raw": ["run", "{{ollamaModel}}", "{{promptEnvelope}}"]
+      },
+      "envPolicy": "local-model",
+      "workspacePolicy": "workspace-required",
+      "supportsStreaming": true,
+      "supportsCancel": true,
+      "outputParser": "ollama",
+      "defaultModel": "llama3.1:8b"
+    },
+    {
+      "id": "hermes",
+      "label": "Hermes",
+      "kind": "external-cli",
+      "provider": "local",
+      "command": "hermes",
+      "description": "Run Hermes Agent in one-shot mode with local workspace context.",
+      "enabledByDefault": true,
+      "installProbe": ["hermes"],
+      "capabilities": ["compose", "audit", "raw"],
+      "commandTemplates": {
+        "compose": ["--toolsets", "terminal,file,memory,skills,todo,session_search,clarify", "--oneshot", "{{promptEnvelope}}"],
+        "audit": ["--toolsets", "terminal,file,memory,skills,todo,session_search,clarify", "--oneshot", "{{promptEnvelope}}"],
+        "raw": ["--toolsets", "terminal,file,memory,skills,todo,session_search,clarify", "--oneshot", "{{promptEnvelope}}"]
+      },
+      "envPolicy": "safe-inherit",
+      "workspacePolicy": "workspace-required",
+      "supportsStreaming": true,
+      "supportsCancel": true,
+      "outputParser": "hermes-text"
+    },
+    {
+      "id": "shell",
+      "label": "Shell",
+      "kind": "shell",
+      "provider": "shell",
+      "command": "sh",
+      "description": "Trusted shell execution, disabled by default.",
+      "enabledByDefault": false,
+      "installProbe": ["sh"],
+      "capabilities": ["raw"],
+      "commandTemplates": {
+        "raw": ["-lc", "{{prompt}}"]
+      },
+      "envPolicy": "shell",
+      "workspacePolicy": "trusted-shell",
+      "supportsStreaming": true,
+      "supportsCancel": true,
+      "outputParser": "shell"
+    }
+  ]
+}

@@ -6,6 +6,57 @@ This changelog tracks Mémoire itself: every version, commit, and architectural 
 
 ---
 
+## v0.15.0 — 2026-05-06
+
+### The upgrade
+This release turns Mémoire into an agent-first Studio platform instead of only a registry/design-system CLI. Studio now has a packaged web shell, a desktop-first Tauri app slice, project memory, an active Figma bridge controller, and harness compatibility for Mémoire Native, Claude Code, Codex, Hermes, OpenCode, Gemini, Ollama, and guarded shell runs.
+
+### New
+- Added Mémoire Studio runtime commands: `memi studio status`, `memi studio serve`, `memi studio run`, `memi studio logs`, `memi studio tui`, and `memi studio web`.
+- Added first-class TUI/log visibility for persisted `.memoire/studio/sessions/*.jsonl` runs, including package logs, harness logs, auth status, tool calls, artifacts, and session results.
+- Added `memi video create`, `memi video preview`, `memi video render`, and `memi video status` for filesystem-first Remotion and HyperFrames motion/video projects under `.memoire/videos`.
+- Added a packaged Studio web app under `dist/studio-web` so globally installed npm packages can run Studio without needing the source checkout.
+- Added shared harness manifests, command-template expansion, provider/workspace/env policy metadata, install probes, and agent prompt envelopes for design, UX research, specs, systems, Figma, and project-memory context.
+- Added output normalizers for Claude Code stream JSON, Codex JSONL, Hermes text, Ollama/local output, grouped stdout/stderr, tool calls, reasoning events, and structured `session_result` blocks.
+- Added filesystem-first project memory for Home, Research, Specs, Systems, Monitor, and Changelog while filtering stale bid/AICP/generated preview artifacts from Studio memory.
+- Added a compact active Figma bridge controller with connect/disconnect, native open, port scanning, client status, full sync, inspect, pull tokens, pull components, pull stickies, and screenshot actions.
+- Added Studio UI markers and a dense old-Mémoire-inspired product-memory shell, with the harness terminal scoped to Home and Monitor instead of taking over the whole app.
+- Added a compact active-widget Studio home surface and a Notes Marketplace for built-in, workspace-installed, and installable Mémoire Notes packages.
+- Added tagged-release macOS DMG publishing for Mémoire Studio so app downloads live on GitHub Releases instead of in git.
+- Added Hermes/Warp interface attribution and license-boundary notes while excluding Warp AGPL app/client code from copied implementation.
+
+### Compatibility
+- Claude Code runs with a Mémoire design/research system envelope and stream JSON parsing.
+- Claude Code and Codex now surface CLI auth readiness before a harness run.
+- Codex runs with JSON event streaming, workspace-scoped prompts, and design-agent context injection.
+- Hermes runs with terminal/file/memory/skills/todo/session-search toolsets and a Mémoire UX/research wrapper.
+- Ollama and local-model routes receive the same structured prompt envelope for offline design workflows.
+- Remotion and HyperFrames are optional video adapters, so package installs remain lightweight while video workflows become native when the tools exist.
+- Packaged `memi studio web` serves the same Studio UI and API from one localhost runtime when the source `apps/studio` Vite app is not present.
+
+### Verification
+- Focused Studio harness, package-compatibility, Figma, memory, and release-version tests cover the new runtime paths.
+- Focused Marketplace API, Studio workbench UI, and compact table CSS tests cover the Notes Marketplace and active-widget shell.
+- Focused Studio log/TUI, auth probe, Figma open, and video workflow tests cover the 0.15 visibility and motion pass.
+- `npm run build` passed and copied the Studio web bundle into `dist/studio-web`.
+- `npm test -- --run` passed with 133 files and 1161 tests.
+- `npm run typecheck` passed.
+- `npm --prefix apps/studio run build` passed.
+- `cargo test --quiet` passed in `apps/studio/src-tauri`.
+- `npm run studio:build` passed and produced `Mémoire Studio.app` plus the macOS DMG bundle.
+- `npm run check:release` and `npm run pack:dry-run` passed for `0.15.0`.
+- Packaged-mode smoke verification passed from a temporary non-source project directory.
+
+### Commits
+| Hash | Message |
+|------|---------|
+| `f1da52a1` | chore(release): prepare v0.15 studio update |
+
+### External Release Gates
+- Publish `0.15.0` to npm after the local release gate passes.
+- Verify a global install can run `memi studio web --port 1422` from a non-source project directory.
+- Publish updated MCP metadata with `mcp-publisher publish server.json`.
+
 ## v0.14.4 — 2026-04-30
 
 ### The fix
