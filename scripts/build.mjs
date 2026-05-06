@@ -8,6 +8,7 @@ import { syncChangelogPreview } from "./build-changelog-preview.mjs";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const distDir = resolve(root, "dist");
 const tscBin = resolve(root, "node_modules", "typescript", "bin", "tsc");
+const useShell = process.platform === "win32";
 const buildInfo = resolve(root, "tsconfig.build.tsbuildinfo");
 const studioAppDir = resolve(root, "apps", "studio");
 const studioDistSrc = resolve(root, "apps", "studio", "dist");
@@ -87,7 +88,7 @@ async function runCommand(label, [command, args]) {
     const child = spawn(command, args, {
       cwd: root,
       stdio: "inherit",
-      shell: false,
+      shell: useShell,
     });
 
     child.on("error", reject);
