@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const maxSizeBytes = Number.parseInt(process.env.MEMOIRE_PACK_MAX_BYTES || "1250000", 10);
-const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
+const npmCommand = "npm";
 const tempRoot = await mkdtemp(join(tmpdir(), "memoire-pack-"));
 
 try {
@@ -62,6 +62,7 @@ try {
 async function run(command, args, cwd) {
   const child = spawn(command, args, {
     cwd,
+    shell: process.platform === "win32",
     stdio: ["ignore", "pipe", "pipe"],
     env: {
       ...process.env,
