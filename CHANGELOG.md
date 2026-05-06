@@ -6,6 +6,22 @@ This changelog tracks Mémoire itself: every version, commit, and architectural 
 
 ---
 
+## Unreleased
+
+### New
+- Added a native Mermaid Jam integration for routing Mermaid and markdown diagram source into the Mermaid Jam FigJam plugin.
+- Added `memi mermaid-jam status` / `memi mermaid-jam open`, a Studio `/api/integrations/mermaid-jam` endpoint, and a built-in `mermaid-jam` Note for agent workflows.
+
+### Verification
+- Focused Mermaid Jam resolver, CLI, and Studio API tests passed.
+- Packaged Note asset tests and Studio Marketplace tests passed.
+- `npm run typecheck` passed.
+
+### Commits
+| Hash | Message |
+|------|---------|
+| `49bbded2` | feat: add native mermaid jam integration |
+
 ## v0.15.0 — 2026-05-06
 
 ### The upgrade
