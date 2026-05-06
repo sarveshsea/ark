@@ -11,15 +11,22 @@ This changelog tracks Mémoire itself: every version, commit, and architectural 
 ### New
 - Added a native Mermaid Jam integration for routing Mermaid and markdown diagram source into the Mermaid Jam FigJam plugin.
 - Added `memi mermaid-jam status` / `memi mermaid-jam open`, a Studio `/api/integrations/mermaid-jam` endpoint, and a built-in `mermaid-jam` Note for agent workflows.
+- Added a macOS-first native Markdown Corpus path for Studio: reviewed GitHub markdown seeds download through the Rust/Tauri app into `.memoire/markdown-corpus`, with manifest hashes, license policy, and markdown-only allowlisting.
+- Added deep Markdown analysis for FigJam candidates, including Mermaid fences, headings, lists, tables, frontmatter, links, and checklist-to-flow conversion.
+- Added `memi mermaid-jam corpus status`, `memi mermaid-jam corpus sync --setup`, `memi mermaid-jam analyze`, and Studio `/api/markdown-corpus/*` endpoints for corpus setup, status, analysis, and FigJam sync.
+- Added a Studio Markdown Corpus setup card with repository status, source-path analysis, and direct “Sync to FigJam” handoff through the connected bridge.
 
 ### Verification
 - Focused Mermaid Jam resolver, CLI, and Studio API tests passed.
+- Focused Rust/Tauri Markdown Corpus tests passed.
+- Focused Markdown Corpus integration, CLI, and Studio API tests passed.
 - Packaged Note asset tests and Studio Marketplace tests passed.
 - `npm run typecheck` passed.
 
 ### Commits
 | Hash | Message |
 |------|---------|
+| `3d11b9e8` | feat: add native markdown corpus sync |
 | `49bbded2` | feat: add native mermaid jam integration |
 
 ## v0.15.0 — 2026-05-06

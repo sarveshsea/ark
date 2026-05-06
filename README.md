@@ -207,6 +207,8 @@ Studio runs Claude Code, Codex, Hermes, Ollama, OpenCode, Gemini, and Memoire Na
 
 Studio also includes a Notes Marketplace that lists built-in Notes, installed workspace Notes, and installable packages from the repo-owned `notes/*/note.json` manifests. The Marketplace uses the same Notes installer logic as `memi notes`, so installed packs become normal `.memoire/notes` project memory and agent context.
 
+Studio's macOS app has a native Markdown Corpus setup card for deeper Markdown and Mermaid-to-FigJam work. The Tauri/Rust path downloads a reviewed markdown-only corpus under `.memoire/markdown-corpus`, indexes manifests with commit/license/hash metadata, analyzes local markdown for FigJam-ready candidates, and syncs candidates through the connected Figma/FigJam bridge as editable nodes. The npm CLI keeps the lightweight fallback through `memi mermaid-jam corpus ...`.
+
 The desktop app source lives in `apps/studio`. Build output stays out of git under `apps/studio/src-tauri/target`; tagged GitHub Releases attach the downloadable macOS DMGs, for example `Mémoire Studio_0.15.0_aarch64.dmg`. For a local build, run:
 
 ```bash
@@ -320,6 +322,9 @@ Or add manually to `.mcp.json`:
 | `memi diagnose [target]` | Diagnose design debt in an existing web app from code or URL |
 | `memi connect` | Start Figma bridge (auto-discovers plugin on ports 9223-9232) |
 | `memi mermaid-jam status` | Inspect the Mermaid Jam FigJam plugin link, repo, and local manifest path |
+| `memi mermaid-jam corpus status --json` | Read the local markdown corpus manifest, repository freshness, file counts, and errors |
+| `memi mermaid-jam corpus sync --setup --json` | Download/index the curated markdown-only corpus for smarter Markdown/Mermaid-to-FigJam generation |
+| `memi mermaid-jam analyze <path> --json` | Analyze Markdown or MDX for Mermaid blocks, heading/list flows, tables, and FigJam candidates |
 | `memi pull` | Extract tokens, components, styles from Figma |
 | `memi pull --rest` | Pull via REST API -- no plugin, no Figma Desktop |
 | `memi pull --penpot` | Pull from Penpot (needs `PENPOT_TOKEN` + `PENPOT_FILE_ID`) |

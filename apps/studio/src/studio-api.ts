@@ -190,6 +190,56 @@ export interface FigmaOpenResult {
   openedAt: string;
 }
 
+export interface MarkdownCorpusRepoStatus {
+  repo: string;
+  license: string;
+  commit: string;
+  files: number;
+  bytes: number;
+  skipped: number;
+  errors: string[];
+  fetchedAt: string;
+}
+
+export interface MarkdownCorpusStatus {
+  status: "ready" | "downloading" | "partial" | "failed";
+  repos: MarkdownCorpusRepoStatus[];
+}
+
+export interface MarkdownDiagramCandidate {
+  title: string;
+  sourcePath: string;
+  kind: string;
+  confidence: number;
+  diagnostics: string[];
+  cleanSource: string;
+}
+
+export interface MarkdownAnalysisReport {
+  status: "ready";
+  candidates: MarkdownDiagramCandidate[];
+  summary: {
+    headings: number;
+    lists: number;
+    codeFences: number;
+    mermaidBlocks: number;
+    links: number;
+    tables: number;
+    frontmatter: boolean;
+  };
+}
+
+export interface MarkdownFigJamSyncResult {
+  status: "ready";
+  candidates: MarkdownDiagramCandidate[];
+  figjam: {
+    bridgeState: "connected";
+    createdNodeCount: number;
+    artifactPath: string | null;
+    diagnostics: string[];
+  };
+}
+
 const runtimeBase = import.meta.env.VITE_MEMOIRE_STUDIO_RUNTIME
   || (window.location.protocol.startsWith("http") ? window.location.origin : "http://127.0.0.1:8765");
 
@@ -356,6 +406,39 @@ export async function openFigma(fileKey?: string | null): Promise<FigmaOpenResul
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ fileKey: fileKey ?? null }),
+  });
+}
+
+export async function getMarkdownCorpusStatus(): Promise<MarkdownCorpusStatus> {
+  if (hasTauri()) return invoke<MarkdownCorpusStatus>("get_markdown_corpus_status");
+  return fetchJSON<MarkdownCorpusStatus>("/api/markdown-corpus/status");
+}
+
+export async function setupMarkdownCorpus(): Promise<MarkdownCorpusStatus> {
+  if (hasTauri()) return invoke<MarkdownCorpusStatus>("setup_markdown_corpus");
+  return fetchJSON<MarkdownCorpusStatus>("/api/markdown-corpus/setup", { method: "POST" });
+}
+
+export async function cancelMarkdownCorpusSetup(): Promise<boolean> {
+  if (hasTauri()) return invoke<boolean>("cancel_markdown_corpus_setup");
+  const payload = await fetchJSON<{ cancelled: boolean }>("/api/markdown-corpus/cancel", { method: "POST" });
+  return payload.cancelled;
+}
+
+export async function analyzeMarkdownForFigJam(input: { sourcePath: string }): Promise<MarkdownAnalysisReport> {
+  if (hasTauri()) return invoke<MarkdownAnalysisReport>("analyze_markdown_for_fig_jam", { path: input.sourcePath });
+  return fetchJSON<MarkdownAnalysisReport>("/api/markdown-corpus/analyze", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(input),
+  });
+}
+
+export async function syncMarkdownToFigJam(input: { sourcePath?: string; source?: string }): Promise<MarkdownFigJamSyncResult> {
+  return fetchJSON<MarkdownFigJamSyncResult>("/api/markdown-corpus/sync-to-figjam", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(input),
   });
 }
 
