@@ -18,6 +18,10 @@ function fail(message) {
   failures.push(message);
 }
 
+function normalizeNewlines(value) {
+  return value.replace(/\r\n/g, "\n");
+}
+
 const packageJson = await readJson(join(root, "package.json"));
 const version = packageJson.version;
 const expectedMcpName = "io.github.sarveshsea/memoire";
@@ -102,7 +106,7 @@ const previewPath = join(root, "preview", "changelog.html");
 const currentPreview = await readFile(previewPath, "utf-8");
 const releases = parseChangelogMarkdown(changelog);
 const generatedPreview = applyChangelogData(currentPreview, releases);
-if (generatedPreview !== currentPreview) {
+if (normalizeNewlines(generatedPreview) !== normalizeNewlines(currentPreview)) {
   fail("preview/changelog.html is not synced with CHANGELOG.md");
 }
 

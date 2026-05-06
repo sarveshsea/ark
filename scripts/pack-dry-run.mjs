@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const maxSizeBytes = Number.parseInt(process.env.MEMOIRE_PACK_MAX_BYTES || "1250000", 10);
+const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
 const tempRoot = await mkdtemp(join(tmpdir(), "memoire-pack-"));
 
 try {
@@ -30,7 +31,7 @@ try {
     });
   }
 
-  const pack = await run("npm", ["pack", "--dry-run", "--ignore-scripts", "--json"], tempRoot);
+  const pack = await run(npmCommand, ["pack", "--dry-run", "--ignore-scripts", "--json"], tempRoot);
   const payload = JSON.parse(pack.stdout);
   const summary = Array.isArray(payload) ? payload[0] : payload;
   const size = Number(summary?.size ?? 0);
