@@ -9,6 +9,8 @@ jobs:
   build:
     name: ${{ matrix.target }}
     runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
@@ -37,6 +39,7 @@ jobs:
           bun-version: latest
 
       - name: Install deps
+        shell: bash
         run: |
           rm -f package-lock.json
           npm install --ignore-scripts
@@ -78,6 +81,8 @@ jobs:
   build-studio-macos:
     name: studio-${{ matrix.arch }}
     runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
@@ -133,6 +138,8 @@ jobs:
   publish-checksums:
     needs: [build, build-studio-macos]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - name: Download all release assets
