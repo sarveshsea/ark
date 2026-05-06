@@ -123,17 +123,44 @@ const archivePath = join(ROOT, "dist-bin", archiveName);
 await rm(archivePath, { force: true });
 
 console.log(`▸ Packing ${archiveName}`);
-const archiveResult = archive === "zip"
-  ? spawnSync("zip", ["-r", archivePath, `memi-${targetKey}`], {
-      cwd: join(ROOT, "dist-bin"),
+const archiveSource = `memi-${targetKey}`;
+const archiveCwd = join(ROOT, "dist-bin");
+let archiveResult;
+
+if (archive === "zip" && process.platform === "win32") {
+  archiveResult = spawnSync(
+    "pwsh",
+    [
+      "-NoProfile",
+      "-Command",
+      "Compress-Archive -Path $env:MEMOIRE_ARCHIVE_SOURCE -DestinationPath $env:MEMOIRE_ARCHIVE_DESTINATION -Force",
+    ],
+    {
+      cwd: archiveCwd,
       stdio: "inherit",
-    })
-  : spawnSync("tar", ["-czf", archivePath, `memi-${targetKey}`], {
-      cwd: join(ROOT, "dist-bin"),
-      stdio: "inherit",
-    });
+      env: {
+        ...process.env,
+        MEMOIRE_ARCHIVE_SOURCE: archiveSource,
+        MEMOIRE_ARCHIVE_DESTINATION: archivePath,
+      },
+    },
+  );
+} else {
+  archiveResult = archive === "zip"
+    ? spawnSync("zip", ["-r", archivePath, archiveSource], {
+        cwd: archiveCwd,
+        stdio: "inherit",
+      })
+    : spawnSync("tar", ["-czf", archivePath, archiveSource], {
+        cwd: archiveCwd,
+        stdio: "inherit",
+      });
+}
 
 if (archiveResult.status !== 0) {
+  if (archiveResult.error) {
+    console.error(archiveResult.error.message);
+  }
   console.error("archive step failed");
   process.exit(archiveResult.status ?? 1);
 }
