@@ -17,6 +17,7 @@ import {
 import { indexProjectMemory, refreshProjectMemory } from "./project-memory.js";
 import { StudioFigmaController } from "./figma-controller.js";
 import { installMarketplaceNote, listMarketplaceNotes, removeMarketplaceNote } from "./marketplace.js";
+import { openMermaidJamTarget, resolveMermaidJamIntegration, type MermaidJamOpenTarget } from "../integrations/mermaid-jam.js";
 import type {
   StudioConfig,
   StudioEvent,
@@ -312,6 +313,31 @@ export class StudioRuntimeServer {
 
     if (req.method === "GET" && url.pathname === "/api/project-memory") {
       this.sendJSON(res, 200, await indexProjectMemory(this.projectRoot));
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/integrations/mermaid-jam") {
+      this.sendJSON(res, 200, {
+        integration: await resolveMermaidJamIntegration({ projectRoot: this.projectRoot }),
+      });
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/integrations/mermaid-jam/open") {
+      try {
+        const body = await readJSON<{ target?: MermaidJamOpenTarget }>(req);
+        const integration = await resolveMermaidJamIntegration({ projectRoot: this.projectRoot });
+        this.sendJSON(res, 200, {
+          status: "opened",
+          result: await openMermaidJamTarget(integration, body.target ?? "community"),
+          integration,
+        });
+      } catch (error) {
+        const statusCode = typeof (error as { statusCode?: unknown }).statusCode === "number"
+          ? (error as { statusCode: number }).statusCode
+          : 500;
+        this.sendJSON(res, statusCode, { error: error instanceof Error ? error.message : String(error) });
+      }
       return;
     }
 

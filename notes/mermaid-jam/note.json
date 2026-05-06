@@ -1,0 +1,18 @@
+{
+  "name": "mermaid-jam",
+  "version": "1.0.0",
+  "description": "Route Mermaid and markdown diagram source into the Mermaid Jam FigJam plugin for editable native FigJam output",
+  "author": "Memoire",
+  "category": "connect",
+  "tags": ["figjam", "mermaid", "markdown", "diagram", "user-flow"],
+  "skills": [{
+    "file": "mermaid-jam.md",
+    "name": "Mermaid Jam",
+    "activateOn": "figma-canvas-operation",
+    "freedomLevel": "high"
+  }],
+  "dependencies": [],
+  "engines": { "memoire": ">=0.15.0" },
+  "createdAt": "2026-05-06T00:00:00.000Z",
+  "updatedAt": "2026-05-06T00:00:00.000Z"
+}
