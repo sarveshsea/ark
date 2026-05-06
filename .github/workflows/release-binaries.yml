@@ -125,6 +125,23 @@ jobs:
           shasum -a 256 "$DMG" > "$DMG.sha256"
           ls -lh "$DMG" "$DMG.sha256"
 
+      - name: Delete existing Studio DMG assets
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          DMG="$(find apps/studio/src-tauri/target/release/bundle/dmg -maxdepth 1 -name '*.dmg' -print -quit)"
+          arch="${DMG##*_}"
+          arch="${arch%.dmg}"
+          gh release view "${GITHUB_REF_NAME}" --json assets --jq '.assets[].name' | while IFS= read -r asset; do
+            case "$asset" in
+              *"${arch}.dmg"|*"${arch}.dmg.sha256")
+                gh release delete-asset "${GITHUB_REF_NAME}" "$asset" -y || true
+                ;;
+            esac
+          done
+
       - name: Upload Studio DMG to release
         uses: softprops/action-gh-release@v2
         with:

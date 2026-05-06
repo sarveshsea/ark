@@ -7,9 +7,6 @@ on:
         description: 'Expected npm version after publish'
         required: false
         type: string
-  push:
-    tags:
-      - 'v*'
 
 jobs:
   publish:
@@ -37,16 +34,15 @@ jobs:
       - run: npm run lint
       - run: npm test -- --run
       - run: npm run build
-      - name: Publish npm package
-        if: ${{ env.NODE_AUTH_TOKEN != '' }}
-        run: npm publish --access public --provenance
-      - name: Skip npm publish without token
-        if: ${{ env.NODE_AUTH_TOKEN == '' }}
+      - name: Validate npm token
         run: |
-          echo "::warning::NPM_TOKEN is not configured; skipping npm publish."
-          echo "Configure the repository NPM_TOKEN secret or run npm publish from an authenticated machine."
+          if [ -z "${NODE_AUTH_TOKEN:-}" ]; then
+            echo "::error::NPM_TOKEN is not configured for this repository."
+            exit 1
+          fi
+      - name: Publish npm package
+        run: npm publish --access public --provenance
       - name: Verify npm release
-        if: ${{ env.NODE_AUTH_TOKEN != '' }}
         run: node scripts/verify-npm-release.mjs
         env:
           EXPECTED_VERSION: ${{ inputs.expected_version }}
