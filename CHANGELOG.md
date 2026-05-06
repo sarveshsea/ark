@@ -26,7 +26,7 @@ This changelog tracks Mémoire itself: every version, commit, and architectural 
 ### Commits
 | Hash | Message |
 |------|---------|
-| `3d11b9e8` | feat: add native markdown corpus sync |
+| `70c9ced6` | feat: add native markdown corpus sync |
 | `49bbded2` | feat: add native mermaid jam integration |
 
 ## v0.15.0 — 2026-05-06
