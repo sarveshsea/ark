@@ -17,6 +17,12 @@ import {
 import { indexProjectMemory, refreshProjectMemory } from "./project-memory.js";
 import { StudioFigmaController } from "./figma-controller.js";
 import { installMarketplaceNote, listMarketplaceNotes, removeMarketplaceNote } from "./marketplace.js";
+import {
+  analyzeMarkdownForFigJam,
+  getMarkdownCorpusStatus,
+  setupMarkdownCorpus,
+  type MarkdownCorpusRepo,
+} from "../integrations/markdown-corpus.js";
 import { openMermaidJamTarget, resolveMermaidJamIntegration, type MermaidJamOpenTarget } from "../integrations/mermaid-jam.js";
 import type {
   StudioConfig,
@@ -56,6 +62,7 @@ export class StudioRuntimeServer {
   private readonly figma: StudioFigmaController;
   private readonly startedAt = Date.now();
   private readonly activeStreams = new Set<string>();
+  private markdownCorpusAbort: AbortController | null = null;
   private eventBufferSize = 0;
   private readonly maxInMemoryEvents = 400;
 
@@ -331,6 +338,81 @@ export class StudioRuntimeServer {
           status: "opened",
           result: await openMermaidJamTarget(integration, body.target ?? "community"),
           integration,
+        });
+      } catch (error) {
+        const statusCode = typeof (error as { statusCode?: unknown }).statusCode === "number"
+          ? (error as { statusCode: number }).statusCode
+          : 500;
+        this.sendJSON(res, statusCode, { error: error instanceof Error ? error.message : String(error) });
+      }
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/markdown-corpus/status") {
+      this.sendJSON(res, 200, await getMarkdownCorpusStatus(this.projectRoot));
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/markdown-corpus/setup") {
+      try {
+        const body = await readJSON<{ catalog?: MarkdownCorpusRepo[] }>(req);
+        if (this.markdownCorpusAbort) {
+          this.sendJSON(res, 409, { error: "Markdown corpus setup is already running" });
+          return;
+        }
+        const abort = new AbortController();
+        this.markdownCorpusAbort = abort;
+        req.on("aborted", () => {
+          if (!res.writableEnded) abort.abort();
+        });
+        const status = await setupMarkdownCorpus({ projectRoot: this.projectRoot, catalog: body.catalog, signal: abort.signal });
+        this.markdownCorpusAbort = null;
+        this.sendJSON(res, 200, status);
+      } catch (error) {
+        this.markdownCorpusAbort = null;
+        const statusCode = typeof (error as { statusCode?: unknown }).statusCode === "number"
+          ? (error as { statusCode: number }).statusCode
+          : 500;
+        this.sendJSON(res, statusCode, { error: error instanceof Error ? error.message : String(error) });
+      }
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/markdown-corpus/cancel") {
+      this.markdownCorpusAbort?.abort();
+      this.sendJSON(res, 200, { cancelled: Boolean(this.markdownCorpusAbort) });
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/markdown-corpus/analyze") {
+      try {
+        const body = await readJSON<{ sourcePath?: string; source?: string }>(req);
+        this.sendJSON(res, 200, await analyzeMarkdownForFigJam({
+          projectRoot: this.projectRoot,
+          sourcePath: body.sourcePath,
+          source: body.source,
+        }));
+      } catch (error) {
+        const statusCode = typeof (error as { statusCode?: unknown }).statusCode === "number"
+          ? (error as { statusCode: number }).statusCode
+          : 500;
+        this.sendJSON(res, statusCode, { error: error instanceof Error ? error.message : String(error) });
+      }
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/markdown-corpus/sync-to-figjam") {
+      try {
+        const body = await readJSON<{ sourcePath?: string; source?: string }>(req);
+        const analysis = await analyzeMarkdownForFigJam({
+          projectRoot: this.projectRoot,
+          sourcePath: body.sourcePath,
+          source: body.source,
+        });
+        this.sendJSON(res, 200, {
+          status: analysis.status,
+          candidates: analysis.candidates,
+          figjam: await this.figma.syncMarkdownToFigJam(analysis),
         });
       } catch (error) {
         const statusCode = typeof (error as { statusCode?: unknown }).statusCode === "number"

@@ -1,3 +1,4 @@
+pub mod markdown_corpus;
 mod studio;
 
 use serde::Serialize;
@@ -8,7 +9,10 @@ use std::{
     io::{BufRead, BufReader},
     path::PathBuf,
     process::{Command, Stdio},
-    sync::{Arc, Mutex},
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc, Mutex,
+    },
     thread,
     time::Duration,
 };
@@ -17,6 +21,7 @@ use tauri::{AppHandle, Emitter, Manager, State};
 #[derive(Default)]
 struct AppState {
     processes: Mutex<HashMap<String, Arc<Mutex<std::process::Child>>>>,
+    markdown_corpus_cancel: AtomicBool,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -134,6 +139,44 @@ fn save_config(config: Value) -> Result<bool, String> {
     Ok(true)
 }
 
+#[tauri::command]
+fn setup_markdown_corpus(
+    app: AppHandle,
+    state: State<AppState>,
+    catalog: Option<Vec<markdown_corpus::CorpusRepo>>,
+) -> Result<markdown_corpus::CorpusStatus, String> {
+    let repos = catalog.unwrap_or_else(markdown_corpus::default_corpus_catalog);
+    let root = studio::current_dir();
+    state.markdown_corpus_cancel.store(false, Ordering::Relaxed);
+    let _ = app.emit(
+        "markdown-corpus-event",
+        serde_json::json!({ "status": "downloading", "repos": repos.len() }),
+    );
+    let status = markdown_corpus::setup_markdown_corpus_at_with_cancel(
+        &root,
+        &repos,
+        &state.markdown_corpus_cancel,
+    )?;
+    let _ = app.emit("markdown-corpus-event", &status);
+    Ok(status)
+}
+
+#[tauri::command]
+fn cancel_markdown_corpus_setup(state: State<AppState>) -> Result<bool, String> {
+    state.markdown_corpus_cancel.store(true, Ordering::Relaxed);
+    Ok(true)
+}
+
+#[tauri::command]
+fn get_markdown_corpus_status() -> Result<markdown_corpus::CorpusStatus, String> {
+    markdown_corpus::get_markdown_corpus_status_at(&studio::current_dir())
+}
+
+#[tauri::command]
+fn analyze_markdown_for_fig_jam(path: String) -> Result<markdown_corpus::MarkdownAnalysisReport, String> {
+    markdown_corpus::analyze_markdown_file(&PathBuf::from(path))
+}
+
 pub fn run() {
     tauri::Builder::default()
         .manage(AppState::default())
@@ -145,7 +188,11 @@ pub fn run() {
             cancel_session,
             read_workspace,
             open_artifact,
-            save_config
+            save_config,
+            setup_markdown_corpus,
+            cancel_markdown_corpus_setup,
+            get_markdown_corpus_status,
+            analyze_markdown_for_fig_jam
         ])
         .run(tauri::generate_context!())
         .expect("error while running Mémoire Studio");

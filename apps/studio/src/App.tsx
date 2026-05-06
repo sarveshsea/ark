@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   cancelSession,
+  cancelMarkdownCorpusSetup,
   connectFigma,
   disconnectFigma,
+  analyzeMarkdownForFigJam,
   getConfig,
   getFigmaStatus,
+  getMarkdownCorpusStatus,
   getMarketplaceNotes,
   getProjectMemory,
   getStatus,
@@ -15,13 +18,18 @@ import {
   removeMarketplaceNote,
   runFigmaAction,
   saveConfig,
+  setupMarkdownCorpus,
   startSession,
   subscribeSession,
+  syncMarkdownToFigJam,
   type FigmaAction,
   type FigmaActionResult,
   type FigmaStatus,
   type Harness,
   type HarnessId,
+  type MarkdownAnalysisReport,
+  type MarkdownCorpusStatus,
+  type MarkdownFigJamSyncResult,
   type MarketplaceNote,
   type MarketplaceNotesPayload,
   type ProjectMemoryIndex,
@@ -187,6 +195,12 @@ export function App() {
   const [figmaConnecting, setFigmaConnecting] = useState(false);
   const [figmaActionRunning, setFigmaActionRunning] = useState(false);
   const [figmaError, setFigmaError] = useState<string | null>(null);
+  const [markdownCorpusStatus, setMarkdownCorpusStatus] = useState<MarkdownCorpusStatus | null>(null);
+  const [markdownCorpusBusy, setMarkdownCorpusBusy] = useState(false);
+  const [markdownCorpusError, setMarkdownCorpusError] = useState<string | null>(null);
+  const [markdownSourcePath, setMarkdownSourcePath] = useState("");
+  const [markdownAnalysis, setMarkdownAnalysis] = useState<MarkdownAnalysisReport | null>(null);
+  const [markdownSyncResult, setMarkdownSyncResult] = useState<MarkdownFigJamSyncResult | null>(null);
   const [settingsDraft, setSettingsDraft] = useState<StudioConfig | null>(null);
   const [settingsSavedAt, setSettingsSavedAt] = useState<string | null>(null);
   const [collapsedBlockIds, setCollapsedBlockIds] = useState<Set<string>>(new Set());
@@ -260,12 +274,15 @@ export function App() {
         getFigmaStatus().catch(() => null),
         getMarketplaceNotes().catch(() => null),
       ]);
+      const nextMarkdownCorpus = await getMarkdownCorpusStatus().catch(() => null);
       setStatus(nextStatus);
       setHarnesses(nextHarnesses);
       setSettingsDraft(nextConfig);
       setSelectedHarness(nextConfig.defaultHarness);
       setProjectMemory(nextMemory);
       setFigmaStatus(nextFigma);
+      setMarkdownCorpusStatus(nextMarkdownCorpus);
+      setMarkdownSourcePath((current) => current || `${nextStatus.projectRoot}/README.md`);
       if (nextMarketplace) {
         setMarketplaceNotes(nextMarketplace.notes);
         setMarketplaceSummary(nextMarketplace.summary);
@@ -401,6 +418,86 @@ export function App() {
     }
   }
 
+  async function refreshMarkdownCorpus() {
+    try {
+      setMarkdownCorpusStatus(await getMarkdownCorpusStatus());
+      setMarkdownCorpusError(null);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setMarkdownCorpusError(message);
+      setError(message);
+    }
+  }
+
+  async function handleMarkdownCorpusSetup() {
+    setMarkdownCorpusBusy(true);
+    setMarkdownCorpusError(null);
+    try {
+      const next = await setupMarkdownCorpus();
+      setMarkdownCorpusStatus(next);
+      setError(null);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setMarkdownCorpusError(message);
+      setError(message);
+    } finally {
+      setMarkdownCorpusBusy(false);
+    }
+  }
+
+  async function handleMarkdownCancel() {
+    try {
+      await cancelMarkdownCorpusSetup();
+      setMarkdownCorpusBusy(false);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setMarkdownCorpusError(message);
+      setError(message);
+    }
+  }
+
+  async function handleMarkdownAnalyze() {
+    if (!markdownSourcePath.trim()) return;
+    setMarkdownCorpusBusy(true);
+    setMarkdownCorpusError(null);
+    try {
+      setMarkdownAnalysis(await analyzeMarkdownForFigJam({ sourcePath: markdownSourcePath.trim() }));
+      setError(null);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setMarkdownCorpusError(message);
+      setError(message);
+    } finally {
+      setMarkdownCorpusBusy(false);
+    }
+  }
+
+  async function handleMarkdownSync() {
+    if (!markdownSourcePath.trim()) return;
+    setMarkdownCorpusBusy(true);
+    setMarkdownCorpusError(null);
+    try {
+      const result = await syncMarkdownToFigJam({ sourcePath: markdownSourcePath.trim() });
+      setMarkdownSyncResult(result);
+      setMarkdownAnalysis({ status: result.status, candidates: result.candidates, summary: markdownAnalysis?.summary ?? {
+        headings: 0,
+        lists: 0,
+        codeFences: 0,
+        mermaidBlocks: 0,
+        links: 0,
+        tables: 0,
+        frontmatter: false,
+      } });
+      setError(null);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setMarkdownCorpusError(message);
+      setError(message);
+    } finally {
+      setMarkdownCorpusBusy(false);
+    }
+  }
+
   function patchSettings(update: (current: StudioConfig) => StudioConfig) {
     setSettingsDraft((current) => current ? update(current) : current);
   }
@@ -460,6 +557,7 @@ export function App() {
         <TopWidget label="Harness" value={currentHarness?.label ?? selectedHarness} detail={effectiveAction} onClick={() => setActiveMemoryPage("monitor")} />
         <TopWidget label="Auth" value={currentHarness?.authStatus ?? "unknown"} detail={currentHarness?.installed ? "provider" : "missing"} onClick={() => setActiveMemoryPage("monitor")} />
         <TopWidget label="Figma" value={figmaStatus?.connectionState ?? "offline"} detail={`${figmaStatus?.clients.length ?? 0} clients`} onClick={() => setActiveMemoryPage("system")} />
+        <TopWidget label="Corpus" value={markdownCorpusStatus?.status ?? "missing"} detail={`${markdownCorpusStatus?.repos.length ?? 0} repos`} onClick={() => setActiveMemoryPage("system")} />
         <TopWidget label="Memory" value={String(memoryCount)} detail="indexed" onClick={() => setActiveMemoryPage("home")} />
         <TopWidget label="Market" value={String(marketplaceSummary?.total ?? 0)} detail={`${marketplaceSummary?.installed ?? 0} installed`} onClick={() => setActiveMemoryPage("marketplace")} />
       </section>
@@ -663,21 +761,37 @@ export function App() {
         <section className="memory-page" data-memory-page="systems" hidden={activeMemoryPage !== "system"}>
           <section className="memory-layout two-col">
             <MemoryTable title="Systems" items={itemsByKind.system} empty="No dashboard or preview system artifacts found." />
-            <FigmaDriver
-              figmaStatus={figmaStatus}
-              figmaActionResult={figmaActionResult}
-              figmaConnecting={figmaConnecting}
-              figmaActionRunning={figmaActionRunning}
-              figmaError={figmaError}
-              settingsDraft={settingsDraft}
-              onConnect={handleFigmaConnect}
-              onDisconnect={handleFigmaDisconnect}
-              onOpen={handleFigmaOpen}
-              onAction={handleFigmaAction}
-              onPatchSettings={patchSettings}
-              onSaveSettings={saveSettings}
-              settingsSavedAt={settingsSavedAt}
-            />
+            <aside className="system-rail">
+              <FigmaDriver
+                figmaStatus={figmaStatus}
+                figmaActionResult={figmaActionResult}
+                figmaConnecting={figmaConnecting}
+                figmaActionRunning={figmaActionRunning}
+                figmaError={figmaError}
+                settingsDraft={settingsDraft}
+                onConnect={handleFigmaConnect}
+                onDisconnect={handleFigmaDisconnect}
+                onOpen={handleFigmaOpen}
+                onAction={handleFigmaAction}
+                onPatchSettings={patchSettings}
+                onSaveSettings={saveSettings}
+                settingsSavedAt={settingsSavedAt}
+              />
+              <MarkdownCorpusPanel
+                analysis={markdownAnalysis}
+                busy={markdownCorpusBusy}
+                error={markdownCorpusError}
+                sourcePath={markdownSourcePath}
+                status={markdownCorpusStatus}
+                syncResult={markdownSyncResult}
+                onAnalyze={handleMarkdownAnalyze}
+                onCancel={handleMarkdownCancel}
+                onRefresh={refreshMarkdownCorpus}
+                onSetup={handleMarkdownCorpusSetup}
+                onSourcePathChange={setMarkdownSourcePath}
+                onSync={handleMarkdownSync}
+              />
+            </aside>
           </section>
         </section>
 
@@ -894,6 +1008,85 @@ function MarketplaceNotes(props: {
         ))}
       </div>
     </WorkbenchPanel>
+  );
+}
+
+function MarkdownCorpusPanel(props: {
+  analysis: MarkdownAnalysisReport | null;
+  busy: boolean;
+  error: string | null;
+  sourcePath: string;
+  status: MarkdownCorpusStatus | null;
+  syncResult: MarkdownFigJamSyncResult | null;
+  onAnalyze: () => void;
+  onCancel: () => void;
+  onRefresh: () => void;
+  onSetup: () => void;
+  onSourcePathChange: (value: string) => void;
+  onSync: () => void;
+}) {
+  const repos = props.status?.repos ?? [];
+  const files = repos.reduce((sum, repo) => sum + repo.files, 0);
+  const bytes = repos.reduce((sum, repo) => sum + repo.bytes, 0);
+  const skipped = repos.reduce((sum, repo) => sum + repo.skipped, 0);
+  return (
+    <section className="panel markdown-corpus-panel" data-markdown-corpus="native">
+      <div className="panel-head">
+        <div><p className="eyebrow">Markdown Corpus</p><h2>{props.status?.status ?? "not set up"}</h2></div>
+        <span>{repos.length} repos</span>
+      </div>
+      <div className="figma-status-grid markdown-corpus-stats">
+        <span><strong>{files}</strong> files</span>
+        <span><strong>{formatBytes(bytes)}</strong> stored</span>
+        <span><strong>{skipped}</strong> skipped</span>
+      </div>
+      <div className="inline-actions">
+        <button className="primary" type="button" onClick={props.onSetup} disabled={props.busy}>
+          {props.busy ? "Working" : "Setup corpus"}
+        </button>
+        <button type="button" onClick={props.onCancel} disabled={!props.busy}>Cancel</button>
+        <button type="button" onClick={props.onRefresh} disabled={props.busy}>Refresh</button>
+      </div>
+      <div className="markdown-repo-list" aria-label="Markdown corpus repositories">
+        {repos.slice(0, 8).map((repo) => (
+          <article key={repo.repo}>
+            <strong>{repo.repo}</strong>
+            <span>{repo.license} / {repo.files} files / {repo.errors.length ? "error" : repo.commit.slice(0, 7)}</span>
+          </article>
+        ))}
+        {repos.length === 0 ? <p className="empty">No corpus manifest found.</p> : null}
+      </div>
+      <label className="markdown-source-field">
+        <span>Source path</span>
+        <input
+          value={props.sourcePath}
+          placeholder="/path/to/file.md"
+          onChange={(event) => props.onSourcePathChange(event.target.value)}
+        />
+      </label>
+      <div className="inline-actions">
+        <button type="button" onClick={props.onAnalyze} disabled={props.busy || !props.sourcePath.trim()}>Analyze</button>
+        <button className="primary" type="button" onClick={props.onSync} disabled={props.busy || !props.sourcePath.trim()}>Sync to FigJam</button>
+      </div>
+      {props.error ? <p className="inline-error">{props.error}</p> : null}
+      {props.analysis ? (
+        <div className="markdown-candidates">
+          <span>{props.analysis.candidates.length} candidates</span>
+          {props.analysis.candidates.slice(0, 3).map((candidate) => (
+            <article key={`${candidate.sourcePath}-${candidate.kind}-${candidate.title}`}>
+              <strong>{candidate.title}</strong>
+              <span>{candidate.kind} / {Math.round(candidate.confidence * 100)}%</span>
+            </article>
+          ))}
+        </div>
+      ) : null}
+      {props.syncResult ? (
+        <div className="settings-actions">
+          <span>{props.syncResult.figjam.createdNodeCount} FigJam nodes</span>
+          <span>{props.syncResult.figjam.artifactPath ? displaySourceLabel(props.syncResult.figjam.artifactPath) : "no artifact"}</span>
+        </div>
+      ) : null}
+    </section>
   );
 }
 
@@ -1243,6 +1436,12 @@ function formatTime(value: string): string {
 function trimText(value: string, maxLength: number): string {
   if (value.length <= maxLength) return value;
   return `${value.slice(0, Math.max(0, maxLength - 1)).trimEnd()}...`;
+}
+
+function formatBytes(value: number): string {
+  if (value < 1024) return `${value} B`;
+  if (value < 1024 * 1024) return `${Math.round(value / 1024)} KB`;
+  return `${(value / 1024 / 1024).toFixed(1)} MB`;
 }
 
 function formatDataPreview(data: unknown): string {

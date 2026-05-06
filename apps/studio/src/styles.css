@@ -249,6 +249,7 @@ pre {
 .terminal-block header span,
 .command-strip label span,
 .figma-driver label span,
+.markdown-source-field span,
 .settings-panel label span {
   margin: 0;
   font-size: var(--font-size-xs);
@@ -350,7 +351,8 @@ pre {
 .settings-panel,
 .context-list article,
 .memory-table-panel,
-.figma-driver {
+.figma-driver,
+.markdown-corpus-panel {
   border: 1px solid var(--line);
   border-radius: var(--radius-panel);
   background: var(--surface);
@@ -358,7 +360,8 @@ pre {
 
 .overview-card,
 .panel,
-.figma-driver {
+.figma-driver,
+.markdown-corpus-panel {
   padding: 8px;
 }
 
@@ -367,11 +370,18 @@ pre {
   top: 0;
   z-index: 4;
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 6px;
   border-bottom: 1px solid var(--line);
   background: var(--surface-bg);
   padding: 5px 12px;
+}
+
+.system-rail {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
 }
 
 .top-widget {
@@ -548,9 +558,12 @@ pre {
 .system-list,
 .settings-harnesses,
 .figma-clients,
+.markdown-repo-list,
+.markdown-candidates,
 .context-list,
 .settings-panel,
-.figma-driver {
+.figma-driver,
+.markdown-corpus-panel {
   display: grid;
   gap: 8px;
 }
@@ -564,6 +577,8 @@ pre {
 
 .system-list article,
 .context-list article,
+.markdown-repo-list article,
+.markdown-candidates article,
 .settings-harnesses article {
   display: grid;
   gap: 4px;
@@ -576,6 +591,8 @@ pre {
 .system-list strong,
 .context-list strong,
 .settings-harnesses strong,
+.markdown-repo-list strong,
+.markdown-candidates strong,
 .figma-clients strong {
   font-weight: 400;
 }
@@ -756,8 +773,41 @@ pre {
   color: var(--danger);
 }
 
+.markdown-corpus-panel .panel-head h2 {
+  color: var(--ok);
+}
+
+.markdown-corpus-panel[data-markdown-corpus="native"] {
+  min-width: 0;
+}
+
+.markdown-source-field {
+  min-width: 0;
+}
+
+.markdown-source-field input {
+  min-width: 0;
+}
+
+.markdown-repo-list,
+.markdown-candidates {
+  max-height: 220px;
+  overflow: auto;
+}
+
+.markdown-candidates > span,
+.inline-error {
+  color: var(--ink-muted);
+}
+
+.inline-error {
+  margin: 0;
+  color: var(--danger);
+}
+
 .command-strip label,
 .figma-driver label,
+.markdown-source-field,
 .settings-panel label {
   display: grid;
   gap: 4px;
@@ -766,6 +816,7 @@ pre {
 .command-strip select,
 .command-dock textarea,
 .figma-driver input,
+.markdown-source-field input,
 .settings-panel select {
   width: 100%;
 }
