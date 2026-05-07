@@ -326,6 +326,7 @@ const STUDIO_ACTION_REGISTRY: StudioActionRegistryItem[] = [
 export function App() {
   const scrollRegionRef = useRef<HTMLElement | null>(null);
   const bottomAnchorRef = useRef<HTMLDivElement | null>(null);
+  const latestScrollRestoringRef = useRef(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const traceRefreshTimerRef = useRef<number | null>(null);
   const pendingTraceSessionIdRef = useRef<string | null>(null);
@@ -1480,11 +1481,13 @@ export function App() {
   function handleConversationScroll() {
     const element = scrollRegionRef.current;
     if (!element) return;
+    if (latestScrollRestoringRef.current) return;
     const pinned = isNearScrollBottom(element);
     setUserPinnedToBottom((current) => current === pinned ? current : pinned);
   }
 
   function scrollConversationToLatest(behavior: ScrollBehavior = "auto") {
+    latestScrollRestoringRef.current = true;
     setUserPinnedToBottom(true);
     const element = scrollRegionRef.current;
     if (element) {
@@ -1493,6 +1496,12 @@ export function App() {
         element.scrollTop = element.scrollHeight;
         setUserPinnedToBottom(true);
       });
+      window.setTimeout(() => {
+        latestScrollRestoringRef.current = false;
+        setUserPinnedToBottom(isNearScrollBottom(element));
+      }, 180);
+    } else {
+      latestScrollRestoringRef.current = false;
     }
     bottomAnchorRef.current?.scrollIntoView({ block: "end", behavior });
   }
