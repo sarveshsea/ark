@@ -13,18 +13,29 @@ import type {
   StudioFigmaStatus,
 } from "./types.js";
 
+type StudioFigmaBridgeStatus = Omit<StudioFigmaStatus, "bridgeStatus" | "pluginStatus"> &
+  Partial<Pick<StudioFigmaStatus, "bridgeStatus" | "pluginStatus">>;
+
 export interface StudioFigmaBridgeLike {
   isConnected: boolean;
   connect(preferredPort?: number): Promise<number>;
   disconnect(): Promise<void>;
-  getStatus(): StudioFigmaStatus;
+  getStatus(): StudioFigmaBridgeStatus;
   getSelection(): Promise<unknown>;
   extractDesignSystem(): Promise<{ tokens?: unknown[]; components?: unknown[]; styles?: unknown[] }>;
   extractStickies(): Promise<unknown>;
   getPageTree(depth?: number): Promise<unknown>;
   getWidgetSnapshot(timeoutMs?: number): Promise<unknown>;
   captureScreenshot(nodeId?: string, format?: "PNG" | "SVG", scale?: number): Promise<unknown>;
-  pushTokens(tokens: NonNullable<StudioFigmaActionRequest["tokens"]>): Promise<unknown>;
+  createNode(params: Record<string, unknown>): Promise<unknown>;
+  updateNode(nodeId: string, properties: Record<string, unknown>, expectedVersion?: string): Promise<unknown>;
+  deleteNode(nodeId: string): Promise<unknown>;
+  setSelection(nodeIds: string[]): Promise<unknown>;
+  navigateTo(nodeId: string): Promise<unknown>;
+  pushTokens(
+    tokens: NonNullable<StudioFigmaActionRequest["tokens"]>,
+    options?: { createMissing?: boolean; collectionName?: string },
+  ): Promise<unknown>;
   execute?(code: string, timeout?: number): Promise<unknown>;
 }
 
@@ -52,6 +63,11 @@ const ALLOWED_FIGMA_ACTIONS = new Set<StudioFigmaAction>([
   "pageTree",
   "widgetSnapshot",
   "captureScreenshot",
+  "createNode",
+  "updateNode",
+  "deleteNode",
+  "setSelection",
+  "navigateTo",
   "pushTokens",
   "fullSync",
 ]);
@@ -73,9 +89,14 @@ export class StudioFigmaController {
 
   async connect(input: { preferredPort?: number | null } = {}): Promise<StudioFigmaStatus> {
     const bridge = this.ensureBridge();
+    const currentStatus = normalizeStatus(bridge.getStatus());
+    if (currentStatus.running) {
+      return currentStatus;
+    }
+
     const port = await bridge.connect(input.preferredPort ?? undefined);
     this.emit("figma_bridge_started", `Figma bridge started on ${port}`, { port });
-    const status = bridge.getStatus();
+    const status = normalizeStatus(bridge.getStatus());
     for (const client of status.clients) {
       this.emit("figma_plugin_connected", `Figma plugin connected: ${client.file || client.id}`, client);
     }
@@ -90,7 +111,7 @@ export class StudioFigmaController {
 
   async status(): Promise<StudioFigmaStatus> {
     if (!this.bridge) return disconnectedStatus();
-    return this.bridge.getStatus();
+    return normalizeStatus(this.bridge.getStatus());
   }
 
   async openFigma(input: StudioFigmaOpenRequest = {}): Promise<StudioFigmaOpenResult> {
@@ -132,6 +153,92 @@ export class StudioFigmaController {
     }
   }
 
+  private async dispatchAction(bridge: StudioFigmaBridgeLike, request: StudioFigmaActionRequest): Promise<unknown> {
+    switch (request.action) {
+      case "inspectSelection":
+        return bridge.getSelection();
+      case "pullTokens": {
+        const system = await bridge.extractDesignSystem();
+        return { tokens: system.tokens ?? [], summary: designSystemSummary(system) };
+      }
+      case "pullComponents": {
+        const system = await bridge.extractDesignSystem();
+        return { components: system.components ?? [], summary: designSystemSummary(system) };
+      }
+      case "pullStyles": {
+        const system = await bridge.extractDesignSystem();
+        return { styles: system.styles ?? [], summary: designSystemSummary(system) };
+      }
+      case "pullStickies":
+        return bridge.extractStickies();
+      case "pageTree":
+        return bridge.getPageTree(2);
+      case "widgetSnapshot":
+        return bridge.getWidgetSnapshot(8000);
+      case "captureScreenshot":
+        return bridge.captureScreenshot(request.nodeId, request.format ?? "PNG", request.scale ?? 2);
+      case "createNode":
+        return bridge.createNode({
+          type: request.type,
+          name: request.name,
+          parentId: request.parentId,
+          x: request.x,
+          y: request.y,
+          width: request.width,
+          height: request.height,
+          text: request.text,
+          fills: request.fills,
+        });
+      case "updateNode":
+        return bridge.updateNode(request.nodeId ?? "", request.properties ?? {}, request.expectedVersion);
+      case "deleteNode":
+        return bridge.deleteNode(request.nodeId ?? "");
+      case "setSelection":
+        return bridge.setSelection(request.nodeIds ?? []);
+      case "navigateTo":
+        return bridge.navigateTo(request.nodeId ?? "");
+      case "pushTokens":
+        return bridge.pushTokens(request.tokens ?? [], {
+          createMissing: request.createMissing,
+          collectionName: request.collectionName,
+        });
+      case "fullSync": {
+        const [system, stickies, widget] = await Promise.all([
+          bridge.extractDesignSystem(),
+          bridge.extractStickies(),
+          bridge.getWidgetSnapshot(8000),
+        ]);
+        return {
+          ...system,
+          stickies,
+          widget,
+          summary: designSystemSummary(system),
+        };
+      }
+    }
+  }
+
+  private ensureBridge(): StudioFigmaBridgeLike {
+    if (!this.bridge) this.bridge = this.bridgeFactory();
+    return this.bridge;
+  }
+
+  private ensureConnectedBridge(): StudioFigmaBridgeLike {
+    const bridge = this.ensureBridge();
+    if (!bridge.isConnected) {
+      throw Object.assign(new Error("Figma bridge is not connected"), { statusCode: 409 });
+    }
+    return bridge;
+  }
+
+  private async persistArtifact(action: StudioFigmaAction | "syncMarkdownToFigJam", result: unknown): Promise<string | null> {
+    const dir = join(this.projectRoot, ".memoire", "project-memory", "figma");
+    await mkdir(dir, { recursive: true });
+    const file = join(dir, `${new Date().toISOString().replace(/[:.]/g, "-")}-${action}.json`);
+    await writeFile(file, `${JSON.stringify({ action, capturedAt: new Date().toISOString(), result }, null, 2)}\n`, "utf-8");
+    return file;
+  }
+
   async syncMarkdownToFigJam(report: MarkdownAnalysisReport): Promise<{
     bridgeState: "connected";
     createdNodeCount: number;
@@ -170,69 +277,6 @@ export class StudioFigmaController {
       });
       throw error;
     }
-  }
-
-  private async dispatchAction(bridge: StudioFigmaBridgeLike, request: StudioFigmaActionRequest): Promise<unknown> {
-    switch (request.action) {
-      case "inspectSelection":
-        return bridge.getSelection();
-      case "pullTokens": {
-        const system = await bridge.extractDesignSystem();
-        return { tokens: system.tokens ?? [], summary: designSystemSummary(system) };
-      }
-      case "pullComponents": {
-        const system = await bridge.extractDesignSystem();
-        return { components: system.components ?? [], summary: designSystemSummary(system) };
-      }
-      case "pullStyles": {
-        const system = await bridge.extractDesignSystem();
-        return { styles: system.styles ?? [], summary: designSystemSummary(system) };
-      }
-      case "pullStickies":
-        return bridge.extractStickies();
-      case "pageTree":
-        return bridge.getPageTree(2);
-      case "widgetSnapshot":
-        return bridge.getWidgetSnapshot(8000);
-      case "captureScreenshot":
-        return bridge.captureScreenshot(request.nodeId, request.format ?? "PNG", request.scale ?? 2);
-      case "pushTokens":
-        return bridge.pushTokens(request.tokens ?? []);
-      case "fullSync": {
-        const [system, stickies, widget] = await Promise.all([
-          bridge.extractDesignSystem(),
-          bridge.extractStickies(),
-          bridge.getWidgetSnapshot(8000),
-        ]);
-        return {
-          ...system,
-          stickies,
-          widget,
-          summary: designSystemSummary(system),
-        };
-      }
-    }
-  }
-
-  private ensureBridge(): StudioFigmaBridgeLike {
-    if (!this.bridge) this.bridge = this.bridgeFactory();
-    return this.bridge;
-  }
-
-  private ensureConnectedBridge(): StudioFigmaBridgeLike {
-    const bridge = this.ensureBridge();
-    if (!bridge.isConnected) {
-      throw Object.assign(new Error("Figma bridge is not connected"), { statusCode: 409 });
-    }
-    return bridge;
-  }
-
-  private async persistArtifact(action: StudioFigmaAction | "syncMarkdownToFigJam", result: unknown): Promise<string | null> {
-    const dir = join(this.projectRoot, ".memoire", "project-memory", "figma");
-    await mkdir(dir, { recursive: true });
-    const file = join(dir, `${new Date().toISOString().replace(/[:.]/g, "-")}-${action}.json`);
-    await writeFile(file, `${JSON.stringify({ action, capturedAt: new Date().toISOString(), result }, null, 2)}\n`, "utf-8");
-    return file;
   }
 
   private emit(type: StudioEventType, message: string, data?: unknown): void {
@@ -308,11 +352,21 @@ function disconnectedStatus(): StudioFigmaStatus {
   return {
     running: false,
     port: null,
+    bridgeStatus: "stopped",
+    pluginStatus: "disconnected",
     clients: [],
     connectionState: "disconnected",
     reconnectAttempts: 0,
     lastConnectedAt: null,
     lastDisconnectedAt: new Date().toISOString(),
+  };
+}
+
+function normalizeStatus(status: StudioFigmaBridgeStatus): StudioFigmaStatus {
+  return {
+    ...status,
+    bridgeStatus: status.bridgeStatus ?? (status.running ? "running" : "stopped"),
+    pluginStatus: status.pluginStatus ?? (status.clients.length > 0 ? "connected" : "disconnected"),
   };
 }
 
