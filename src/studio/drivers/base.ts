@@ -45,6 +45,7 @@ import {
   type HarnessSnapshot,
   type SnapshotStore,
 } from "../snapshots/snapshot-store.js";
+import type { EventJournal } from "../journal/event-journal.js";
 
 export interface HarnessDriverConfig {
   readonly harnessId: HarnessId;
@@ -59,6 +60,13 @@ export interface HarnessDriverConfig {
    * session. When absent, the driver behaves exactly as before.
    */
   readonly snapshotStore?: SnapshotStore;
+  /**
+   * Optional event journal. When provided, every emitted event is appended
+   * to a per-session JSONL log so a UI client can replay the session from
+   * a cursor (offline playback, audit, post-hoc rendering). When absent,
+   * the driver behaves exactly as before.
+   */
+  readonly eventJournal?: EventJournal;
 }
 
 export interface HarnessTurnRequest {
@@ -146,6 +154,31 @@ export abstract class BaseHarnessDriver implements HarnessDriver {
       }
     }
     this.maybeUpdateSnapshot(event);
+    this.maybeAppendJournal(event);
+  }
+
+  private journalWriteInflight: Promise<void> | null = null;
+
+  private maybeAppendJournal(event: ProviderRuntimeEvent): void {
+    const journal = this.config.eventJournal;
+    if (!journal) return;
+    const previous = this.journalWriteInflight ?? Promise.resolve();
+    this.journalWriteInflight = previous
+      .then(() => journal.append(this.config.sessionId, event))
+      .catch((error) => {
+        // Best-effort write; surface as a diagnostic, never throw.
+        try {
+          for (const sub of this.subscribers) {
+            sub({
+              ...this.envelope(),
+              type: "diagnostic.warn",
+              message: `journal append failed: ${error instanceof Error ? error.message : String(error)}`,
+            });
+          }
+        } catch {
+          // ignore
+        }
+      });
   }
 
   // Tracked counters for snapshot persistence. Updated by maybeUpdateSnapshot.
