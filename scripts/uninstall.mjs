@@ -4,7 +4,7 @@
  * Mémoire uninstall — removes all Mémoire artifacts from the user's system.
  *
  * Usage:
- *   npx @sarveshsea/memoire uninstall
+ *   npx @memi-design/cli uninstall
  *   — or —
  *   node scripts/uninstall.mjs
  *
@@ -52,5 +52,5 @@ if (removed > 0) {
 }
 console.log();
 console.log("  To fully uninstall the package:");
-console.log("    npm uninstall -g @sarveshsea/memoire");
+console.log("    npm uninstall -g @memi-design/cli");
 console.log();

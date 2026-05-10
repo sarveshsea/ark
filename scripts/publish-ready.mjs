@@ -16,7 +16,7 @@ const notes = [];
 const packageJson = await readJson("package.json");
 const serverJson = await readJson("server.json");
 
-check(packageJson.name === "@sarveshsea/memoire", `package name is ${packageJson.name}`);
+check(packageJson.name === "@memi-design/cli", `package name is ${packageJson.name}`);
 check(packageJson.version === serverJson.version, `server.json version ${serverJson.version} does not match package.json ${packageJson.version}`);
 check(packageJson.mcpName === "io.github.sarveshsea/memoire", `package.json mcpName is ${packageJson.mcpName}`);
 check(serverJson.name === packageJson.mcpName, `server.json name ${serverJson.name} does not match package.json mcpName ${packageJson.mcpName}`);
@@ -55,11 +55,11 @@ if (!skipAuth) {
     check(false, [
       "npm is not logged in as the package owner.",
       "Run `npm logout --registry=https://registry.npmjs.org/` then `npm login --auth-type=web --registry=https://registry.npmjs.org/`.",
-      "If `npm publish` returns E404 on PUT for @sarveshsea/memoire, you are logged into the wrong npm account or using an invalid token for the @sarveshsea scope.",
+      "If `npm publish` returns E404 on PUT for @memi-design/cli, you are logged into the wrong npm account or using an invalid token for the @sarveshsea scope.",
     ].join(" "));
   } else {
     const user = whoami.stdout.trim();
-    check(user === expectedNpmUser, `npm user is ${user}, expected ${expectedNpmUser}; publishing as another account can produce E404 on PUT for @sarveshsea/memoire.`);
+    check(user === expectedNpmUser, `npm user is ${user}, expected ${expectedNpmUser}; publishing as another account can produce E404 on PUT for @memi-design/cli.`);
     notes.push(`npm user: ${user}`);
   }
 }
@@ -110,7 +110,7 @@ console.log(`Memoire ${packageJson.version} is ready to publish.`);
 for (const note of notes) console.log(`- ${note}`);
 console.log("\nNext:");
 console.log("  npm publish --access public --auth-type=web");
-console.log("  npm view @sarveshsea/memoire version dist-tags.latest mcpName --json");
+console.log("  npm view @memi-design/cli version dist-tags.latest mcpName --json");
 console.log("  mcp-publisher publish server.json");
 
 async function readJson(path) {

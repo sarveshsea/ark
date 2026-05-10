@@ -95,7 +95,7 @@ export function registerDesignDocCommand(program: Command, engine: MemoireEngine
 
         // Append contrast section and attribution to DESIGN.md
         content += buildContrastSection(tokens.contrastPairs, !!opts.wcag);
-        content += `\n---\n\n*Design system extracted with [Memoire](https://memoire.cv) · \`npx @sarveshsea/memoire extract ${url}\`*\n`;
+        content += `\n---\n\n*Design system extracted with [Memoire](https://memoire.cv) · \`npx @memi-design/cli extract ${url}\`*\n`;
 
         // 4. Write DESIGN.md
         const outputPath = isAbsolute(opts.output)

@@ -21,7 +21,7 @@
   "author": "Sarvesh Chidambaram",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sarveshsea/m-moire.git",
+    "url": "git+https://github.com/sarveshsea/memi.git",
     "directory": "packages/memi-studio-types"
   },
   "publishConfig": {

@@ -8,7 +8,7 @@ Use this every Friday during the `0.14.4` trust and distribution window. Record 
 - Monthly npm downloads: `1532` for Mar 25-Apr 23, 2026
 - npm latest before this roadmap: `0.12.3`
 - Repo target version: `0.14.4`
-- Primary CTA: `https://www.npmjs.com/package/@sarveshsea/memoire`
+- Primary CTA: `https://www.npmjs.com/package/@memi-design/cli`
 - Search phrase: `Design CI for shadcn/Tailwind apps`
 
 ## Targets
@@ -38,8 +38,8 @@ npm run growth:status
 - npm latest: `https://registry.npmjs.org/%40sarveshsea%2Fmemoire`
 - npm weekly downloads: `https://api.npmjs.org/downloads/point/last-week/%40sarveshsea%2Fmemoire`
 - npm monthly downloads: `https://api.npmjs.org/downloads/point/last-month/%40sarveshsea%2Fmemoire`
-- GitHub metadata: `https://api.github.com/repos/sarveshsea/m-moire`
-- npm package page: `https://www.npmjs.com/package/@sarveshsea/memoire`
+- GitHub metadata: `https://api.github.com/repos/sarveshsea/memi`
+- npm package page: `https://www.npmjs.com/package/@memi-design/cli`
 - Components page: `https://www.memoire.cv/components`
 
 ## Weekly Review Questions

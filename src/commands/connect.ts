@@ -385,7 +385,7 @@ export function registerConnectCommand(program: Command, engine: MemoireEngine) 
         console.log();
 
         if (plugin.source === "local" && plugin.symlinked) {
-          console.log(ui.warn("manifest.json is a symlink — Figma may reject it. Fix with: npm install -g @sarveshsea/memoire"));
+          console.log(ui.warn("manifest.json is a symlink — Figma may reject it. Fix with: npm install -g @memi-design/cli"));
           console.log();
         }
 

@@ -4,7 +4,7 @@ description: Use when an OpenClaw workspace task involves UI design, Figma, desi
 version: 1.1.0
 author: Sarvesh Chidambaram
 license: MIT
-metadata: {"openclaw":{"homepage":"https://github.com/sarveshsea/m-moire","requires":{"bins":["memi"]},"install":[{"id":"npm","kind":"node","package":"@sarveshsea/memoire","bins":["memi"],"label":"Install Memoire CLI with npm"}]}}
+metadata: {"openclaw":{"homepage":"https://github.com/sarveshsea/memi","requires":{"bins":["memi"]},"install":[{"id":"npm","kind":"node","package":"@memi-design/cli","bins":["memi"],"label":"Install Memoire CLI with npm"}]}}
 ---
 
 # Mémoire Design Tooling
@@ -19,7 +19,7 @@ Memoire gives OpenClaw a local design intelligence layer: warmed project memory,
 
 ## Setup
 ```bash
-npm i -g @sarveshsea/memoire
+npm i -g @memi-design/cli
 memi suite init --project .
 memi daemon start --project . --port auto
 memi daemon status --json

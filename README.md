@@ -42,7 +42,7 @@ memi shadcn export --out public/r   # publish a shadcn-native registry
 `0.16.3` ships native agent kits and the first native-runtime trust patch inside the npm package. Install Memoire once, initialize the workspace suite manifest, warm the shared daemon, then give Hermes agents, OpenClaw bots, Claude Code, Cursor, Codex, and OpenCode the same design-system memory, Figma bridge context, Atomic Design rules, shadcn/ui codegen, Tailwind diagnostics, and research-backed UI audit flow.
 
 ```bash
-npm i -g @sarveshsea/memoire
+npm i -g @memi-design/cli
 
 memi suite init --project .
 memi daemon start --project . --port auto
@@ -79,13 +79,13 @@ Hermes and OpenClaw receive `memoire-design-tooling` `SKILL.md` packages. Claude
 Memoire also ships as a Git-backed Codex marketplace so users can install it from `/plugins` without waiting for the official Codex Plugin Directory:
 
 ```bash
-codex plugin marketplace add sarveshsea/m-moire --ref main --sparse .agents/plugins --sparse plugins/memoire
+codex plugin marketplace add sarveshsea/memi --ref main --sparse .agents/plugins --sparse plugins/memoire
 ```
 
 Then open `/plugins` in Codex and install Memoire from the marketplace list. The same plugin is available through npm for users who already have `memi`:
 
 ```bash
-npm i -g @sarveshsea/memoire
+npm i -g @memi-design/cli
 memi agent install codex-plugin
 ```
 
@@ -201,7 +201,7 @@ After diagnosis, the registry loop is simple: publish the improved design system
 ### Existing app/CSS -> tokens -> shadcn registry
 
 ```bash
-npm i -g @sarveshsea/memoire
+npm i -g @memi-design/cli
 
 memi tokens --from ./src --report
 memi shadcn doctor
@@ -228,20 +228,20 @@ memi registry install Button --from @you/ds
 ### Figma -> npm -> shadcn app
 
 ```bash
-npm i -g @sarveshsea/memoire
+npm i -g @memi-design/cli
 
 # Publish your Figma file to npm
-npx @sarveshsea/memoire publish --name @you/ds --figma https://figma.com/design/xxx --push
+npx @memi-design/cli publish --name @you/ds --figma https://figma.com/design/xxx --push
 
 # From any project, drop working code in
-npx @sarveshsea/memoire add Button --from @you/ds
+npx @memi-design/cli add Button --from @you/ds
 # → src/components/memoire/Button.tsx (real working code, not a spec)
 ```
 
 ### tweakcn -> npm -> shadcn app
 
 ```bash
-npm i -g @sarveshsea/memoire
+npm i -g @memi-design/cli
 
 memi theme import ./tweakcn-export.css --name "Acme Theme"
 memi theme publish "Acme Theme" --package @you/theme
@@ -253,9 +253,9 @@ A registry bundles tokens (W3C DTCG JSON + Tailwind v4 `@theme` CSS), component 
 ## Featured registries
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/sarveshsea/m-moire/main/assets/showcases/starter-saas.svg" alt="Starter SaaS registry" width="240" />
-  <img src="https://raw.githubusercontent.com/sarveshsea/m-moire/main/assets/showcases/docs-blog.svg" alt="Docs Blog registry" width="240" />
-  <img src="https://raw.githubusercontent.com/sarveshsea/m-moire/main/assets/showcases/dashboard.svg" alt="Dashboard registry" width="240" />
+  <img src="https://raw.githubusercontent.com/sarveshsea/memi/main/assets/showcases/starter-saas.svg" alt="Starter SaaS registry" width="240" />
+  <img src="https://raw.githubusercontent.com/sarveshsea/memi/main/assets/showcases/docs-blog.svg" alt="Docs Blog registry" width="240" />
+  <img src="https://raw.githubusercontent.com/sarveshsea/memi/main/assets/showcases/dashboard.svg" alt="Dashboard registry" width="240" />
 </p>
 
 - `@memoire-examples/starter-saas` — neutral SaaS starter. Install with `memi add Button --from @memoire-examples/starter-saas`. Source: [`examples/presets/starter-saas`](./examples/presets/starter-saas)
@@ -286,11 +286,11 @@ memi theme publish "Acme Theme" --package @you/theme
 Theme import handles both Tailwind v3 (`:root { --primary: ... }`) and v4 (`@theme { --color-primary: ... }`) exports, including `:root` + `.dark` multi-mode themes. If you want the one-shot path, `memi publish --theme <path-or-url>` still works.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/sarveshsea/m-moire/main/assets/demo.gif" alt="Memoire terminal publish and install flow" width="720" />
+  <img src="https://raw.githubusercontent.com/sarveshsea/memi/main/assets/demo.gif" alt="Memoire terminal publish and install flow" width="720" />
 </p>
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/sarveshsea/m-moire/main/assets/theme-workflow-demo.svg" alt="Memoire tweakcn theme workflow" width="720" />
+  <img src="https://raw.githubusercontent.com/sarveshsea/memi/main/assets/theme-workflow-demo.svg" alt="Memoire tweakcn theme workflow" width="720" />
 </p>
 
 Demo scripts for recording and reuse live in [`docs/DEMOS.md`](./docs/DEMOS.md).
@@ -347,7 +347,7 @@ See [`NOTICE`](./NOTICE) for source links and attribution details.
 | Generated registries | Installable components for React / Vue / Svelte |
 
 ```bash
-npm i -g @sarveshsea/memoire
+npm i -g @memi-design/cli
 
 memi diagnose                         # audit the current app from code
 memi diagnose http://localhost:3000   # audit a running route or public URL
@@ -383,7 +383,7 @@ docker run --rm -it -v "$PWD:/work" -w /work ghcr.io/sarveshsea/memoire --help
 memi upgrade
 ```
 
-**Manual download** if `curl`, `brew`, and `docker` are all blocked — grab the archive from [GitHub Releases](https://github.com/sarveshsea/m-moire/releases/latest):
+**Manual download** if `curl`, `brew`, and `docker` are all blocked — grab the archive from [GitHub Releases](https://github.com/sarveshsea/memi/releases/latest):
 
 | Platform                | Archive                          |
 |-------------------------|----------------------------------|
@@ -442,7 +442,7 @@ npm logout --registry=https://registry.npmjs.org/
 npm login --auth-type=web --registry=https://registry.npmjs.org/
 npm whoami --registry=https://registry.npmjs.org/   # must print sarveshsea
 npm publish --access public --auth-type=web
-npm view @sarveshsea/memoire version dist-tags.latest mcpName --json
+npm view @memi-design/cli version dist-tags.latest mcpName --json
 mcp-publisher login github
 mcp-publisher publish server.json
 npm run check:public-release

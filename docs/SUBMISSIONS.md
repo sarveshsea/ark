@@ -11,7 +11,7 @@ Memoire is an MCP server and CLI for shadcn-native Design CI: diagnose UI debt, 
 ## Primary Install Path
 
 ```bash
-npm i -g @sarveshsea/memoire
+npm i -g @memi-design/cli
 memi diagnose
 memi shadcn export --out public/r
 memi mcp config --install
@@ -53,7 +53,7 @@ memi mcp config --install
 Category: `Agent Skills > General`
 
 ```markdown
-- [Memoire](https://github.com/sarveshsea/m-moire) by [sarveshsea](https://github.com/sarveshsea) - MCP server and CLI for shadcn-native Design CI. Diagnose UI debt, extract Tailwind tokens, export shadcn registries, plan safe UI fixes, and connect Claude Code with `memi mcp config --install`.
+- [Memoire](https://github.com/sarveshsea/memi) by [sarveshsea](https://github.com/sarveshsea) - MCP server and CLI for shadcn-native Design CI. Diagnose UI debt, extract Tailwind tokens, export shadcn registries, plan safe UI fixes, and connect Claude Code with `memi mcp config --install`.
 ```
 
 ### awesome-mcp-servers
@@ -61,7 +61,7 @@ Category: `Agent Skills > General`
 Category: `Developer Tools > Design`
 
 ```markdown
-- [Memoire](https://github.com/sarveshsea/m-moire) 📇 🏠 - MCP server and CLI for shadcn-native Design CI. Audits Tailwind/shadcn apps, extracts tokens, exports shadcn registries, plans safe UI fixes, and gives Claude Code/Cursor/Codex design-system context through MCP.
+- [Memoire](https://github.com/sarveshsea/memi) 📇 🏠 - MCP server and CLI for shadcn-native Design CI. Audits Tailwind/shadcn apps, extracts tokens, exports shadcn registries, plans safe UI fixes, and gives Claude Code/Cursor/Codex design-system context through MCP.
 ```
 
 ### MCP directory one-liner
@@ -91,7 +91,7 @@ I built Memoire, an MCP server and CLI for shadcn-native Design CI.
 
 It starts from the app you already have:
 
-  npm i -g @sarveshsea/memoire
+  npm i -g @memi-design/cli
   memi diagnose
   memi shadcn export --out public/r
   memi mcp config --install
@@ -102,7 +102,7 @@ The wedge is code-first design systems. No Figma required. If your team has a me
 
 MIT licensed.
 
-https://github.com/sarveshsea/m-moire
+https://github.com/sarveshsea/memi
 ```
 
 ## X/Twitter Thread
@@ -110,7 +110,7 @@ https://github.com/sarveshsea/m-moire
 ```text
 i built an MCP server for shadcn-native Design CI
 
-npm i -g @sarveshsea/memoire
+npm i -g @memi-design/cli
 memi diagnose
 memi shadcn export --out public/r
 memi mcp config --install
@@ -141,15 +141,15 @@ the core loop:
 
 ```text
 repo:
-https://github.com/sarveshsea/m-moire
+https://github.com/sarveshsea/memi
 
 npm:
-https://www.npmjs.com/package/@sarveshsea/memoire
+https://www.npmjs.com/package/@memi-design/cli
 ```
 
 ## Submission Checklist
 
-- [x] Publish npm 0.14.1 and verify `npm view @sarveshsea/memoire version`
+- [x] Publish npm 0.14.1 and verify `npm view @memi-design/cli version`
 - [x] Publish npm 0.14.3 and verify `mcpName`
 - [ ] Publish 0.14.4 trust patch
 - [x] Update GitHub description and topics

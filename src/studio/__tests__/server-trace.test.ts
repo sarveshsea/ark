@@ -79,13 +79,13 @@ describe("studio backend trace and persisted sessions", () => {
       store.appendEvent(tracedSession, makeEvent(tracedSession.id, "reference_trace", "Mémoire package and source references loaded", {
         references: [
           {
-            id: "package:@sarveshsea/memoire",
+            id: "package:@memi-design/cli",
             kind: "package",
-            label: "@sarveshsea/memoire@0.17.0",
+            label: "@memi-design/cli@0.17.0",
             summary: "Runtime package",
-            packageName: "@sarveshsea/memoire",
+            packageName: "@memi-design/cli",
             packageVersion: "0.17.0",
-            url: "https://www.npmjs.com/package/@sarveshsea/memoire",
+            url: "https://www.npmjs.com/package/@memi-design/cli",
             eventIds: [],
           },
         ],
@@ -113,7 +113,7 @@ describe("studio backend trace and persisted sessions", () => {
       expect(traced.trace.references).toEqual(expect.arrayContaining([
         expect.objectContaining({
           kind: "package",
-          packageName: "@sarveshsea/memoire",
+          packageName: "@memi-design/cli",
           packageVersion: "0.17.0",
         }),
         expect.objectContaining({
@@ -147,13 +147,13 @@ describe("studio backend trace and persisted sessions", () => {
       store.appendEvent(noisySession, makeEvent(noisySession.id, "reference_trace", "Mémoire package and source references loaded", {
         references: [
           {
-            id: "package:@sarveshsea/memoire",
+            id: "package:@memi-design/cli",
             kind: "package",
-            label: "@sarveshsea/memoire@0.17.0",
+            label: "@memi-design/cli@0.17.0",
             summary: "Runtime package",
-            packageName: "@sarveshsea/memoire",
+            packageName: "@memi-design/cli",
             packageVersion: "0.17.0",
-            url: "https://www.npmjs.com/package/@sarveshsea/memoire",
+            url: "https://www.npmjs.com/package/@memi-design/cli",
             eventIds: [],
           },
         ],
@@ -177,7 +177,7 @@ describe("studio backend trace and persisted sessions", () => {
       expect(traced.trace.references).toEqual(expect.arrayContaining([
         expect.objectContaining({
           kind: "package",
-          packageName: "@sarveshsea/memoire",
+          packageName: "@memi-design/cli",
         }),
       ]));
       expect(traced.trace.outputs.length).toBeGreaterThan(400);

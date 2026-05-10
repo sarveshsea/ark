@@ -187,7 +187,7 @@ function setupTool(input: {
 }
 
 function installCommandForHarness(id: StudioHarnessId, command: string): string {
-  if (id === "memoire") return "npm i -g @sarveshsea/memoire";
+  if (id === "memoire") return "npm i -g @memi-design/cli";
   if (id === "claude-code") return "npm i -g @anthropic-ai/claude-code";
   if (id === "codex") return "npm i -g @openai/codex";
   if (id === "ollama") return "brew install ollama";

@@ -51,7 +51,7 @@ The socket file lives in a per-call temp dir (`/tmp/memi-execcode-XXX/tools.sock
 From the host side:
 
 ```ts
-import { dispatchExecuteCode, makeFunctionRunner } from "@sarveshsea/memoire/studio/exec/builtin-tool.js";
+import { dispatchExecuteCode, makeFunctionRunner } from "@memi-design/cli/studio/exec/builtin-tool.js";
 
 const result = await dispatchExecuteCode(
   {

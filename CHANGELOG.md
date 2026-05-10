@@ -8,6 +8,25 @@ This changelog tracks Mémoire itself: every version, commit, and architectural 
 
 ## Unreleased
 
+## v1.0.0 — 2026-05-10
+
+### Rebrand and stability commitment
+First stable release as **memi**. The npm package moves from `@memi-design/cli` to `@memi-design/cli`, the GitHub repo from `m-moire` to `memi`, and the brand from `Mémoire` to a single lowercase wordmark. Same engine, same MCP server, same Codex plugin — clearer name, single CLI binary (`memi`), and a real homepage at `memoire.cv`.
+
+### Breaking
+- **npm package renamed**: `@memi-design/cli` → `@memi-design/cli`. Reinstall with `npm i -g @memi-design/cli`. The old package will receive a final deprecation publish pointing here.
+- **CLI binaries trimmed**: `memoire` and `design-extract` aliases removed. Use `memi` only.
+- **GitHub repo renamed**: `sarveshsea/memi` → `sarveshsea/memi`. Old URL auto-redirects.
+- **Codex marketplace command updated**: `codex plugin marketplace add sarveshsea/memi --ref main --sparse .agents/plugins --sparse plugins/memoire` (was `sarveshsea/memi`).
+
+### Distribution-fix highlights
+- `package.json` description rewritten as a single value-prop sentence.
+- `package.json` keywords trimmed from 70+ to 10 high-intent terms.
+- README hero now shows the demo GIF inline on the npm page (rendered from GitHub raw URL — keeps the package size under the size gate).
+- `README.md` hero replaced with single install line + 30-second example.
+- Homepage now points to `memoire.cv`.
+- `CONTRIBUTING.md` documents the new Tuesday-only release cadence and semver discipline from 1.0 onward.
+
 ## v0.18.0 — 2026-05-10
 
 ### The upgrade
@@ -305,7 +324,7 @@ This patch publishes the MCP Registry verification metadata that landed after th
 
 ### External Release Gates
 - Publish `0.14.2` to npm after logging in with `npm login`.
-- Verify `npm view @sarveshsea/memoire version mcpName --json` reports `0.14.2` and `io.github.sarveshsea/memoire`.
+- Verify `npm view @memi-design/cli version mcpName --json` reports `0.14.2` and `io.github.sarveshsea/memoire`.
 - Publish `server.json` with `mcp-publisher publish`.
 
 ## v0.14.1 — 2026-04-26
@@ -453,7 +472,7 @@ This patch release turns the registry marketplace into the growth wedge: more in
 - **Keep changes additive** — `0.13.1` is a patch release, so existing `memi add`, `publish`, `view`, `tokens`, and `diagnose` behavior remains compatible.
 - **Catalog is the source of truth** — The website, CLI, docs, and launch copy should mirror `marketplace-catalog.v1.json` instead of hand-maintaining separate lists.
 - **Aliases improve activation** — Slugs like `ai-chat`, `auth-flow`, and `landing-page` are easier to remember than scoped package names, while package-name refs remain supported.
-- **npm stays the conversion URL** — Until `/components` is deployed and healthy, every launch post and external CTA points to `https://www.npmjs.com/package/@sarveshsea/memoire`.
+- **npm stays the conversion URL** — Until `/components` is deployed and healthy, every launch post and external CTA points to `https://www.npmjs.com/package/@memi-design/cli`.
 - **Doctor before distribution** — Registry packages now have a CI-friendly validation path before teams publish or mirror them.
 
 ### External Release Gates
@@ -508,7 +527,7 @@ This release makes Memoire a code-first Design CI tool for shadcn/Tailwind apps:
 ### Key Design Decisions
 - **Prioritize code-first adoption** — Developers can start from an existing shadcn/Tailwind app without opening Figma.
 - **Use Design CI as the wedge** — Public copy should sell repeatable UI quality checks and registry publishing, not a broad AI design platform.
-- **Keep npm as the only primary CTA** — Until the deployed `/components` page is reliable, every growth surface sends traffic to `@sarveshsea/memoire`.
+- **Keep npm as the only primary CTA** — Until the deployed `/components` page is reliable, every growth surface sends traffic to `@memi-design/cli`.
 - **Measure conversion weekly** — Download recovery is tracked by npm latest, weekly/monthly downloads, GitHub metadata, README CTA clarity, and website health.
 - **Treat performance as activation** — A sub-300ms help path and faster code scans make the first 60 seconds of adoption feel credible.
 
@@ -629,7 +648,7 @@ memi view Button --json                   # { url, component, registry }
 memi publish --name @you/theme --theme ./tweakcn.css --push
 
 # Any project can now install it:
-npx @sarveshsea/memoire add Button --from @you/theme
+npx @memi-design/cli add Button --from @you/theme
 ```
 
 ---

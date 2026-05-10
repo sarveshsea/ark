@@ -94,7 +94,7 @@ describe("packaged agent kits", () => {
       expect(skill).toContain("name: memoire-design-tooling");
       expect(skill).toContain("description: Use when");
       expect(skill).toMatch(/\n---\n\n# Mémoire Design Tooling/);
-      expect(skill).toContain("npm i -g @sarveshsea/memoire");
+      expect(skill).toContain("npm i -g @memi-design/cli");
       expect(skill).toContain("memoire.agent.yaml");
       expect(skill).toContain("memi daemon status --json");
       expect(skill).toContain("memi mcp start --no-figma");
@@ -169,7 +169,7 @@ describe("packaged agent kits", () => {
     const readme = await readFile(join(root, "README.md"), "utf-8");
     const codexPage = await readFile(join(root, "docs", "CODEX_PLUGIN.md"), "utf-8");
     const smokeScript = await readFile(join(root, "scripts", "smoke-codex-plugin-marketplace.mjs"), "utf-8");
-    const installCommand = "codex plugin marketplace add sarveshsea/m-moire --ref main --sparse .agents/plugins --sparse plugins/memoire";
+    const installCommand = "codex plugin marketplace add sarveshsea/memi --ref main --sparse .agents/plugins --sparse plugins/memoire";
 
     expect(readme).toContain(installCommand);
     expect(codexPage).toContain(installCommand);

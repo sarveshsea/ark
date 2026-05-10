@@ -1,13 +1,13 @@
 {
   "name": "memoire",
-  "version": "0.19.0",
+  "version": "1.0.0",
   "description": "Design memory and UI quality tools for Codex: MCP tools, design-system context, Figma workflows, shadcn/ui, Tailwind, and Atomic Design.",
   "author": {
     "name": "Sarvesh Chidambaram",
     "url": "https://github.com/sarveshsea"
   },
   "homepage": "https://www.memoire.cv/codex-plugin",
-  "repository": "https://github.com/sarveshsea/m-moire",
+  "repository": "https://github.com/sarveshsea/memi",
   "license": "MIT",
   "privacyPolicyURL": "https://www.memoire.cv/privacy",
   "termsOfServiceURL": "https://www.memoire.cv/terms",

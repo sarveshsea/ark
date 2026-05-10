@@ -126,7 +126,7 @@ for (const [sourceRel, destRel] of sidecars) {
 await writeFile(
   join(RUNTIME_RESOURCE_DIR, "studio-runtime-info.json"),
   JSON.stringify({
-    name: "@sarveshsea/memoire Studio runtime",
+    name: "@memi-design/cli Studio runtime",
     packageVersion: pkg.version,
     target: targetKey,
     targetTriple: target.triple,

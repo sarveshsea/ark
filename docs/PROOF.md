@@ -7,7 +7,7 @@ These examples are for developers who already have a shadcn/Tailwind app and wan
 Use this when a developer wants proof immediately, before running a full audit or token extraction pass.
 
 ```bash
-npm i -g @sarveshsea/memoire
+npm i -g @memi-design/cli
 memi add HeroSection --from @memoire-examples/landing-page
 memi add AuthCard --from @memoire-examples/auth-flow
 memi add ChatComposer --from @memoire-examples/ai-chat
@@ -33,7 +33,7 @@ Proof artifacts:
 Use this when the app feels inconsistent and you need a ranked UI-quality punch list.
 
 ```bash
-npm i -g @sarveshsea/memoire
+npm i -g @memi-design/cli
 memi diagnose --no-write
 memi diagnose --json --no-write > .memoire/app-quality/ci-diagnosis.json
 ```
@@ -100,7 +100,7 @@ Proof artifacts:
 A new developer should understand this path in under 60 seconds:
 
 ```bash
-npm i -g @sarveshsea/memoire
+npm i -g @memi-design/cli
 memi diagnose
 memi tokens --from ./src --report
 memi publish --name @you/ds

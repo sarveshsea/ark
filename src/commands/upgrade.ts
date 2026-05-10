@@ -2,7 +2,7 @@
  * `memi upgrade` — self-update the standalone binary.
  *
  * Only meaningful when running the prebuilt binary (not the npm install, which
- * upgrades via `npm i -g @sarveshsea/memoire`). Detects the current platform,
+ * upgrades via `npm i -g @memi-design/cli`). Detects the current platform,
  * downloads the latest release archive from GitHub, verifies SHA256, and
  * swaps the binary + sidecar assets atomically.
  */
@@ -19,7 +19,7 @@ import { Readable } from "node:stream";
 import type { MemoireEngine } from "../engine/core.js";
 import { packageRoot } from "../utils/asset-path.js";
 
-const REPO = "sarveshsea/m-moire";
+const REPO = "sarveshsea/memi";
 
 function detectTarget(): { target: string; ext: string; archive: "tar.gz" | "zip" } | null {
   const platform = process.platform;
@@ -99,7 +99,7 @@ export function registerUpgradeCommand(program: Command, _engine: MemoireEngine)
     .action(async (opts: { version: string; check?: boolean; allowUnverified?: boolean }) => {
       if (!isStandaloneBinary()) {
         console.log("  memi was installed via npm. Upgrade with:");
-        console.log("    npm i -g @sarveshsea/memoire@latest");
+        console.log("    npm i -g @memi-design/cli@latest");
         return;
       }
 

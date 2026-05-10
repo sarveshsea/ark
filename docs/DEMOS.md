@@ -9,7 +9,7 @@ For the `0.14.1` shadcn/v0 launch, use [`docs/V0_WORKFLOWS.md`](./V0_WORKFLOWS.m
 Goal: show that Memoire starts from an existing shadcn/Tailwind app, no Figma required.
 
 ```bash
-npm i -g @sarveshsea/memoire
+npm i -g @memi-design/cli
 
 # 1. Diagnose real UI debt in the current app
 memi diagnose --no-write
@@ -40,7 +40,7 @@ Screen beats:
 Goal: show the whole loop in one screen.
 
 ```bash
-npm i -g @sarveshsea/memoire
+npm i -g @memi-design/cli
 memi diagnose --no-write
 memi tokens --from ./src --report
 memi publish --name @demo/ds

@@ -1,6 +1,6 @@
 # Memoire 0.14.1 Launch Campaign
 
-Link every post to `https://www.npmjs.com/package/@sarveshsea/memoire` until `https://www.memoire.cv/components` is deployed, indexed from `examples/site-bundle`, and verified healthy.
+Link every post to `https://www.npmjs.com/package/@memi-design/cli` until `https://www.memoire.cv/components` is deployed, indexed from `examples/site-bundle`, and verified healthy.
 
 ## Core message
 
@@ -20,7 +20,7 @@ memi fix plan
 
 Turn a real app into registry JSON that works with shadcn, v0, AI editors, npm, and Memoire.
 
-npm i -g @sarveshsea/memoire
+npm i -g @memi-design/cli
 ```
 
 ## shadcn audience
@@ -36,7 +36,7 @@ Memoire 0.14.1 turns your existing shadcn/Tailwind app into a registry:
 - npm/URL installs
 - registry doctor
 
-npm i -g @sarveshsea/memoire
+npm i -g @memi-design/cli
 memi shadcn export --out public/r
 ```
 
@@ -49,7 +49,7 @@ Memoire 0.14.1 exports shadcn registry items from an existing Tailwind app and e
 
 Diagnose the app, export registry JSON, open the item in v0, then install the result back into code.
 
-npm i -g @sarveshsea/memoire
+npm i -g @memi-design/cli
 ```
 
 ## AI editor / MCP audience
@@ -65,7 +65,7 @@ Memoire 0.14.1 exposes MCP tools for:
 
 Use the app graph + registry items as code-native design-system context.
 
-npm i -g @sarveshsea/memoire
+npm i -g @memi-design/cli
 ```
 
 ## Tailwind audience
@@ -93,13 +93,13 @@ Memoire now starts from the app:
 4. export shadcn registry items
 5. install from npm, URL, GitHub, local path, or alias
 
-npm i -g @sarveshsea/memoire
+npm i -g @memi-design/cli
 ```
 
 ## Release gates before posting
 
 - npm latest reports `0.14.1`.
 - npm README first screen contains `Shadcn-native Design CI for Tailwind apps`.
-- `npm i -g @sarveshsea/memoire && memi --version` returns `0.14.1`.
+- `npm i -g @memi-design/cli && memi --version` returns `0.14.1`.
 - GitHub description/topics match `docs/SITE_HANDOFF.md`.
 - Website `/components` renders from `examples/site-bundle/catalog.json` or the catalog fallback.

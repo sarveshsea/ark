@@ -23,7 +23,7 @@ const bundleCatalog = {
   entries: [],
 };
 const codexPluginUrl = "https://www.memoire.cv/codex-plugin";
-const codexPluginInstallCommand = "codex plugin marketplace add sarveshsea/m-moire --ref main --sparse .agents/plugins --sparse plugins/memoire";
+const codexPluginInstallCommand = "codex plugin marketplace add sarveshsea/memi --ref main --sparse .agents/plugins --sparse plugins/memoire";
 const privacyUrl = "https://www.memoire.cv/privacy";
 const termsUrl = "https://www.memoire.cv/terms";
 const sitemapUrls = ["https://www.memoire.cv/components", codexPluginUrl, privacyUrl, termsUrl];
@@ -62,7 +62,7 @@ const snippets = [
   "",
   "Hero: Shadcn-native Design CI for Tailwind apps.",
   "Subhead: Turn an existing app into a registry that works with shadcn, v0, AI editors, npm, and Memoire.",
-  "Primary CTA: https://www.npmjs.com/package/@sarveshsea/memoire",
+  "Primary CTA: https://www.npmjs.com/package/@memi-design/cli",
   "Codex plugin: https://www.memoire.cv/codex-plugin",
   `Codex marketplace install: ${codexPluginInstallCommand}`,
   "",
@@ -268,7 +268,7 @@ function renderCodexPluginPage(installCommand) {
 
     <section>
       <h2>Install through npm</h2>
-      <pre><code>npm i -g @sarveshsea/memoire
+      <pre><code>npm i -g @memi-design/cli
 memi agent install codex-plugin</code></pre>
     </section>
 
@@ -316,7 +316,7 @@ function renderPolicyPage({ title, canonicalUrl, body }) {
   <main>
     <h1>${escapeHtml(title)}</h1>
     ${body.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join("\n    ")}
-    <p>Contact: <a href="https://github.com/sarveshsea/m-moire">github.com/sarveshsea/m-moire</a></p>
+    <p>Contact: <a href="https://github.com/sarveshsea/memi">github.com/sarveshsea/memi</a></p>
   </main>
 </body>
 </html>

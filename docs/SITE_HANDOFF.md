@@ -11,8 +11,8 @@ These are the exact external-surface updates that still need credentials or the 
 
 - Heading: `Shadcn-native Design CI for Tailwind apps.`
 - Subhead: `Turn an existing app into a registry that works with shadcn, v0, AI editors, npm, and Mémoire.`
-- Primary CTA: `https://www.npmjs.com/package/@sarveshsea/memoire`
-- Secondary CTA: omit until `/components` is reliable. If one is required, use `https://github.com/sarveshsea/m-moire#no-figma-required`.
+- Primary CTA: `https://www.npmjs.com/package/@memi-design/cli`
+- Secondary CTA: omit until `/components` is reliable. If one is required, use `https://github.com/sarveshsea/memi#no-figma-required`.
 
 ## Docs landing
 
@@ -29,7 +29,7 @@ These are the exact external-surface updates that still need credentials or the 
 
 ## Footer
 
-- npm link: `https://www.npmjs.com/package/@sarveshsea/memoire`
+- npm link: `https://www.npmjs.com/package/@memi-design/cli`
 - Version string: only show the currently released package version
 - OpenGraph, Twitter card, sitemap, and JSON-LD copy: [`docs/SEO.md`](./SEO.md)
 
@@ -40,5 +40,5 @@ These are the exact external-surface updates that still need credentials or the 
 - Update GitHub description and topics to the exact strings above.
 - Deploy the website hero, docs landing, and `/components` catalog from the generated marketplace bundle.
 - Verify `/components` renders non-empty cards from the catalog or featured fallback.
-- Verify npm README first screen contains `Shadcn-native Design CI for Tailwind apps` and `npm i -g @sarveshsea/memoire`.
+- Verify npm README first screen contains `Shadcn-native Design CI for Tailwind apps` and `npm i -g @memi-design/cli`.
 - Record the 7-day follow-up metrics in [`docs/METRICS.md`](./METRICS.md): npm weekly downloads, npm monthly downloads, npm latest, GitHub stars, README CTA, and `/components` health.

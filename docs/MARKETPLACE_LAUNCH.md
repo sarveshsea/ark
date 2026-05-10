@@ -2,7 +2,7 @@
 
 Use these posts after `0.13.1` is published and npm latest verifies. Keep every link pointed at npm until `https://www.memoire.cv/components` is deployed and healthy.
 
-Primary link: `https://www.npmjs.com/package/@sarveshsea/memoire`
+Primary link: `https://www.npmjs.com/package/@memi-design/cli`
 
 ## Master Marketplace Post
 
@@ -19,10 +19,10 @@ Install registries for:
 - ecommerce
 - tweakcn-inspired themes
 
-npm i -g @sarveshsea/memoire
+npm i -g @memi-design/cli
 memi registry list
 
-https://www.npmjs.com/package/@sarveshsea/memoire
+https://www.npmjs.com/package/@memi-design/cli
 ```
 
 ## Landing Page
@@ -36,7 +36,7 @@ memi add HeroSection --from landing-page
 
 No Figma required. It ships tokens, specs, React code, screenshot proof, and source metadata.
 
-https://www.npmjs.com/package/@sarveshsea/memoire
+https://www.npmjs.com/package/@memi-design/cli
 ```
 
 ## Auth Flow
@@ -50,7 +50,7 @@ memi add AuthCard --from auth-flow
 
 Useful when your product works but the auth surface still feels generic.
 
-https://www.npmjs.com/package/@sarveshsea/memoire
+https://www.npmjs.com/package/@memi-design/cli
 ```
 
 ## AI Chat
@@ -65,7 +65,7 @@ memi add ChatMessage --from ai-chat
 
 Claude/v0 help create. Memoire helps package, validate, and reuse.
 
-https://www.npmjs.com/package/@sarveshsea/memoire
+https://www.npmjs.com/package/@memi-design/cli
 ```
 
 ## Ecommerce
@@ -79,7 +79,7 @@ memi add ProductCard --from ecommerce
 
 Tokens, specs, React code, and registry metadata included.
 
-https://www.npmjs.com/package/@sarveshsea/memoire
+https://www.npmjs.com/package/@memi-design/cli
 ```
 
 ## shadcn Community
@@ -94,7 +94,7 @@ memi add ChatComposer --from ai-chat
 
 Everything is tokenized and published through registry.json.
 
-https://www.npmjs.com/package/@sarveshsea/memoire
+https://www.npmjs.com/package/@memi-design/cli
 ```
 
 ## tweakcn Community
@@ -107,7 +107,7 @@ Try the built-in tweakcn-inspired registries:
 memi registry search tweakcn
 memi add Button --from tweakcn-vercel
 
-https://www.npmjs.com/package/@sarveshsea/memoire
+https://www.npmjs.com/package/@memi-design/cli
 ```
 
 ## Developer Forums
@@ -122,7 +122,7 @@ memi registry doctor ai-chat --json
 
 It is a CLI for turning shadcn/Tailwind design systems into installable npm-backed registries.
 
-https://www.npmjs.com/package/@sarveshsea/memoire
+https://www.npmjs.com/package/@memi-design/cli
 ```
 
 ## Reply Bank

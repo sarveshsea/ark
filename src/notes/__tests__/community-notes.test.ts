@@ -71,7 +71,7 @@ describe("community Notes validation and forks", () => {
   it("forks a Note into .memoire/notes with fork metadata, computes a diff, and exports PR commands", async () => {
     const fork = await forkNoteDirectory(root, {
       sourcePath: sourceNote,
-      sourceRepo: "https://github.com/sarveshsea/m-moire",
+      sourceRepo: "https://github.com/sarveshsea/memi",
       sourcePathInRepo: "notes/design-systems",
     });
 
@@ -84,7 +84,7 @@ describe("community Notes validation and forks", () => {
       forkOf: {
         name: "design-systems",
         version: "0.1.0",
-        sourceRepo: "https://github.com/sarveshsea/m-moire",
+        sourceRepo: "https://github.com/sarveshsea/memi",
         sourcePath: "notes/design-systems",
       },
     });

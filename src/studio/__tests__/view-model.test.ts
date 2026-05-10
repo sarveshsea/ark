@@ -58,13 +58,13 @@ describe("studio trace view model", () => {
         makeEvent("reference_trace", "Mémoire package and source references loaded", {
           references: [
             {
-              id: "package:@sarveshsea/memoire",
+              id: "package:@memi-design/cli",
               kind: "package",
-              label: "@sarveshsea/memoire@0.17.0",
+              label: "@memi-design/cli@0.17.0",
               summary: "Runtime package",
-              packageName: "@sarveshsea/memoire",
+              packageName: "@memi-design/cli",
               packageVersion: "0.17.0",
-              url: "https://www.npmjs.com/package/@sarveshsea/memoire",
+              url: "https://www.npmjs.com/package/@memi-design/cli",
               eventIds: [],
             },
             {
@@ -85,7 +85,7 @@ describe("studio trace view model", () => {
     expect(trace.references).toEqual(expect.arrayContaining([
       expect.objectContaining({
         kind: "package",
-        packageName: "@sarveshsea/memoire",
+        packageName: "@memi-design/cli",
         packageVersion: "0.17.0",
         eventIds: ["reference_trace-1"],
       }),
