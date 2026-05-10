@@ -137,11 +137,11 @@ async function readJson(path) {
 }
 
 function githubTreeUrl(path) {
-  return `https://github.com/sarveshsea/m-moire/tree/main/${path}`;
+  return `https://github.com/sarveshsea/memi/tree/main/${path}`;
 }
 
 function githubRawUrl(path) {
-  return `https://raw.githubusercontent.com/sarveshsea/m-moire/main/${path}`;
+  return `https://raw.githubusercontent.com/sarveshsea/memi/main/${path}`;
 }
 
 function memoireRegistryItemUrl(slug, componentName) {

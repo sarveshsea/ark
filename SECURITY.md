@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-Security fixes are shipped on the latest npm release of `@sarveshsea/memoire`. Older pre-`0.14` releases are not supported for security updates.
+Security fixes are shipped on the latest npm release of `@memi-design/cli`. Older pre-`0.14` releases are not supported for security updates.
 
 ## Reporting A Vulnerability
 

@@ -9,7 +9,7 @@ Use Memoire as the local design evidence layer before making frontend changes.
 
 ## Commands
 ```bash
-npm i -g @sarveshsea/memoire
+npm i -g @memi-design/cli
 memi suite init --project .
 memi daemon start --project . --port auto
 memi daemon status --json

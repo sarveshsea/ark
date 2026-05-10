@@ -33,7 +33,7 @@ export function registerMcpCommand(program: Command, engine: MemoireEngine): voi
     .action(async (opts: { target: string; global?: boolean; install?: boolean }) => {
       const useGlobal = opts.global !== false;
       const cmd = useGlobal ? "memi" : "npx";
-      const args = useGlobal ? ["mcp", "start", "--no-figma"] : ["@sarveshsea/memoire", "mcp", "start", "--no-figma"];
+      const args = useGlobal ? ["mcp", "start", "--no-figma"] : ["@memi-design/cli", "mcp", "start", "--no-figma"];
 
       const serverConfig = {
         command: cmd,

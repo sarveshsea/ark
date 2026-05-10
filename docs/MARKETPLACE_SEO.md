@@ -33,7 +33,7 @@ Browse tokenized design systems, install components with memi add or shadcn, ope
 Primary CTA:
 
 ```text
-npm i -g @sarveshsea/memoire
+npm i -g @memi-design/cli
 ```
 
 Secondary command:
@@ -68,7 +68,7 @@ Required links:
 - Screenshot URL from `examples/marketplace-catalog.v1.json`
 - `registryItemUrl` from `examples/site-bundle/catalog.json`
 - `openInV0Url` from `examples/site-bundle/catalog.json`
-- Main Memoire npm package: `https://www.npmjs.com/package/@sarveshsea/memoire`
+- Main Memoire npm package: `https://www.npmjs.com/package/@memi-design/cli`
 
 ## Registry Page Keywords
 
@@ -98,7 +98,7 @@ Required links:
   "isPartOf": {
     "@type": "SoftwareApplication",
     "name": "Memoire",
-    "url": "https://www.npmjs.com/package/@sarveshsea/memoire"
+    "url": "https://www.npmjs.com/package/@memi-design/cli"
   }
 }
 ```

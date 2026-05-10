@@ -696,7 +696,7 @@ export class StudioRuntimeServer {
         }
         const fork = await forkNoteDirectory(this.projectRoot, {
           sourcePath: note.sourcePath,
-          sourceRepo: note.sourceRepo ?? "https://github.com/sarveshsea/m-moire",
+          sourceRepo: note.sourceRepo ?? "https://github.com/sarveshsea/memi",
           sourcePathInRepo: note.sourcePath.includes("/notes/") ? `notes/${note.name}` : note.sourcePath,
         });
         this.sendJSON(res, 201, {

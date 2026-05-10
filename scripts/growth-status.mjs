@@ -31,9 +31,9 @@ const [
   getNpmMetadata(),
   fetchJson("https://api.npmjs.org/downloads/point/last-week/%40sarveshsea%2Fmemoire"),
   fetchJson("https://api.npmjs.org/downloads/point/last-month/%40sarveshsea%2Fmemoire"),
-  fetchJson("https://api.github.com/repos/sarveshsea/m-moire"),
+  fetchJson("https://api.github.com/repos/sarveshsea/memi"),
   fetchJson("https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.sarveshsea/memoire"),
-  fetchJson("https://api.github.com/repos/sarveshsea/m-moire/pulls/2"),
+  fetchJson("https://api.github.com/repos/sarveshsea/memi/pulls/2"),
   Promise.all(directoryPullRequests.map(async ([repo, number]) => {
     const pull = await fetchJson(`https://api.github.com/repos/${repo}/pulls/${number}`);
     return {
@@ -110,7 +110,7 @@ function normalizeNpmMetadata(metadata) {
     latest,
     mcpName: version?.mcpName ?? null,
     description: version?.description ?? metadata.description ?? null,
-    npmUrl: "https://www.npmjs.com/package/@sarveshsea/memoire",
+    npmUrl: "https://www.npmjs.com/package/@memi-design/cli",
   };
 }
 

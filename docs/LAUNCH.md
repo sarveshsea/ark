@@ -6,7 +6,7 @@ Use one message everywhere for the `0.13.1` launch:
 
 Link to one conversion page only per post. Until `memoire.cv/components` is fixed, prefer the npm package page:
 
-- [npm: `@sarveshsea/memoire`](https://www.npmjs.com/package/@sarveshsea/memoire)
+- [npm: `@memi-design/cli`](https://www.npmjs.com/package/@memi-design/cli)
 
 ## Launch baseline
 
@@ -34,8 +34,8 @@ Memoire 0.13 is Design CI for shadcn/Tailwind apps.
 
 Run `memi diagnose`, find UI debt in real code, extract tokens, then publish the improved system as an installable registry.
 
-npm i -g @sarveshsea/memoire
-https://www.npmjs.com/package/@sarveshsea/memoire
+npm i -g @memi-design/cli
+https://www.npmjs.com/package/@memi-design/cli
 ```
 
 ### No Figma
@@ -48,7 +48,7 @@ Memoire now starts from the app:
 
 That turns code into a design-system audit.
 
-https://www.npmjs.com/package/@sarveshsea/memoire
+https://www.npmjs.com/package/@memi-design/cli
 ```
 
 ### shadcn
@@ -58,11 +58,11 @@ shadcn made components installable.
 
 Memoire makes the design system installable: tokens, components, registry, and update path.
 
-npm i -g @sarveshsea/memoire
+npm i -g @memi-design/cli
 memi publish --name @you/ds
 memi add Button --from @you/ds
 
-https://www.npmjs.com/package/@sarveshsea/memoire
+https://www.npmjs.com/package/@memi-design/cli
 ```
 
 ### tweakcn
@@ -75,7 +75,7 @@ Memoire is how you validate, package, publish, and install it across apps.
 memi theme import ./tweakcn-export.css --name "Acme Theme"
 memi theme publish "Acme Theme" --package @you/theme
 
-https://www.npmjs.com/package/@sarveshsea/memoire
+https://www.npmjs.com/package/@memi-design/cli
 ```
 
 ### Competitive
@@ -85,7 +85,7 @@ Claude Design and v0 help create the first pass.
 
 Memoire is for the part after: diagnose the real app, clean the system, and publish reusable code.
 
-https://www.npmjs.com/package/@sarveshsea/memoire
+https://www.npmjs.com/package/@memi-design/cli
 ```
 
 ### Proof
@@ -97,7 +97,7 @@ Memoire 0.13 target:
 - SEO-clean npm page
 - Design CI workflow devs can try in under 60 seconds
 
-https://www.npmjs.com/package/@sarveshsea/memoire
+https://www.npmjs.com/package/@memi-design/cli
 ```
 
 ## Marketplace campaign
@@ -123,7 +123,7 @@ memi publish --name @you/ds
 
 It finds UI debt in real apps, then turns the cleaned-up system into something installable.
 
-https://www.npmjs.com/package/@sarveshsea/memoire
+https://www.npmjs.com/package/@memi-design/cli
 ```
 
 ### shadcn community
@@ -136,11 +136,11 @@ If you like the shadcn install pattern, Memoire applies it to whole design syste
 - keep tokens + components synced through one registry
 
 Quickstart:
-npm i -g @sarveshsea/memoire
+npm i -g @memi-design/cli
 memi publish --name @you/ds --figma <url> --push
 memi add Button --from @you/ds
 
-https://www.npmjs.com/package/@sarveshsea/memoire
+https://www.npmjs.com/package/@memi-design/cli
 ```
 
 ### tweakcn audience
@@ -153,7 +153,7 @@ memi theme import ./tweakcn-export.css --name "Acme Theme"
 memi theme validate "Acme Theme"
 memi theme publish "Acme Theme" --package @you/theme
 
-https://www.npmjs.com/package/@sarveshsea/memoire
+https://www.npmjs.com/package/@memi-design/cli
 ```
 
 ### Figma / dev-design audience
@@ -168,7 +168,7 @@ install anywhere:
 memi add Button --from @you/ds
 
 Registry-first docs and examples:
-https://www.npmjs.com/package/@sarveshsea/memoire
+https://www.npmjs.com/package/@memi-design/cli
 ```
 
 ## Weekly checks

@@ -53,7 +53,7 @@ The official MCP Registry verifies npm package ownership through `package.json#m
 
 - `package.json#mcpName`: `io.github.sarveshsea/memoire`
 - `server.json#name`: `io.github.sarveshsea/memoire`
-- `server.json#packages[0].identifier`: `@sarveshsea/memoire`
+- `server.json#packages[0].identifier`: `@memi-design/cli`
 - `server.json#packages[0].packageArguments`: `mcp`
 
 After that patch is published, run:
@@ -101,7 +101,7 @@ Memoire is an MCP server and CLI for shadcn-native Design CI: diagnose UI debt, 
 ### Install block
 
 ```bash
-npm i -g @sarveshsea/memoire
+npm i -g @memi-design/cli
 memi diagnose
 memi shadcn export --out public/r
 memi mcp config --install

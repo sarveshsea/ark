@@ -252,7 +252,7 @@ program
 
     console.log();
     console.log("  To fully uninstall:");
-    console.log("    npm uninstall -g @sarveshsea/memoire");
+    console.log("    npm uninstall -g @memi-design/cli");
     console.log();
   });
 
@@ -274,9 +274,9 @@ if (process.argv.length === 2) {
         console.log("    memi add Button --from @you/ds");
         console.log("    memi design-doc <url>  Extract a site into DESIGN.md");
         console.log();
-        console.log("  npm:  https://www.npmjs.com/package/@sarveshsea/memoire");
-        console.log("  Docs: https://github.com/sarveshsea/m-moire/tree/main/docs");
-        console.log("  Issues: https://github.com/sarveshsea/m-moire/issues");
+        console.log("  npm:  https://www.npmjs.com/package/@memi-design/cli");
+        console.log("  Docs: https://github.com/sarveshsea/memi/tree/main/docs");
+        console.log("  Issues: https://github.com/sarveshsea/memi/issues");
         console.log();
         mkdirSync(join(home, ".memoire"), { recursive: true });
         writeFileSync(stamp, new Date().toISOString());
@@ -348,7 +348,7 @@ function printFastHelp(version: string): void {
     "  audit                   Run accessibility audits",
     "",
     `Version: ${version}`,
-    "npm: https://www.npmjs.com/package/@sarveshsea/memoire",
+    "npm: https://www.npmjs.com/package/@memi-design/cli",
   ];
   console.log(lines.join("\n"));
 }

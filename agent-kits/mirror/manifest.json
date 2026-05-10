@@ -1,7 +1,7 @@
 {
   "name": "memoire-agent-skills",
   "version": "1.0.0",
-  "package": "@sarveshsea/memoire",
+  "package": "@memi-design/cli",
   "suiteManifest": "memoire.agent.yaml",
   "daemon": {
     "start": "memi daemon start --project . --port auto",

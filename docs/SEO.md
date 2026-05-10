@@ -47,16 +47,16 @@ Use this copy on the website repo, GitHub metadata, and launch pages until `memo
 
 - `og:title`: `Memoire - Shadcn-native Design CI for Tailwind apps`
 - `og:description`: `Turn existing apps into shadcn registries for shadcn, v0, AI editors, npm, and UI fix planning.`
-- `og:url`: `https://www.npmjs.com/package/@sarveshsea/memoire`
+- `og:url`: `https://www.npmjs.com/package/@memi-design/cli`
 - `og:type`: `website`
-- `og:image`: `https://raw.githubusercontent.com/sarveshsea/m-moire/main/assets/theme-workflow-demo.svg`
+- `og:image`: `https://raw.githubusercontent.com/sarveshsea/memi/main/assets/theme-workflow-demo.svg`
 
 ## Twitter Card
 
 - `twitter:card`: `summary_large_image`
 - `twitter:title`: `Memoire - Shadcn-native Design CI for Tailwind apps`
 - `twitter:description`: `Run memi diagnose, memi shadcn export, and memi fix plan to bridge real Tailwind apps into registry workflows.`
-- `twitter:image`: `https://raw.githubusercontent.com/sarveshsea/m-moire/main/assets/theme-workflow-demo.svg`
+- `twitter:image`: `https://raw.githubusercontent.com/sarveshsea/memi/main/assets/theme-workflow-demo.svg`
 
 ## JSON-LD
 
@@ -69,8 +69,8 @@ Use this copy on the website repo, GitHub metadata, and launch pages until `memo
   "operatingSystem": "macOS, Linux, Windows",
   "description": "Shadcn-native Design CI for Tailwind apps: diagnose UI debt, extract tokens, export shadcn registries, and plan safe UI fixes.",
   "softwareVersion": "0.14.1",
-  "url": "https://www.npmjs.com/package/@sarveshsea/memoire",
-  "codeRepository": "https://github.com/sarveshsea/m-moire",
+  "url": "https://www.npmjs.com/package/@memi-design/cli",
+  "codeRepository": "https://github.com/sarveshsea/memi",
   "programmingLanguage": "TypeScript",
   "keywords": [
     "design-ci",
@@ -108,8 +108,8 @@ Use this copy on the website repo, GitHub metadata, and launch pages until `memo
 ## Website Acceptance Criteria
 
 - The first screen says `Shadcn-native Design CI for Tailwind apps`.
-- The only primary CTA is `https://www.npmjs.com/package/@sarveshsea/memoire`.
-- The first code block uses `npm i -g @sarveshsea/memoire`, `memi diagnose`, `memi tokens --from ./src --report`, `memi shadcn export --out public/r`, and `memi publish --name @you/ds`.
+- The only primary CTA is `https://www.npmjs.com/package/@memi-design/cli`.
+- The first code block uses `npm i -g @memi-design/cli`, `memi diagnose`, `memi tokens --from ./src --report`, `memi shadcn export --out public/r`, and `memi publish --name @you/ds`.
 - `/components` renders `examples/marketplace-catalog.v1.json`; if that fails, it falls back to `examples/featured-registries.json` instead of an empty state.
-- Footer links use `@sarveshsea/memoire`, not an unscoped package name.
+- Footer links use `@memi-design/cli`, not an unscoped package name.
 - Individual registry pages use the page templates in [`MARKETPLACE_SEO.md`](./MARKETPLACE_SEO.md).

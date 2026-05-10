@@ -7,7 +7,7 @@ Memoire gives agents a local design intelligence layer: warmed daemon context, `
 ## Install
 
 ```bash
-npm i -g @sarveshsea/memoire
+npm i -g @memi-design/cli
 memi suite init --project .
 memi daemon start --project . --port auto
 memi daemon status --json
@@ -47,4 +47,4 @@ memi mcp start --no-figma
 
 ## Source
 
-This mirror is generated from `@sarveshsea/memoire`. Keep the npm package as the source of truth, then copy this folder into `sarveshsea/memoire-agent-skills` for external agent-skill discovery.
+This mirror is generated from `@memi-design/cli`. Keep the npm package as the source of truth, then copy this folder into `sarveshsea/memoire-agent-skills` for external agent-skill discovery.

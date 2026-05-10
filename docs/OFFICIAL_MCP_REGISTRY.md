@@ -9,7 +9,7 @@ The Official MCP Registry hosts metadata, not package artifacts. For npm package
 Memoire uses:
 
 - MCP server name: `io.github.sarveshsea/memoire`
-- npm package: `@sarveshsea/memoire`
+- npm package: `@memi-design/cli`
 - transport: `stdio`
 - package argument: `mcp`
 
@@ -30,7 +30,7 @@ If `sudo` is not available, move the binary into any directory already on `PATH`
 ```bash
 npm run publish:ready
 npm publish --access public
-npm view @sarveshsea/memoire version mcpName --json
+npm view @memi-design/cli version mcpName --json
 
 mcp-publisher login github
 mcp-publisher publish server.json

@@ -5,7 +5,7 @@ Memoire is for coding agents first: it gives Claude Code, Codex, Cursor, OpenCod
 ## Before Any UI Patch
 
 ```bash
-npm i -g @sarveshsea/memoire
+npm i -g @memi-design/cli
 memi suite init --project .
 memi daemon start --project . --port auto
 memi daemon status --json
@@ -46,7 +46,7 @@ memi agent install codex-plugin
 Public marketplace install:
 
 ```bash
-codex plugin marketplace add sarveshsea/m-moire --ref main --sparse .agents/plugins --sparse plugins/memoire
+codex plugin marketplace add sarveshsea/memi --ref main --sparse .agents/plugins --sparse plugins/memoire
 ```
 
 Then open `/plugins` in Codex and install Memoire from the marketplace list.
@@ -159,7 +159,7 @@ npm logout --registry=https://registry.npmjs.org/
 npm login --auth-type=web --registry=https://registry.npmjs.org/
 npm whoami --registry=https://registry.npmjs.org/
 npm publish --access public --auth-type=web
-npm view @sarveshsea/memoire version dist-tags.latest mcpName --json
+npm view @memi-design/cli version dist-tags.latest mcpName --json
 mcp-publisher login github
 mcp-publisher publish server.json
 npm run check:public-release

@@ -28,7 +28,7 @@ const event: ProviderRuntimeEvent = parseProviderRuntimeEvent(rawJson);
 
 ## Versioning
 
-Tracks the engine's own `runtime-v*` release tags. A bump here means a corresponding `runtime-v*` tag landed on `sarveshsea/m-moire`.
+Tracks the engine's own `runtime-v*` release tags. A bump here means a corresponding `runtime-v*` tag landed on `sarveshsea/memi`.
 
 ## License
 

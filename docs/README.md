@@ -11,7 +11,7 @@ Memoire is design memory and UI quality tooling for coding agents working on sha
 ### Coding agent setup
 
 ```bash
-npm i -g @sarveshsea/memoire
+npm i -g @memi-design/cli
 memi agent install claude-code --project .
 memi agent install cursor --project .
 memi agent install codex
@@ -24,13 +24,13 @@ Use this before Codex, Claude Code, Cursor, OpenCode, Hermes, or OpenClaw edits 
 Public Codex plugin marketplace:
 
 ```bash
-codex plugin marketplace add sarveshsea/m-moire --ref main --sparse .agents/plugins --sparse plugins/memoire
+codex plugin marketplace add sarveshsea/memi --ref main --sparse .agents/plugins --sparse plugins/memoire
 ```
 
 ### Existing app to diagnosis
 
 ```bash
-npm i -g @sarveshsea/memoire
+npm i -g @memi-design/cli
 memi diagnose
 memi diagnose http://localhost:3000
 ```
@@ -38,7 +38,7 @@ memi diagnose http://localhost:3000
 ### Existing app to tokens
 
 ```bash
-npm i -g @sarveshsea/memoire
+npm i -g @memi-design/cli
 memi tokens --from ./src --save
 memi tokens --from http://localhost:3000 --output generated/tokens --report
 ```
@@ -50,18 +50,18 @@ Use this when the team is code-first and not starting in Figma. Memoire extracts
 The highest-conversion path is code-first:
 
 ```bash
-npm i -g @sarveshsea/memoire
+npm i -g @memi-design/cli
 memi diagnose
 memi tokens --from ./src --report
 memi publish --name @you/ds
 ```
 
-Use a single CTA until the website is fully synced: [`@sarveshsea/memoire` on npm](https://www.npmjs.com/package/@sarveshsea/memoire).
+Use a single CTA until the website is fully synced: [`@memi-design/cli` on npm](https://www.npmjs.com/package/@memi-design/cli).
 
 ### Figma to npm
 
 ```bash
-npm i -g @sarveshsea/memoire
+npm i -g @memi-design/cli
 memi publish --name @you/ds --figma https://figma.com/design/xxx --push
 memi add Button --from @you/ds
 ```
@@ -69,7 +69,7 @@ memi add Button --from @you/ds
 ### tweakcn to npm
 
 ```bash
-npm i -g @sarveshsea/memoire
+npm i -g @memi-design/cli
 memi theme import ./tweakcn-export.css --name "Acme Theme"
 memi theme publish "Acme Theme" --package @you/theme
 memi add Button --from @you/theme

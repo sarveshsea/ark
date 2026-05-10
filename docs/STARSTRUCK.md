@@ -1,6 +1,6 @@
 # Starstruck Distribution Plan
 
-Goal: move `sarveshsea/m-moire` from `7` real stars to the Starstruck base tier at `16` stars. We need `9` legitimate stars from developers who see enough value to install, test, or bookmark Memoire.
+Goal: move `sarveshsea/memi` from `7` real stars to the Starstruck base tier at `16` stars. We need `9` legitimate stars from developers who see enough value to install, test, or bookmark Memoire.
 
 ## Current Reality
 
@@ -9,7 +9,7 @@ Goal: move `sarveshsea/m-moire` from `7` real stars to the Starstruck base tier 
 | GitHub stars | `7` | Need `9` more for Starstruck |
 | npm latest | `0.14.3` | Published with `mcpName`; next trust patch is `0.14.4` |
 | Official MCP Registry | Not listed | `registry.modelcontextprotocol.io` search returns no Memoire result |
-| Glama | Listed | Listed as `sarveshsea/m-moire`, but the description still reflects the older design-system MCP positioning |
+| Glama | Listed | Listed as `sarveshsea/memi`, but the description still reflects the older design-system MCP positioning |
 | GitHub topics | Updated | Strong enough for search: `mcp-server`, `shadcn-native`, `shadcn-registry-generator`, `design-ci`, `token-extraction` |
 | SafeSkill PR | Open, blocked badge | Do not merge until score improves or findings are addressed |
 | Open shadcn PRs | `1` | `bytefer/awesome-shadcn-ui#18`; `birobirobiro/awesome-shadcn-ui#493` merged |
@@ -21,7 +21,7 @@ Use one ask everywhere:
 
 ```text
 If this saves you from rebuilding the same shadcn/Tailwind system again, star the repo so more frontend teams can find it:
-https://github.com/sarveshsea/m-moire
+https://github.com/sarveshsea/memi
 ```
 
 Do not ask for fake stars, star swaps, or bot engagement. The ask must sit after a demo, install command, or useful directory submission.
@@ -100,7 +100,7 @@ Why this matters: the official registry only hosts metadata, but MCP directories
 ## Demo Script
 
 ```bash
-npm i -g @sarveshsea/memoire
+npm i -g @memi-design/cli
 memi diagnose --no-write
 memi tokens --from ./src --report
 memi shadcn export --out public/r

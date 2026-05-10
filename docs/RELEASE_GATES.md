@@ -25,7 +25,7 @@ npm run growth:status
 
 - npm `dist-tags.latest` matches `package.json`.
 - npm README includes the current positioning phrase.
-- npm README includes `npm i -g @sarveshsea/memoire`.
+- npm README includes `npm i -g @memi-design/cli`.
 - A clean temp install can run `memi --version`.
 
 For the `0.14.4` line, npm must report `0.14.4` before any Official MCP Registry or directory follow-up.
@@ -43,7 +43,7 @@ Before the public `0.14.4` announcement, verify every external surface points to
 
 - npm latest: `0.14.4`
 - npm README phrase: `Shadcn-native Design CI for Tailwind apps`
-- npm install command: `npm i -g @sarveshsea/memoire`
+- npm install command: `npm i -g @memi-design/cli`
 - GitHub description: `Shadcn-native Design CI for Tailwind apps: export registries that work with shadcn, v0, AI editors, and npm.`
 - GitHub topics: `shadcn-native`, `shadcn-registry`, `shadcn-registry-generator`, `v0-design-system`, `design-ci`, `tailwind-audit`, `token-extraction`, `ui-quality`, `ui-fix-plan`, `registry-generator`, `design-tokens`, `tweakcn`
 - Website hero: `Shadcn-native Design CI for Tailwind apps.`

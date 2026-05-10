@@ -94,7 +94,7 @@ describe("packaged agent kits", () => {
       expect(skill).toContain("name: memoire-design-tooling");
       expect(skill).toContain("description: Use when");
       expect(skill).toMatch(/\n---\n\n# Mémoire Design Tooling/);
-      expect(skill).toContain("npm i -g @sarveshsea/memoire");
+      expect(skill).toContain("npm i -g @memi-design/cli");
       expect(skill).toContain("memoire.agent.yaml");
       expect(skill).toContain("memi daemon status --json");
       expect(skill).toContain("memi mcp start --no-figma");

@@ -5,7 +5,7 @@ Use these demos for the `0.14.1` launch. The point is simple: Memoire turns a re
 ## 60-second terminal demo
 
 ```bash
-npm i -g @sarveshsea/memoire
+npm i -g @memi-design/cli
 
 # 1. Diagnose the current app.
 memi diagnose --no-write

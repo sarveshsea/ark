@@ -2,7 +2,7 @@
 
 All posts link to npm until `https://www.memoire.cv/components` is reliable.
 
-Primary link: `https://www.npmjs.com/package/@sarveshsea/memoire`
+Primary link: `https://www.npmjs.com/package/@memi-design/cli`
 
 ## X / Twitter
 
@@ -18,7 +18,7 @@ memi publish --name @you/ds
 
 It starts from real code, finds UI debt, extracts tokens, and packages the improved system as an installable registry.
 
-https://www.npmjs.com/package/@sarveshsea/memoire
+https://www.npmjs.com/package/@memi-design/cli
 ```
 
 ### Reply 1
@@ -56,7 +56,7 @@ If your team uses shadcn, Memoire gives you a Design CI loop around the app:
 
 shadcn made components installable. Memoire makes the design system installable.
 
-https://www.npmjs.com/package/@sarveshsea/memoire
+https://www.npmjs.com/package/@memi-design/cli
 ```
 
 ## tweakcn community
@@ -71,7 +71,7 @@ memi theme validate "Acme Theme"
 memi theme publish "Acme Theme" --package @you/theme
 memi add Button --from @you/theme
 
-https://www.npmjs.com/package/@sarveshsea/memoire
+https://www.npmjs.com/package/@memi-design/cli
 ```
 
 ## Dev-design community
@@ -84,9 +84,9 @@ Memoire 0.13 starts from code:
 - extracts token coverage and dark-mode parity
 - turns the improved system into an installable registry
 
-npm i -g @sarveshsea/memoire
+npm i -g @memi-design/cli
 
-https://www.npmjs.com/package/@sarveshsea/memoire
+https://www.npmjs.com/package/@memi-design/cli
 ```
 
 ## Marketplace category posts

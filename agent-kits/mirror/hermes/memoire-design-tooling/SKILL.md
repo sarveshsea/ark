@@ -24,7 +24,7 @@ Do not use this skill for unrelated backend-only work unless the backend change 
 
 ## Quick Commands
 ```bash
-npm i -g @sarveshsea/memoire
+npm i -g @memi-design/cli
 memi suite init --project .
 memi daemon start --project . --port auto
 memi daemon status --json
@@ -41,7 +41,7 @@ memi studio web
 ```
 
 ## Workflow
-1. Check whether `memi` is available with `memi status`. If it is missing, install it with `npm i -g @sarveshsea/memoire`.
+1. Check whether `memi` is available with `memi status`. If it is missing, install it with `npm i -g @memi-design/cli`.
 2. Initialize or read `memoire.agent.yaml`; this is the workspace suite manifest for memory sources, harnesses, skills, and product-team recipes.
 3. Prefer the warmed daemon path: `memi daemon start --project . --port auto`, then `memi daemon status --json`.
 4. Inspect existing project context before making UI changes: `.memoire/`, specs, tokens, README/AGENTS files, `memoire.agent.yaml`, and Figma connection state.
