@@ -4,19 +4,19 @@
   "builtAt": "2026-05-12T03:53:41.174Z",
   "bundleHash": "ffd143c9b7a1a1ea878b03322940525eb1f53db395572b46e3cc7bbf4f2e69aa",
   "manifest": {
-    "path": "/Users/sarveshchidambaram/Desktop/Projects/Other/ark/plugin/manifest.json",
+    "path": "manifest.json",
     "exists": true,
     "bytes": 1746,
     "sha256": "93e5420e7a2b359a345cd7af9c552e9d66171df1bf976090229e224fdb1c13ab"
   },
   "code": {
-    "path": "/Users/sarveshchidambaram/Desktop/Projects/Other/ark/plugin/code.js",
+    "path": "code.js",
     "exists": true,
     "bytes": 48064,
     "sha256": "1bb461e5c6d934cc810a5d459a1ab852cca577efafc1f35c2591b9945d018977"
   },
   "ui": {
-    "path": "/Users/sarveshchidambaram/Desktop/Projects/Other/ark/plugin/ui.html",
+    "path": "ui.html",
     "exists": true,
     "bytes": 93930,
     "sha256": "8e61e42da2825c1d2afbbbc285aaf02c86c66f2751b1b9538b59fb8ca2a4f192"
