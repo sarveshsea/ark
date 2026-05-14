@@ -152,19 +152,13 @@ describe("studio runtime server", () => {
       }).then((res) => res.json());
 
       await waitFor(() => server.getSession(created.session.id)?.status === "completed");
-      const rpc = await fetch(`${runtime.url}/api/rpc`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          op: "replayEvents",
-          requestId: "r1",
-          sessionId: created.session.id,
-        }),
-      }).then((res) => res.json());
+      await waitFor(async () => {
+        const rpc = await replayEvents(runtime.url, created.session.id);
+        return eventTypesFromRpc(rpc).includes("turn.completed");
+      });
+      const rpc = await replayEvents(runtime.url, created.session.id);
 
-      const eventTypes = rpc.responses
-        .filter((response: { kind: string }) => response.kind === "event")
-        .map((response: { event: { type: string } }) => response.event.type);
+      const eventTypes = eventTypesFromRpc(rpc);
       expect(eventTypes).toEqual(expect.arrayContaining([
         "message.user",
         "session.created",
@@ -178,10 +172,28 @@ describe("studio runtime server", () => {
   });
 });
 
-async function waitFor(check: () => boolean, timeoutMs = 3_000): Promise<void> {
+async function replayEvents(runtimeUrl: string, sessionId: string): Promise<{ responses: Array<{ kind: string; event?: { type: string } }> }> {
+  return fetch(`${runtimeUrl}/api/rpc`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      op: "replayEvents",
+      requestId: "r1",
+      sessionId,
+    }),
+  }).then((res) => res.json());
+}
+
+function eventTypesFromRpc(rpc: { responses: Array<{ kind: string; event?: { type: string } }> }): string[] {
+  return rpc.responses
+    .filter((response) => response.kind === "event" && response.event)
+    .map((response) => response.event?.type ?? "");
+}
+
+async function waitFor(check: () => boolean | Promise<boolean>, timeoutMs = 3_000): Promise<void> {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
-    if (check()) return;
+    if (await check()) return;
     await new Promise((resolve) => setTimeout(resolve, 20));
   }
   throw new Error("Timed out waiting for condition");
