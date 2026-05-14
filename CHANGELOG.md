@@ -8,6 +8,22 @@ This changelog tracks Mémoire itself: every version, commit, and architectural 
 
 ## Unreleased
 
+## v1.0.2 — 2026-05-14
+
+### Studio runtime contracts
+- Stabilize Studio runtime API contracts for session hydration, simulation tools, artifact state, usage, and design changelog flows so the macOS app can reopen agent work without blanking surfaces.
+
+### Packaging
+- Stabilize Figma plugin widget metadata generation so the packaged plugin ships deterministic widget assets and avoids dirty local screenshot state.
+
+## v1.0.1 — 2026-05-12
+
+### Docs
+- README install section now lists pnpm and yarn variants alongside npm (single bash block, three lines).
+
+### Packaging
+- Exclude `plugin/*.png` from the npm tarball — prevents stray local screenshots in the plugin folder from blowing past the size gate.
+
 ## v1.0.0 — 2026-05-10
 
 ### Rebrand and stability commitment

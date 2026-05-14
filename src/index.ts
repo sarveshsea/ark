@@ -160,8 +160,8 @@ process.on("unhandledRejection", (reason) => {
 const program = new Command();
 
 program
-  .name("memoire")
-  .description("Diagnose and improve real web apps, then package the design system as an installable registry")
+  .name("memi")
+  .description("Design-system memory for coding agents — pull tokens from Figma, generate shadcn-native components, audit Tailwind apps")
   .version(packageVersion);
 
 // Create engine instance (shared across commands)

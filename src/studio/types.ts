@@ -9,6 +9,7 @@ export type StudioHarnessId =
   | "shell";
 
 export type StudioHarnessKind = "memoire" | "external-cli" | "local-model" | "shell";
+export type StudioHarnessVisibility = "primary" | "advanced";
 export type StudioRunAction =
   | "compose"
   | "design-doc"
@@ -61,6 +62,7 @@ export type StudioFigmaAction =
   | "pushTokens"
   | "fullSync";
 export type StudioHarnessProvider = "memoire" | "anthropic" | "openai" | "google" | "local" | "shell";
+export type StudioUsageProviderId = "anthropic" | "openai" | "openai-compatible" | "google" | "local" | "memoire" | "shell";
 export type StudioHarnessAuthStatus = "missing" | "needs_login" | "signed_in" | "ready" | "not_required";
 export type StudioEnvPolicy = "provider" | "local-model" | "safe-inherit" | "shell";
 export type StudioWorkspacePolicy = "workspace-required" | "trusted-shell";
@@ -135,6 +137,7 @@ export interface StudioHarnessManifestEntry {
   provider: StudioHarnessProvider;
   command: string;
   description: string;
+  visibility: StudioHarnessVisibility;
   enabledByDefault: boolean;
   installProbe: string[];
   capabilities: StudioRunAction[];
@@ -247,6 +250,18 @@ export interface StudioSetupConfig {
   downloadReadyAcknowledged: boolean;
 }
 
+export interface StudioUsageBudget {
+  dailyTokenLimit?: number | null;
+  dailyCostLimitUsd?: number | null;
+  warningThreshold?: number | null;
+}
+
+export interface StudioUsageBudgetConfig {
+  warningThreshold: number;
+  providers: Partial<Record<StudioUsageProviderId, StudioUsageBudget>>;
+  harnesses: Partial<Record<StudioHarnessId, StudioUsageBudget>>;
+}
+
 export interface StudioConfig {
   schemaVersion: 1;
   workspaceRoots: string[];
@@ -260,6 +275,7 @@ export interface StudioConfig {
   permissions: StudioPermissionConfig;
   computer: StudioComputerConfig;
   setup: StudioSetupConfig;
+  usageBudgets: StudioUsageBudgetConfig;
   enabledTools: {
     shell: boolean;
     browser: boolean;
@@ -479,6 +495,7 @@ export type StudioToolCategory =
   | "mcp"
   | "knowledge"
   | "research"
+  | "board"
   | "simulation";
 
 export interface StudioToolDefinition {

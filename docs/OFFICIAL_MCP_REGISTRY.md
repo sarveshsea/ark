@@ -8,7 +8,7 @@ The Official MCP Registry hosts metadata, not package artifacts. For npm package
 
 Memoire uses:
 
-- MCP server name: `io.github.sarveshsea/memoire`
+- MCP server name: `io.github.sarveshsea/memi`
 - npm package: `@memi-design/cli`
 - transport: `stdio`
 - package argument: `mcp`
@@ -34,8 +34,10 @@ npm view @memi-design/cli version mcpName --json
 
 mcp-publisher login github
 mcp-publisher publish server.json
-curl "https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.sarveshsea/memoire"
+curl "https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.sarveshsea/memi"
 ```
+
+CI can publish without a local registry token through the `Publish to MCP Registry` GitHub Actions workflow. It uses GitHub OIDC, validates `server.json`, and refuses to publish until the matching `@memi-design/cli` version exists on npm.
 
 Expected registry result after publish:
 
@@ -43,7 +45,7 @@ Expected registry result after publish:
 {
   "servers": [
     {
-      "name": "io.github.sarveshsea/memoire"
+      "name": "io.github.sarveshsea/memi"
     }
   ]
 }

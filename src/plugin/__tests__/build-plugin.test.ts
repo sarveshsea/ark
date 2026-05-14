@@ -17,6 +17,13 @@ describe("plugin build pipeline", () => {
       const code = await readFile(result.codePath, "utf8");
       const html = await readFile(result.htmlPath, "utf8");
       const meta = await readFile(result.metaPath, "utf8");
+      const parsedMeta = JSON.parse(meta) as {
+        builtAt: string;
+        bundleHash: string;
+        manifest: { path: string };
+        code: { path: string };
+        ui: { path: string };
+      };
 
       expect(code).toContain("figma.showUI");
       expect(code).toContain("height: 600");
@@ -58,6 +65,19 @@ describe("plugin build pipeline", () => {
       expect(hasRawObjectSpread(html)).toBe(false);
       expect(meta).toContain('"widgetVersion": "2"');
       expect(meta).toContain(`"packageVersion": "${version}"`);
+      expect(parsedMeta.manifest.path).toBe("manifest.json");
+      expect(parsedMeta.code.path).toBe("code.js");
+      expect(parsedMeta.ui.path).toBe("ui.html");
+      expect(meta).not.toContain(process.cwd());
+      expect(meta).not.toContain(tempDir);
+
+      const rebuilt = await buildPluginBundle({ rootDir: process.cwd(), outDir: pluginDir });
+      const rebuiltMeta = JSON.parse(await readFile(rebuilt.metaPath, "utf8")) as {
+        builtAt: string;
+        bundleHash: string;
+      };
+      expect(rebuiltMeta.bundleHash).toBe(parsedMeta.bundleHash);
+      expect(rebuiltMeta.builtAt).toBe(parsedMeta.builtAt);
     } finally {
       await rm(tempDir, { recursive: true, force: true });
     }

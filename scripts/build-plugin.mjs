@@ -115,21 +115,26 @@ async function inlineAssets(html, outDir) {
 
 async function writeWidgetMeta(rootDir, outDir) {
   const packageJson = JSON.parse(await readFile(join(rootDir, "package.json"), "utf-8"));
-  const manifest = await createAsset(join(outDir, "manifest.json"));
-  const code = await createAsset(join(outDir, "code.js"));
-  const ui = await createAsset(join(outDir, "ui.html"));
+  const metaPath = join(outDir, "widget-meta.json");
+  const previousMeta = await readJson(metaPath);
+  const manifest = await createAsset(outDir, join(outDir, "manifest.json"));
+  const code = await createAsset(outDir, join(outDir, "code.js"));
+  const ui = await createAsset(outDir, join(outDir, "ui.html"));
   const bundleHash = sha256(JSON.stringify([
     manifest.sha256 || "missing",
     code.sha256 || "missing",
     ui.sha256 || "missing",
   ]));
+  const builtAt = previousMeta?.bundleHash === bundleHash && typeof previousMeta.builtAt === "string"
+    ? previousMeta.builtAt
+    : new Date().toISOString();
 
   await writeFile(
-    join(outDir, "widget-meta.json"),
+    metaPath,
     JSON.stringify({
       widgetVersion,
       packageVersion: packageJson.version ?? null,
-      builtAt: new Date().toISOString(),
+      builtAt,
       bundleHash,
       manifest,
       code,
@@ -139,14 +144,22 @@ async function writeWidgetMeta(rootDir, outDir) {
   );
 }
 
-async function createAsset(path) {
+async function createAsset(bundleRoot, path) {
   const buffer = await readFile(path);
   return {
-    path,
+    path: relative(bundleRoot, path).replace(/\\/g, "/"),
     exists: true,
     bytes: buffer.byteLength,
     sha256: sha256(buffer),
   };
+}
+
+async function readJson(path) {
+  try {
+    return JSON.parse(await readFile(path, "utf-8"));
+  } catch {
+    return null;
+  }
 }
 
 function sha256(value) {
